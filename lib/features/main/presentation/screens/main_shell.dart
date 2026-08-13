@@ -7,6 +7,7 @@ import 'package:lolango_v2/features/discovery/presentation/screens/discovery_scr
 import 'package:lolango_v2/features/home/presentation/screens/home_screen.dart';
 import 'package:lolango_v2/features/match/presentation/screens/match_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_screen.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
@@ -57,7 +58,18 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
             label: 'Découvrir',
           ),
           NavigationDestination(
-            icon: Icon(LucideIcons.heart, color: textSecondary),
+            icon: Consumer(
+              builder: (context, ref, child) {
+                final badgeCount = ref.watch(matchNotificationBadgeProvider);
+                if (badgeCount > 0) {
+                  return Badge(
+                    label: Text(badgeCount.toString()),
+                    child: Icon(LucideIcons.heart, color: textSecondary),
+                  );
+                }
+                return Icon(LucideIcons.heart, color: textSecondary);
+              },
+            ),
             selectedIcon: Icon(LucideIcons.heart, color: AppColors.primaryLight),
             label: 'Match',
           ),

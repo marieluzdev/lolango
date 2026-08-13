@@ -6,6 +6,7 @@ import 'package:lolango_v2/features/discovery/presentation/widgets/filter_modal.
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 import 'package:lolango_v2/features/discovery/presentation/providers/discovery_providers.dart';
 import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 
 
 class DiscoveryScreen extends ConsumerWidget {
@@ -147,10 +148,30 @@ class DiscoveryScreen extends ConsumerWidget {
                             socials: p.socials,
                             interests: p.interests,
                             isGridMode: true,
-                            onPass: () {},
-                            onConnect: () {},
+                            onPass: () {
+                              debugPrint('DiscoveryScreen Grid - onPass clicked for ${p.id}');
+                              ref.read(hiddenProfilesProvider.notifier).update((state) {
+                                final newState = Set<String>.from(state);
+                                newState.add(p.id);
+                                return newState;
+                              });
+                              ref.read(interactionRepositoryProvider).passProfile(p.id);
+                            },
+                            onConnect: () {
+                              debugPrint('DiscoveryScreen Grid - onConnect clicked for ${p.id}');
+                              ref.read(hiddenProfilesProvider.notifier).update((state) {
+                                final newState = Set<String>.from(state);
+                                newState.add(p.id);
+                                return newState;
+                              });
+                              ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
+                                if (isMatch) {
+                                  ref.invalidate(matchesProvider);
+                                }
+                              });
+                            },
                             onTap: () {
-                              _showActionModal(context, p,
+                              _showActionModal(context, ref, p,
                                   theme: Theme.of(context));
                             },
                           );
@@ -164,7 +185,7 @@ class DiscoveryScreen extends ConsumerWidget {
     );
   }
 
-  void _showActionModal(BuildContext context, ProfileModel p,
+  void _showActionModal(BuildContext context, WidgetRef ref, ProfileModel p,
       {required ThemeData theme}) {
     showReusableModalBottomSheet(
       context: context,
@@ -218,7 +239,15 @@ class DiscoveryScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  ref.read(hiddenProfilesProvider.notifier).update((state) {
+                    final newState = Set<String>.from(state);
+                    newState.add(p.id);
+                    return newState;
+                  });
+                  ref.read(interactionRepositoryProvider).passProfile(p.id);
+                  Navigator.pop(context);
+                },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.redAccent,
                   side: const BorderSide(color: Colors.redAccent, width: 2),
@@ -233,7 +262,19 @@ class DiscoveryScreen extends ConsumerWidget {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  ref.read(hiddenProfilesProvider.notifier).update((state) {
+                    final newState = Set<String>.from(state);
+                    newState.add(p.id);
+                    return newState;
+                  });
+                  ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
+                    if (isMatch) {
+                      ref.invalidate(matchesProvider);
+                    }
+                  });
+                  Navigator.pop(context);
+                },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: const Color(0xFFFE3C72),
