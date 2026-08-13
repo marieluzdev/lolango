@@ -86,8 +86,8 @@ class ProfileRepository {
 
     return {
       ...(profile ?? <String, dynamic>{}),
-      'photos': photos ?? const <dynamic>[],
-      'socials': socials ?? const <dynamic>[],
+      'photos': photos,
+      'socials': socials,
       'interests': interests,
     };
   }

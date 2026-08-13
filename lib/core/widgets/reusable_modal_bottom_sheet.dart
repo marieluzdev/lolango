@@ -70,7 +70,7 @@ class ReusableModalBottomSheet extends StatelessWidget {
 }
 
 /// Affiche un modal bottom sheet réutilisable
-void showReusableModalBottomSheet({
+Future<T?> showReusableModalBottomSheet<T>({
   required BuildContext context,
   required String title,
   required Color surface,
@@ -78,7 +78,7 @@ void showReusableModalBottomSheet({
   required List<Widget> children,
   VoidCallback? onClose,
 }) {
-  showModalBottomSheet<void>(
+  return showModalBottomSheet<T>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
