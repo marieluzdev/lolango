@@ -51,6 +51,15 @@ class _MainAppState extends State<MainApp> {
           themeMode: themeMode,
           debugShowCheckedModeBanner: false,
           routerConfig: router,
+          // Ensure there's always a background color during router redirects
+          // and widget rebuilds to avoid a brief black frame on refresh.
+          builder: (context, child) {
+            final bg = Theme.of(context).scaffoldBackgroundColor;
+            return ColoredBox(
+              color: bg,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
         );
       },
     );

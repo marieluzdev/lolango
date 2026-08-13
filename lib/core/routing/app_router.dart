@@ -31,38 +31,52 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: refreshNotifier,
     redirect: (context, state) async {
-      final authState = ref.read(authViewModelProvider);
-      final isAuthenticated = authState.valueOrNull != null;
-      final isGoingToLogin = state.matchedLocation == '/login';
-      final isGoingToSplash = state.matchedLocation == '/';
-      final isGoingToOnboarding = state.matchedLocation == '/onboarding';
-
-      if (!isAuthenticated) {
-        if (isGoingToLogin) return null;
-        return '/login';
-      }
-
-      final profileRepository = ref.read(profileRepositoryProvider);
-      bool profileCompleted = false;
       try {
-        profileCompleted = await profileRepository.hasCompletedProfile();
-      } catch (_) {
-        profileCompleted = false;
-      }
+        final authState = ref.read(authViewModelProvider);
+        final isAuthenticated = authState.valueOrNull != null;
+        final isGoingToLogin = state.matchedLocation == '/login';
+        final isGoingToSplash = state.matchedLocation == '/';
+        final isGoingToOnboarding = state.matchedLocation == '/onboarding';
 
-      if (isGoingToSplash) {
-        return profileCompleted ? '/home' : '/onboarding';
-      }
+        debugPrint('[Router] redirect: goingTo=${state.matchedLocation} authenticated=$isAuthenticated');
 
-      if (!profileCompleted && !isGoingToOnboarding) {
-        return '/onboarding';
-      }
+        if (!isAuthenticated) {
+          // Allow the splash screen at `/` to be shown even when the
+          // authentication state is not yet known. This prevents immediately
+          // redirecting to `/login` on refresh so the splash can run checks.
+          if (isGoingToLogin || isGoingToSplash) return null;
+          return '/login';
+        }
 
-      if (profileCompleted && (isGoingToLogin || isGoingToOnboarding)) {
-        return '/home';
-      }
+        final profileRepository = ref.read(profileRepositoryProvider);
+        bool profileCompleted = false;
+        try {
+          profileCompleted = await profileRepository.hasCompletedProfile();
+        } catch (e, st) {
+          debugPrint('[Router] hasCompletedProfile failed: $e\n$st');
+          profileCompleted = false;
+        }
 
-      return null;
+        debugPrint('[Router] profileCompleted=$profileCompleted');
+
+        if (isGoingToSplash) {
+          return profileCompleted ? '/home' : '/onboarding';
+        }
+
+        if (!profileCompleted && !isGoingToOnboarding) {
+          return '/onboarding';
+        }
+
+        if (profileCompleted && (isGoingToLogin || isGoingToOnboarding)) {
+          return '/home';
+        }
+
+        return null;
+      } catch (e, st) {
+        debugPrint('[Router] unexpected error in redirect: $e\n$st');
+        // On error, don't redirect — let current route (e.g. splash) render.
+        return null;
+      }
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
