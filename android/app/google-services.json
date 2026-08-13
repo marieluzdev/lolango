@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1077640636296",
+    "project_id": "lolango-417e4",
+    "storage_bucket": "lolango-417e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077640636296:android:93e2d6f68c1db998c23c3d",
+        "android_client_info": {
+          "package_name": "com.mklabs.lolango"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3_lCMXSo3XV5DXw1QK4By0fZLlgG2Ltc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

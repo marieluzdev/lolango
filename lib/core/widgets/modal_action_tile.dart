@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+
+/// Tile réutilisable pour une action dans un modal
+class ModalActionTile extends StatelessWidget {
+  const ModalActionTile({
+    required this.icon,
+    required this.label,
+    required this.textColor,
+    required this.onTap,
+    this.isDangerous = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color textColor;
+  final VoidCallback onTap;
+  final bool isDangerous;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = isDangerous 
+        ? Colors.red.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.04);
+    final effectiveTextColor = isDangerous ? Colors.red : textColor;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: effectiveColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: effectiveTextColor, size: 20),
+            const SizedBox(width: 14),
+            Text(
+              label,
+              style: TextStyle(
+                color: effectiveTextColor,
+                fontSize: 16,
+                fontWeight: isDangerous ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
