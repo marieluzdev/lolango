@@ -5,6 +5,7 @@ import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.
 import 'package:lolango_v2/features/discovery/presentation/providers/discovery_providers.dart';
 import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/filter_modal.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 
@@ -17,6 +18,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
+  List<ProfileModel> _cards = [];
+  int _lastFilterHash = -1;
 
   @override
   void dispose() {
@@ -32,9 +35,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final textPrimary =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
-    final filtered = ref.watch(filteredProfilesProvider);
     final filterState = ref.watch(discoveryFilterProvider);
     final currentUserAsync = ref.watch(currentUserProfileProvider);
+
+    ref.listen<List<ProfileModel>>(filteredProfilesProvider, (prev, next) {
+      final filterChanged = filterState.hashCode != _lastFilterHash;
+      if (filterChanged) {
+        debugPrint('[HOME] Filter changed, resetting cards: ${next.length}');
+        setState(() {
+          _cards = List.from(next);
+          _lastFilterHash = filterState.hashCode;
+        });
+      }
+    });
+
+    if (_cards.isEmpty && _lastFilterHash == -1) {
+      final initial = ref.read(filteredProfilesProvider);
+      if (initial.isNotEmpty) {
+        debugPrint('[HOME] Initial load: ${initial.length} cards');
+        _cards = List.from(initial);
+        _lastFilterHash = filterState.hashCode;
+      }
+    }
 
     // Initialisation du filtre avec les préférences onboarding.
     currentUserAsync.whenData((userMap) {
@@ -126,7 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: filtered.isEmpty
+                child: _cards.isEmpty
                     ? Center(
                         child: Text(
                           'Aucun profil correspondant pour le moment.',
@@ -135,11 +157,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       )
                     : CardSwiper(
                         controller: _swiperController,
-                        cardsCount: filtered.length,
-                        numberOfCardsDisplayed: filtered.length > 1 ? 2 : 1,
+                        cardsCount: _cards.length,
+                        numberOfCardsDisplayed: _cards.length > 1 ? 2 : 1,
+                        isLoop: false,
                         cardBuilder:
                             (context, index, percentThresholdX, percentThresholdY) {
-                          final p = filtered[index];
+                          if (index >= _cards.length) return const SizedBox.shrink();
+                          final p = _cards[index];
                           return ProfileCard(
                             name: p.name,
                             age: p.age,
@@ -149,11 +173,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             bio: p.bio,
                             socials: p.socials,
                             interests: p.interests,
-                            onPass: () => _swiperController
-                                .swipe(CardSwiperDirection.left),
-                            onConnect: () => _swiperController
-                                .swipe(CardSwiperDirection.right),
+                            onPass: () {
+                              _swiperController.swipe(CardSwiperDirection.left);
+                            },
+                            onConnect: () {
+                              _swiperController.swipe(CardSwiperDirection.right);
+                            },
                           );
+                        },
+                        onSwipe: (previousIndex, currentIndex, direction) {
+                          if (previousIndex >= _cards.length) return true;
+                          final p = _cards[previousIndex];
+                          debugPrint('[HOME] onSwipe: ${p.id}, direction: $direction, cards remaining before: ${_cards.length}');
+
+                          // Retirer immédiatement la carte de la liste locale
+                          setState(() {
+                            _cards.removeAt(previousIndex);
+                          });
+
+                          // Cacher dans le provider (filtrage)
+                          ref.read(hiddenProfilesProvider.notifier).update((state) {
+                            final newState = Set<String>.from(state);
+                            newState.add(p.id);
+                            return newState;
+                          });
+
+                          if (direction == CardSwiperDirection.left) {
+                            ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
+                              ref.invalidate(interactedProfilesProvider);
+                            });
+                          } else if (direction == CardSwiperDirection.right) {
+                            ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
+                              if (isMatch) {
+                                debugPrint('[HOME] Match found for ${p.id}! Incrementing badge.');
+                                ref.read(matchNotificationBadgeProvider.notifier).state++;
+                                ref.invalidate(matchesProvider);
+                              }
+                              ref.invalidate(interactedProfilesProvider);
+                            });
+                          }
+                          return true;
                         },
                       ),
               ),

@@ -5,6 +5,7 @@ import '../../domain/profile_model.dart';
 import '../../data/discovery_repository.dart';
 import '../widgets/filter_modal.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 
 final discoveryRepositoryProvider = Provider<DiscoveryRepository>((ref) {
   return DiscoveryRepository(Supabase.instance.client);
@@ -28,6 +29,10 @@ final currentUserProfileProvider =
 final filteredProfilesProvider = Provider<List<ProfileModel>>((ref) {
   final filter = ref.watch(discoveryFilterProvider);
   final all = ref.watch(allProfilesProvider).value ?? [];
+  final interactedIds = ref.watch(interactedProfilesProvider).value ?? [];
+  final hiddenIds = ref.watch(hiddenProfilesProvider);
+
+  debugPrint('filteredProfilesProvider: all=${all.length}, interacted=${interactedIds.length}, hidden=${hiddenIds.length}');
 
   bool matchesPref(String? profileGender, String? pref) {
     if (pref == null) return true;
@@ -41,6 +46,8 @@ final filteredProfilesProvider = Provider<List<ProfileModel>>((ref) {
   }
 
   return all.where((p) {
+    if (interactedIds.contains(p.id) || hiddenIds.contains(p.id)) return false;
+    
     final ageOk = p.age == null ||
         (p.age! >= filter.ageRange.start && p.age! <= filter.ageRange.end);
     final genderOk =
