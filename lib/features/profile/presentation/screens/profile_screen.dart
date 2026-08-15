@@ -41,6 +41,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color border,
     required Color textPrimary,
     required Color textSecondary,
+    required Color primary,
     required String profileUrl,
   }) {
     showReusableModalBottomSheet(
@@ -50,26 +51,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       textPrimary: textPrimary,
       children: [
         ModalActionTile(
+          icon: LucideIcons.eye,
+          label: 'Aperçu profil',
+          textColor: Colors.black,
+          backgroundColor: primary,
+          onTap: () {
+            Navigator.of(context).pop();
+            context.push('/profile-preview');
+          },
+        ),
+        const SizedBox(height: 12),
+        ModalActionTile(
           icon: LucideIcons.settings,
           label: 'Paramètres',
           textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/settings');
-          },
-        ),
-        const SizedBox(height: 12),
-        ModalActionTile(
-          icon: LucideIcons.link,
-          label: 'Copier le lien du profil',
-          textColor: textPrimary,
-          onTap: () async {
-            await Clipboard.setData(ClipboardData(text: profileUrl));
-            if (mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Lien copié.')));
-            }
           },
         ),
       ],
@@ -223,6 +221,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       border: border,
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
+                      primary: primary,
                       profileUrl: profileUrl,
                     ),
                     icon: Icon(LucideIcons.menu, color: textPrimary),

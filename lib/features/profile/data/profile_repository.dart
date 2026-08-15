@@ -46,6 +46,48 @@ class ProfileRepository {
     }
   }
 
+  Future<Map<String, dynamic>> fetchDetailedProfileById(String userId) async {
+    final profile = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+
+    final photos = await supabase
+        .from('profile_photos')
+        .select()
+        .eq('user_id', userId)
+        .order('position', ascending: true);
+
+    final socials = await supabase
+        .from('profile_socials')
+        .select()
+        .eq('user_id', userId);
+
+    final interestRecords = await supabase
+        .from('profile_interests')
+        .select('interest_id, interests(name)')
+        .eq('user_id', userId);
+
+    final interests = <String>[];
+    for (final item in (interestRecords as List<dynamic>? ?? <dynamic>[])) {
+      final dynamic interest = item['interests'];
+      if (interest is Map<String, dynamic>) {
+        final name = interest['name'];
+        if (name is String && name.trim().isNotEmpty) {
+          interests.add(name);
+        }
+      }
+    }
+
+    return {
+      ...(profile ?? <String, dynamic>{}),
+      'photos': photos,
+      'socials': socials,
+      'interests': interests,
+    };
+  }
+
   Future<Map<String, dynamic>> fetchDetailedProfile() async {
     final user = supabase.auth.currentUser;
     if (user == null) {

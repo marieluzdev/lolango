@@ -10,7 +10,9 @@ import 'package:lolango_v2/features/onboarding/presentation/screens/onboarding_f
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_photos_screen.dart';
+import 'package:lolango_v2/features/profile/presentation/screens/profile_preview_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/settings_screen.dart';
+import 'package:lolango_v2/features/profile/presentation/screens/user_profile_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
 
 /// A [ChangeNotifier] that fires whenever auth state changes,
@@ -84,6 +86,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/profile-edit', builder: (context, state) => const ProfileEditScreen()),
       GoRoute(path: '/profile-photos', builder: (context, state) => const ProfilePhotosScreen()),
+      GoRoute(path: '/profile-preview', builder: (context, state) => const ProfilePreviewScreen()),
+      GoRoute(
+        path: '/user-profile/:id',
+        builder: (context, state) {
+          final userId = state.pathParameters['id']!;
+          final userName = state.extra as String?;
+          return UserProfileScreen(userId: userId, userName: userName);
+        },
+      ),
     ],
   );
 });

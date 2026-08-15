@@ -118,57 +118,89 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final navBackground = isDark ? AppColors.navbarDark : AppColors.navbarLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final badgeCount = ref.watch(matchNotificationBadgeProvider);
+
+    // Items de navigation (identiques à v1)
+    final navItems = [
+      _NavItem(icon: LucideIcons.house, label: 'Home', index: 0),
+      _NavItem(icon: LucideIcons.search, label: 'Découvrir', index: 1),
+      _NavItem(icon: LucideIcons.heart, label: 'Match', index: 2, badge: badgeCount),
+      _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 3),
+    ];
 
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: navBackground,
-        elevation: 0,
-        height: 72,
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-        indicatorColor: isDark
-            ? AppColors.primaryDark.withValues(alpha: 0.18)
-            : AppColors.primaryLight.withValues(alpha: 0.20),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(LucideIcons.house, color: textSecondary),
-            selectedIcon: Icon(LucideIcons.house, color: AppColors.primaryLight),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(LucideIcons.search, color: textSecondary),
-            selectedIcon: Icon(LucideIcons.search, color: AppColors.primaryLight),
-            label: 'Découvrir',
-          ),
-          NavigationDestination(
-            icon: Consumer(
-              builder: (context, ref, child) {
-                final badgeCount = ref.watch(matchNotificationBadgeProvider);
-                if (badgeCount > 0) {
-                  return Badge(
-                    label: Text(badgeCount.toString()),
-                    child: Icon(LucideIcons.heart, color: textSecondary),
-                  );
-                }
-                return Icon(LucideIcons.heart, color: textSecondary);
-              },
-            ),
-            selectedIcon: Icon(LucideIcons.heart, color: AppColors.primaryLight),
-            label: 'Match',
-          ),
-          NavigationDestination(
-            icon: Icon(LucideIcons.userRound, color: textSecondary),
-            selectedIcon: Icon(LucideIcons.userRound, color: AppColors.primaryLight),
-            label: 'Profil',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        color: background,
+        padding: EdgeInsets.only(
+          top: 10,
+          bottom: MediaQuery.of(context).padding.bottom + 8,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: navItems.map((item) {
+            final isSelected = _selectedIndex == item.index;
+
+            final iconColor = isDark
+                ? (isSelected ? Colors.black : Colors.white)
+                : (isSelected ? Colors.white : Colors.black);
+
+            Widget iconWidget = Icon(item.icon, size: 24, color: iconColor);
+
+            // Badge sur Match
+            if (item.badge != null && item.badge! > 0) {
+              iconWidget = Badge(
+                backgroundColor: Colors.red,
+                label: Text(
+                  '${item.badge}',
+                  style: const TextStyle(fontSize: 9, color: Colors.white),
+                ),
+                child: iconWidget,
+              );
+            }
+
+            return GestureDetector(
+              onTap: () => setState(() => _selectedIndex = item.index),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 60,
+                height: 52,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? (isDark ? Colors.white : Colors.black)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: iconWidget,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  final int index;
+  final int? badge;
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.index,
+    this.badge,
+  });
 }
