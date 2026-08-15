@@ -9,7 +9,9 @@ import 'package:lolango_v2/features/main/presentation/screens/main_shell.dart';
 import 'package:lolango_v2/features/onboarding/presentation/screens/onboarding_flow_screen.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_edit_screen.dart';
+import 'package:lolango_v2/features/profile/presentation/screens/profile_photos_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/settings_screen.dart';
+import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
 
 /// A [ChangeNotifier] that fires whenever auth state changes,
 /// so GoRouter re-evaluates its redirect without being fully reconstructed.
@@ -17,6 +19,8 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
     // Listen to auth changes
     ref.listen(authViewModelProvider, (_, _) => notifyListeners());
+    // Listen to profile status changes
+    ref.listen(profileStatusProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -30,8 +34,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: refreshNotifier,
-    redirect: (context, state) async {
+    redirect: (context, state) {
       final authState = ref.read(authViewModelProvider);
+      final profileStatus = ref.read(profileStatusProvider);
+      
       final isAuthenticated = authState.valueOrNull != null;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/';
@@ -42,13 +48,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      final profileRepository = ref.read(profileRepositoryProvider);
-      bool profileCompleted = false;
-      try {
-        profileCompleted = await profileRepository.hasCompletedProfile();
-      } catch (_) {
-        profileCompleted = false;
+      if (profileStatus.isLoading) {
+        if (isGoingToLogin || isGoingToSplash) {
+          return null; // Reste sur login ou splash pendant le chargement
+        }
+        return '/'; // Splash screen
       }
+
+      final profileCompleted = profileStatus.valueOrNull ?? false;
 
       if (isGoingToSplash) {
         return profileCompleted ? '/home' : '/onboarding';
@@ -76,6 +83,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/home', builder: (context, state) => const MainShellScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/profile-edit', builder: (context, state) => const ProfileEditScreen()),
+      GoRoute(path: '/profile-photos', builder: (context, state) => const ProfilePhotosScreen()),
     ],
   );
 });

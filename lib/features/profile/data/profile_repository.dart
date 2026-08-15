@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -127,6 +128,28 @@ class ProfileRepository {
     await supabase.from('profile_socials').upsert(rows, onConflict: 'user_id,platform');
   }
 
+  Future<void> upsertInterests(List<String> interests) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    await supabase.from('profile_interests').delete().eq('user_id', user.id);
+
+    if (interests.isNotEmpty) {
+      final tagsData = await supabase
+          .from('interests')
+          .select('id, name')
+          .inFilter('name', interests);
+
+      if (tagsData.isNotEmpty) {
+        final records = tagsData.map((tag) => {
+          'user_id': user.id,
+          'interest_id': tag['id'],
+        }).toList();
+        await supabase.from('profile_interests').insert(records);
+      }
+    }
+  }
+
   Future<void> upsertPhotos(List<String> urls) async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
@@ -144,6 +167,39 @@ class ProfileRepository {
     });
 
     await supabase.from('profile_photos').upsert(rows, onConflict: 'user_id,position');
+  }
+
+  Future<String?> uploadPhoto(List<int> imageBytes, String extension) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
+    final path = '${user.id}/$fileName';
+
+    await supabase.storage.from('profile-photos').uploadBinary(
+          path,
+          Uint8List.fromList(imageBytes),
+          fileOptions: FileOptions(
+            contentType: 'image/$extension',
+            upsert: true,
+          ),
+        );
+
+    return supabase.storage.from('profile-photos').getPublicUrl(path);
+  }
+
+  Future<void> deletePhotoStorage(String photoUrl) async {
+    try {
+      final uri = Uri.parse(photoUrl);
+      final pathSegments = uri.pathSegments;
+      final bucketIndex = pathSegments.indexOf('profile-photos');
+      if (bucketIndex != -1 && bucketIndex + 1 < pathSegments.length) {
+        final path = pathSegments.sublist(bucketIndex + 1).join('/');
+        await supabase.storage.from('profile-photos').remove([path]);
+      }
+    } catch (_) {
+      // Ignorer les erreurs si l'URL est mal formée ou si le fichier n'existe pas
+    }
   }
 
   Future<void> deleteAccount() async {
