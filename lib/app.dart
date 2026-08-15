@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'features/auth/presentation/screens/splash_screen.dart';
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
@@ -51,6 +52,17 @@ class _MainAppState extends State<MainApp> {
           themeMode: themeMode,
           debugShowCheckedModeBanner: false,
           routerConfig: router,
+          builder: (context, child) {
+            if (child == null) {
+              return const SplashScreen();
+            }
+            
+            final bg = Theme.of(context).scaffoldBackgroundColor;
+            return ColoredBox(
+              color: bg,
+              child: child,
+            );
+          },
         );
       },
     );

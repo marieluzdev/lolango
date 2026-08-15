@@ -41,6 +41,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color border,
     required Color textPrimary,
     required Color textSecondary,
+    required Color primary,
     required String profileUrl,
   }) {
     showReusableModalBottomSheet(
@@ -50,26 +51,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       textPrimary: textPrimary,
       children: [
         ModalActionTile(
+          icon: LucideIcons.eye,
+          label: 'Aperçu profil',
+          textColor: Colors.black,
+          backgroundColor: primary,
+          onTap: () {
+            Navigator.of(context).pop();
+            context.push('/profile-preview');
+          },
+        ),
+        const SizedBox(height: 12),
+        ModalActionTile(
           icon: LucideIcons.settings,
           label: 'Paramètres',
           textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/settings');
-          },
-        ),
-        const SizedBox(height: 12),
-        ModalActionTile(
-          icon: LucideIcons.link,
-          label: 'Copier le lien du profil',
-          textColor: textPrimary,
-          onTap: () async {
-            await Clipboard.setData(ClipboardData(text: profileUrl));
-            if (mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Lien copié.')));
-            }
           },
         ),
       ],
@@ -223,6 +221,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       border: border,
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
+                      primary: primary,
                       profileUrl: profileUrl,
                     ),
                     icon: Icon(LucideIcons.menu, color: textPrimary),
@@ -381,13 +380,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    _PhotoBentoGrid(
+                    _PhotoGallery(
                       photoUrls: photoUrls,
                       surface: surface,
                       border: border,
-                      textSecondary: textSecondary,
                       primary: primary,
-                      onAddPhoto: () => context.push('/profile-edit'),
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onAddPhoto: () => context.push('/profile-photos'),
+                      onTapPhoto: (_) => context.push('/profile-photos'),
+                      isDark: isDark,
                     ),
 
                     // ==================================================
@@ -407,9 +409,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(20, 22, 16, 16),
                       decoration: BoxDecoration(
-                        color: surface,
+                        color: Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: border),
                       ),
                       child: Stack(
                         clipBehavior: Clip.none,
@@ -462,25 +463,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         runSpacing: 8,
                         children: [
                           ...visibleInterests.map(
-                            (interest) => _InterestChip(
-                              label: interest,
-                              icon: _interestIcon(interest),
-                              color: surface,
-                              border: border,
-                              textColor: textPrimary,
+                            (interest) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: border),
+                              ),
+                              child: Text(
+                                interest,
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                           if (hasMoreInterests)
                             GestureDetector(
-                              onTap: () =>
-                                  setState(() => _showAllInterests = true),
-                              child: _InterestChip(
-                                label: 'Voir plus',
-                                icon: null,
-                                color: Colors.transparent,
-                                border: Colors.transparent,
-                                textColor: secondary,
-                                bold: true,
+                              onTap: () => setState(() => _showAllInterests = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Text(
+                                  'Voir plus',
+                                  style: TextStyle(
+                                    color: secondary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ),
                         ],
@@ -501,82 +513,73 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      ...socials.map((social) {
-                        final map = social as Map<String, dynamic>;
-                        final platform = map['platform'] as String? ?? '';
-                        final socialUsername = map['username'] as String? ?? '';
-                        if (platform.isEmpty || socialUsername.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final style = _socialStyle(platform);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: border),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: style.color.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  style.icon,
-                                  color: style.color,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      platform,
-                                      style: TextStyle(
-                                        color: textPrimary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: List.generate(socials.length, (index) {
+                            final map = socials[index] as Map<String, dynamic>;
+                            final platform = map['platform'] as String? ?? '';
+                            final socialUsername = map['username'] as String? ?? '';
+                            if (platform.isEmpty || socialUsername.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            final style = _socialStyle(platform);
+                            final isLast = index == socials.length - 1;
+
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 26,
+                                        height: 26,
+                                        decoration: BoxDecoration(
+                                          color: style.color.withValues(alpha: 0.15),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(style.icon, color: style.color, size: 14),
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      socialUsername,
-                                      style: TextStyle(
-                                        color: textSecondary,
-                                        fontSize: 13,
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              platform,
+                                              style: TextStyle(
+                                                color: textPrimary,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              socialUsername,
+                                              style: TextStyle(
+                                                color: textSecondary,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 8),
+                                      Icon(LucideIcons.chevronRight, size: 18, color: textSecondary),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  LucideIcons.arrowRight,
-                                  size: 16,
-                                  color: isDark ? Colors.black : Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                                if (!isLast)
+                                  Divider(height: 1, thickness: 1, color: border, indent: 56),
+                              ],
+                            );
+                          }),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -589,99 +592,89 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-// ==================================================
-// GALERIE PHOTOS EN MOSAÏQUE "BENTO"
-// 1 grande photo (principale) à gauche + 3 petites empilées à droite.
-// Les slots vides deviennent des cartes "+".
-// ==================================================
-class _PhotoBentoGrid extends StatelessWidget {
-  const _PhotoBentoGrid({
-    required this.photoUrls,
-    required this.surface,
-    required this.border,
-    required this.textSecondary,
-    required this.primary,
-    required this.onAddPhoto,
-  });
-
+class _PhotoGallery extends StatelessWidget {
   final List<String> photoUrls;
   final Color surface;
   final Color border;
-  final Color textSecondary;
   final Color primary;
+  final Color textPrimary;
+  final Color textSecondary;
   final VoidCallback onAddPhoto;
+  final ValueChanged<int> onTapPhoto;
+  final bool isDark;
 
-  static const double _height = 236;
-  static const double _gap = 10;
-  static const double _radius = 18;
+  const _PhotoGallery({
+    required this.photoUrls,
+    required this.surface,
+    required this.border,
+    required this.primary,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.onAddPhoto,
+    required this.onTapPhoto,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final slots = List<String?>.generate(
-      4,
-      (i) => i < photoUrls.length ? photoUrls[i] : null,
-    );
+    const double galleryHeight = 264;
+    const double gap = 8;
+
+    if (photoUrls.isEmpty) {
+      return _AddPhotoTile(
+        surface: surface,
+        border: border,
+        primary: primary,
+        height: 140,
+        onTap: onAddPhoto,
+        isDark: isDark,
+      );
+    }
+
+    final hasSecondPhoto = photoUrls.length > 1;
 
     return SizedBox(
-      height: _height,
+      height: galleryHeight,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             flex: 3,
-            child: _BentoTile(
-              url: slots[0],
-              radius: _radius,
-              surface: surface,
+            child: _PhotoTile(
+              url: photoUrls[0],
               border: border,
-              textSecondary: textSecondary,
-              isPrimaryBadge: slots[0] != null,
-              primaryColor: primary,
-              onAdd: onAddPhoto,
+              surface: surface,
+              badgeLabel: 'Photo principale',
+              badgeSurface: surface,
+              badgeText: textPrimary,
+              onTap: () => onTapPhoto(0),
             ),
           ),
-          const SizedBox(width: _gap),
+          const SizedBox(width: gap),
           Expanded(
             flex: 2,
             child: Column(
               children: [
                 Expanded(
-                  child: _BentoTile(
-                    url: slots[1],
-                    radius: _radius,
+                  child: _AddPhotoTile(
                     surface: surface,
                     border: border,
-                    textSecondary: textSecondary,
-                    onAdd: onAddPhoto,
-                    compact: true,
+                    primary: primary,
+                    onTap: onAddPhoto,
+                    isDark: isDark,
                   ),
                 ),
-                const SizedBox(height: _gap),
-                Expanded(
-                  child: _BentoTile(
-                    url: slots[2],
-                    radius: _radius,
-                    surface: surface,
-                    border: border,
-                    textSecondary: textSecondary,
-                    onAdd: onAddPhoto,
-                    compact: true,
+                if (hasSecondPhoto) ...[
+                  const SizedBox(height: gap),
+                  Expanded(
+                    child: _PhotoTile(
+                      url: photoUrls[1],
+                      border: border,
+                      surface: surface,
+                      onTap: () => onTapPhoto(1),
+                    ),
                   ),
-                ),
-                const SizedBox(height: _gap),
-                Expanded(
-                  child: _BentoTile(
-                    url: slots[3],
-                    radius: _radius,
-                    surface: surface,
-                    border: border,
-                    textSecondary: textSecondary,
-                    onAdd: onAddPhoto,
-                    compact: true,
-                    extraCount: photoUrls.length > 4
-                        ? photoUrls.length - 4
-                        : null,
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -691,212 +684,128 @@ class _PhotoBentoGrid extends StatelessWidget {
   }
 }
 
-class _BentoTile extends StatelessWidget {
-  const _BentoTile({
-    required this.url,
-    required this.radius,
-    required this.surface,
-    required this.border,
-    required this.textSecondary,
-    required this.onAdd,
-    this.isPrimaryBadge = false,
-    this.primaryColor,
-    this.compact = false,
-    this.extraCount,
-  });
-
-  final String? url;
-  final double radius;
-  final Color surface;
+class _PhotoTile extends StatelessWidget {
+  final String url;
   final Color border;
-  final Color textSecondary;
-  final VoidCallback onAdd;
-  final bool isPrimaryBadge;
-  final Color? primaryColor;
-  final bool compact;
-  final int? extraCount;
+  final Color surface;
+  final String? badgeLabel;
+  final Color? badgeSurface;
+  final Color? badgeText;
+  final VoidCallback onTap;
+
+  const _PhotoTile({
+    required this.url,
+    required this.border,
+    required this.surface,
+    required this.onTap,
+    this.badgeLabel,
+    this.badgeSurface,
+    this.badgeText,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (url == null) {
-      return _AddPhotoCard(
-        radius: radius,
-        surface: surface,
-        border: border,
-        textSecondary: textSecondary,
-        onTap: onAdd,
-        compact: compact,
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            url!,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              color: surface,
-              child: Icon(LucideIcons.imageOff, color: textSecondary),
-            ),
-          ),
-          if (isPrimaryBadge)
-            Positioned(
-              left: 8,
-              bottom: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (primaryColor ?? Colors.amber).withValues(alpha: 0.93),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: const Text(
-                  'Photo principale',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                  ),
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: border, width: 1),
+              ),
+              child: Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: surface,
+                  child: Icon(LucideIcons.imageOff, color: border),
                 ),
               ),
             ),
-          if (extraCount != null && extraCount! > 0)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.45),
-                child: Center(
+            if (badgeLabel != null)
+              Positioned(
+                left: 10,
+                bottom: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeSurface,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Text(
-                    '+$extraCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
+                    badgeLabel!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: badgeText,
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddPhotoCard extends StatelessWidget {
-  const _AddPhotoCard({
-    required this.radius,
-    required this.surface,
-    required this.border,
-    required this.textSecondary,
-    required this.onTap,
-    this.compact = false,
-  });
-
-  final double radius;
-  final Color surface;
-  final Color border;
-  final Color textSecondary;
-  final VoidCallback onTap;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(radius),
-      child: DottedBorderBox(
-        radius: radius,
-        color: border,
-        child: Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(radius),
-          ),
-          child: Center(
-            child: Icon(
-              LucideIcons.plus,
-              color: textSecondary,
-              size: compact ? 18 : 26,
-            ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Petit conteneur avec bordure en pointillés (sans dépendance externe).
-class DottedBorderBox extends StatelessWidget {
-  const DottedBorderBox({
-    super.key,
-    required this.child,
-    required this.radius,
-    required this.color,
-  });
+class _AddPhotoTile extends StatelessWidget {
+  final Color surface;
+  final Color border;
+  final Color primary;
+  final double? height;
+  final VoidCallback onTap;
+  final bool isDark;
 
-  final Widget child;
-  final double radius;
-  final Color color;
+  const _AddPhotoTile({
+    required this.surface,
+    required this.border,
+    required this.primary,
+    required this.onTap,
+    this.height,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(radius: radius, color: color),
-      child: child,
+    final iconColor = isDark ? Colors.white : Colors.black;
+    final textColor = isDark ? Colors.white : Colors.black;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.plus, size: 22, color: iconColor),
+            const SizedBox(height: 6),
+            Text(
+              'Ajouter\nune photo',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({required this.radius, required this.color});
-
-  final double radius;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.4
-      ..style = PaintingStyle.stroke;
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0.7, 0.7, size.width - 1.4, size.height - 1.4),
-      Radius.circular(radius),
-    );
-
-    final path = Path()..addRRect(rrect);
-    final dashed = _dashPath(path, dashLength: 5, gapLength: 4);
-    canvas.drawPath(dashed, paint);
-  }
-
-  Path _dashPath(
-    Path source, {
-    required double dashLength,
-    required double gapLength,
-  }) {
-    final dashed = Path();
-    for (final metric in source.computeMetrics()) {
-      double distance = 0;
-      bool draw = true;
-      while (distance < metric.length) {
-        final length = draw ? dashLength : gapLength;
-        final next = (distance + length).clamp(0, metric.length).toDouble();
-        if (draw) {
-          dashed.addPath(metric.extractPath(distance, next), Offset.zero);
-        }
-        distance = next;
-        draw = !draw;
-      }
-    }
-    return dashed;
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.radius != radius;
   }
 }
 

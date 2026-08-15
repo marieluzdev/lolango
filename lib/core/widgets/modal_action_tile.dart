@@ -8,6 +8,7 @@ class ModalActionTile extends StatelessWidget {
     required this.textColor,
     required this.onTap,
     this.isDangerous = false,
+    this.backgroundColor,
   });
 
   final IconData icon;
@@ -15,12 +16,13 @@ class ModalActionTile extends StatelessWidget {
   final Color textColor;
   final VoidCallback onTap;
   final bool isDangerous;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = isDangerous 
+    final effectiveColor = backgroundColor ?? (isDangerous 
         ? Colors.red.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.04);
+        : Colors.black.withValues(alpha: 0.04));
     final effectiveTextColor = isDangerous ? Colors.red : textColor;
 
     return InkWell(
