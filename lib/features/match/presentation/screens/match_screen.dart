@@ -94,8 +94,11 @@ class MatchScreen extends ConsumerWidget {
               profile: p,
               onLike: () {
                 ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
+                  debugPrint('[MATCH] Like back profile: ${p.id}. isMatch: $isMatch');
+                  if (isMatch) {
+                    ref.invalidate(matchesProvider);
+                  }
                   ref.invalidate(pendingLikesProvider);
-                  ref.invalidate(matchesProvider);
                   ref.invalidate(interactedProfilesProvider);
                 });
               },

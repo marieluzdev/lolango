@@ -39,7 +39,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentUserAsync = ref.watch(currentUserProfileProvider);
 
     ref.listen<List<ProfileModel>>(filteredProfilesProvider, (prev, next) {
-      if (_cards.isEmpty || filterState.hashCode != _lastFilterHash) {
+      final filterChanged = filterState.hashCode != _lastFilterHash;
+      if (filterChanged) {
+        debugPrint('[HOME] Filter changed, resetting cards: ${next.length}');
         setState(() {
           _cards = List.from(next);
           _lastFilterHash = filterState.hashCode;
@@ -50,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_cards.isEmpty && _lastFilterHash == -1) {
       final initial = ref.read(filteredProfilesProvider);
       if (initial.isNotEmpty) {
+        debugPrint('[HOME] Initial load: ${initial.length} cards');
         _cards = List.from(initial);
         _lastFilterHash = filterState.hashCode;
       }
@@ -156,8 +159,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         controller: _swiperController,
                         cardsCount: _cards.length,
                         numberOfCardsDisplayed: _cards.length > 1 ? 2 : 1,
+                        isLoop: false,
                         cardBuilder:
                             (context, index, percentThresholdX, percentThresholdY) {
+                          if (index >= _cards.length) return const SizedBox.shrink();
                           final p = _cards[index];
                           return ProfileCard(
                             name: p.name,
@@ -168,17 +173,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             bio: p.bio,
                             socials: p.socials,
                             interests: p.interests,
-                            onPass: () => _swiperController
-                                .swipe(CardSwiperDirection.left),
-                            onConnect: () => _swiperController
-                                .swipe(CardSwiperDirection.right),
+                            onPass: () {
+                              _swiperController.swipe(CardSwiperDirection.left);
+                            },
+                            onConnect: () {
+                              _swiperController.swipe(CardSwiperDirection.right);
+                            },
                           );
                         },
                         onSwipe: (previousIndex, currentIndex, direction) {
+                          if (previousIndex >= _cards.length) return true;
                           final p = _cards[previousIndex];
-                          debugPrint('HomeScreen CardSwiper - onSwipe triggered for ${p.id}, direction: $direction');
-                          
-                          // Cacher immédiatement dans l'UI
+                          debugPrint('[HOME] onSwipe: ${p.id}, direction: $direction, cards remaining before: ${_cards.length}');
+
+                          // Retirer immédiatement la carte de la liste locale
+                          setState(() {
+                            _cards.removeAt(previousIndex);
+                          });
+
+                          // Cacher dans le provider (filtrage)
                           ref.read(hiddenProfilesProvider.notifier).update((state) {
                             final newState = Set<String>.from(state);
                             newState.add(p.id);
@@ -186,12 +199,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           });
 
                           if (direction == CardSwiperDirection.left) {
-                            ref.read(interactionRepositoryProvider).passProfile(p.id);
+                            ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
+                              ref.invalidate(interactedProfilesProvider);
+                            });
                           } else if (direction == CardSwiperDirection.right) {
                             ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
                               if (isMatch) {
+                                debugPrint('[HOME] Match found for ${p.id}! Incrementing badge.');
+                                ref.read(matchNotificationBadgeProvider.notifier).state++;
                                 ref.invalidate(matchesProvider);
                               }
+                              ref.invalidate(interactedProfilesProvider);
                             });
                           }
                           return true;

@@ -18,9 +18,10 @@ class DiscoveryRepository {
       }
       print('Profils récupérés: ${list.length}');
 
+      final currentUserId = client.auth.currentUser?.id;
       final ids = list
           .map((e) => e['id']?.toString())
-          .where((id) => id != null)
+          .where((id) => id != null && id != currentUserId)
           .cast<String>()
           .toList();
       print('IDs des profils: $ids');
@@ -87,7 +88,7 @@ class DiscoveryRepository {
       }
 
       // 5. Mapper chaque profil vers ProfileModel.
-      return list.map((e) {
+      return list.where((e) => ids.contains(e['id']?.toString())).map((e) {
         final m = Map<String, dynamic>.from(e as Map);
         final id = m['id']?.toString() ?? '';
         final model = ProfileModel.fromMap(

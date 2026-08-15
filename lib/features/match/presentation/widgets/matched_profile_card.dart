@@ -38,7 +38,6 @@ class MatchedProfileCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              flex: 3,
               child: profile.photoUrl != null
                   ? Image.network(
                       profile.photoUrl!,
@@ -49,58 +48,57 @@ class MatchedProfileCard extends StatelessWidget {
                       child: Icon(Icons.person, size: 48, color: Colors.grey.shade600),
                     ),
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${profile.name}${profile.age != null ? ', ${profile.age}' : ''}',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${profile.name}${profile.age != null ? ', ${profile.age}' : ''}',
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 8),
-                    if (profile.socials.isNotEmpty) ...[
-                      const Text(
-                        'Réseaux :',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 8,
-                        children: profile.socials.keys.take(3).map((social) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  if (profile.socials.isNotEmpty) ...[
+                    const Text(
+                      'Réseaux :',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: profile.socials.keys.take(3).map((social) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            social,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.primaryLight,
+                              fontWeight: FontWeight.w600,
                             ),
-                            child: Text(
-                              social,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: AppColors.primaryLight,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ] else ...[
-                      const Text(
-                        'Aucun réseau',
-                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                      ),
-                    ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ] else ...[
+                    const Text(
+                      'Aucun réseau',
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ],

@@ -149,16 +149,18 @@ class DiscoveryScreen extends ConsumerWidget {
                             interests: p.interests,
                             isGridMode: true,
                             onPass: () {
-                              debugPrint('DiscoveryScreen Grid - onPass clicked for ${p.id}');
+                              debugPrint('[DISCOVERY] Grid - onPass clicked for ${p.id}');
                               ref.read(hiddenProfilesProvider.notifier).update((state) {
                                 final newState = Set<String>.from(state);
                                 newState.add(p.id);
                                 return newState;
                               });
-                              ref.read(interactionRepositoryProvider).passProfile(p.id);
+                              ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
+                                ref.invalidate(interactedProfilesProvider);
+                              });
                             },
                             onConnect: () {
-                              debugPrint('DiscoveryScreen Grid - onConnect clicked for ${p.id}');
+                              debugPrint('[DISCOVERY] Grid - onConnect clicked for ${p.id}');
                               ref.read(hiddenProfilesProvider.notifier).update((state) {
                                 final newState = Set<String>.from(state);
                                 newState.add(p.id);
@@ -166,8 +168,11 @@ class DiscoveryScreen extends ConsumerWidget {
                               });
                               ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
                                 if (isMatch) {
+                                  debugPrint('[DISCOVERY] Match found! Incrementing badge.');
+                                  ref.read(matchNotificationBadgeProvider.notifier).state++;
                                   ref.invalidate(matchesProvider);
                                 }
+                                ref.invalidate(interactedProfilesProvider);
                               });
                             },
                             onTap: () {
@@ -240,12 +245,15 @@ class DiscoveryScreen extends ConsumerWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: () {
+                  debugPrint('[DISCOVERY] Modal - onPass clicked for ${p.id}');
                   ref.read(hiddenProfilesProvider.notifier).update((state) {
                     final newState = Set<String>.from(state);
                     newState.add(p.id);
                     return newState;
                   });
-                  ref.read(interactionRepositoryProvider).passProfile(p.id);
+                  ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
+                    ref.invalidate(interactedProfilesProvider);
+                  });
                   Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
@@ -263,6 +271,7 @@ class DiscoveryScreen extends ConsumerWidget {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
+                  debugPrint('[DISCOVERY] Modal - onConnect clicked for ${p.id}');
                   ref.read(hiddenProfilesProvider.notifier).update((state) {
                     final newState = Set<String>.from(state);
                     newState.add(p.id);
@@ -270,8 +279,11 @@ class DiscoveryScreen extends ConsumerWidget {
                   });
                   ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
                     if (isMatch) {
+                      debugPrint('[DISCOVERY] Match found! Incrementing badge.');
+                      ref.read(matchNotificationBadgeProvider.notifier).state++;
                       ref.invalidate(matchesProvider);
                     }
+                    ref.invalidate(interactedProfilesProvider);
                   });
                   Navigator.pop(context);
                 },
