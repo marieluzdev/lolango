@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'dart:ui';
 
 class BlurredProfileCard extends StatelessWidget {
-  final ProfileModel profile;
+  final DetailedProfileModel profile;
   final VoidCallback onLike;
 
   const BlurredProfileCard({
@@ -36,9 +36,9 @@ class BlurredProfileCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: profile.photoUrl != null
+            child: profile.primaryPhotoUrl != null
                 ? Image.network(
-                    profile.photoUrl!,
+                    profile.primaryPhotoUrl!,
                     fit: BoxFit.cover,
                   )
                 : Container(color: Colors.grey),

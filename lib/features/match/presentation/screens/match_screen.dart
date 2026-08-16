@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/core/models/profile_model.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/widgets/modal_action_tile.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_card.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/core/widgets/app_empty_state.dart';
+import 'package:lolango_v2/core/widgets/app_error_state.dart';
+import 'package:lolango_v2/core/widgets/app_loading.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
   const MatchScreen({super.key});
@@ -21,6 +25,25 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   int _tabIndex = 0;
 
   static const _tabs = ['Likes reçus', 'Matchs'];
+
+  // Dummy profile for skeleton
+  static final _dummyProfile = DetailedProfileModel(
+    profile: ProfileModel(
+      id: 'dummy',
+      authId: 'dummy',
+      name: 'Chargement',
+      username: '@loading',
+      age: 25,
+      gender: 'unknown',
+      city: 'Paris',
+      country: 'France',
+      bio: '...',
+      discoveryPreferences: [],
+    ),
+    photoUrls: ['https://via.placeholder.com/300'],
+    socials: {},
+    interests: [],
+  );
 
   @override
   void initState() {
@@ -37,7 +60,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
     final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     return Scaffold(
@@ -60,7 +82,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Segmented control — conteneur surface, onglet actif fond primary
+              // Segmented control
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(4),
@@ -109,17 +131,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
               const SizedBox(height: 16),
 
-              // IndexedStack — pas de flash, les deux tabs restent en mémoire
               Expanded(
                 child: IndexedStack(
                   index: _tabIndex,
                   children: [
-                    _buildPendingLikesTab(textPrimary),
-                    _buildMatchesTab(textPrimary),
+                    _buildPendingLikesTab(),
+                    _buildMatchesTab(),
                   ],
                 ),
               ),
-
             ],
           ),
         ),
@@ -127,84 +147,165 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     );
   }
 
-  Widget _buildPendingLikesTab(Color textColor) {
+  Widget _buildPendingLikesTab() {
     final pendingAsync = ref.watch(pendingLikesProvider);
 
-    return pendingAsync.when(
-      data: (likes) {
-        if (likes.isEmpty) {
-          return Center(
-            child: Text('Aucun like reçu pour le moment.', style: TextStyle(color: textColor)),
-          );
-        }
-        return GridView.builder(
-          key: const ValueKey('likes'),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.70,
-          ),
-          itemCount: likes.length,
-          itemBuilder: (context, index) {
-            final p = likes[index];
-            return BlurredProfileCard(
-              profile: p,
-              onLike: () {
-                ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
-                  debugPrint('[MATCH] Like back profile: ${p.id}. isMatch: $isMatch');
-                  if (isMatch) {
-                    ref.invalidate(matchesProvider);
-                  }
-                  ref.invalidate(pendingLikesProvider);
-                  ref.invalidate(interactedProfilesProvider);
-                });
-              },
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(pendingLikesProvider),
+      child: pendingAsync.when(
+        data: (likes) {
+          if (likes.isEmpty) {
+            return CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  child: AppEmptyState(
+                    icon: LucideIcons.heart,
+                    title: 'Aucun like',
+                    description: 'Tu n\'as pas encore reçu de like. Continue de swiper !',
+                  ),
+                ),
+              ],
             );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Erreur: $e')),
+          }
+          return GridView.builder(
+            key: const ValueKey('likes'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.70,
+            ),
+            itemCount: likes.length,
+            itemBuilder: (context, index) {
+              final p = likes[index];
+              return BlurredProfileCard(
+                profile: p,
+                onLike: () {
+                  ref.read(interactionRepositoryProvider).likeProfile(p.profile.id).then((isMatch) {
+                    debugPrint('[MATCH] Like back profile: ${p.profile.id}. isMatch: $isMatch');
+                    if (isMatch) {
+                      ref.invalidate(matchesProvider);
+                    }
+                    ref.invalidate(pendingLikesProvider);
+                    ref.invalidate(interactedProfilesProvider);
+                  });
+                },
+              );
+            },
+          );
+        },
+        loading: () => AppLoading(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.70,
+            ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return BlurredProfileCard(
+                profile: _dummyProfile,
+                onLike: () {},
+              );
+            },
+          ),
+        ),
+        error: (e, st) => CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              child: AppErrorState(
+                message: "Impossible de charger les likes.",
+                onRetry: () => ref.invalidate(pendingLikesProvider),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildMatchesTab(Color textColor) {
+  Widget _buildMatchesTab() {
     final matchesAsync = ref.watch(matchesProvider);
 
-    return matchesAsync.when(
-      data: (matches) {
-        if (matches.isEmpty) {
-          return Center(
-            child: Text('Aucun match pour le moment.', style: TextStyle(color: textColor)),
-          );
-        }
-        return GridView.builder(
-          key: const ValueKey('matches'),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.70,
-          ),
-          itemCount: matches.length,
-          itemBuilder: (context, index) {
-            final p = matches[index];
-            return MatchedProfileCard(
-              profile: p,
-              onTap: () {
-                _showSocialsModal(context, p);
-              },
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(matchesProvider),
+      child: matchesAsync.when(
+        data: (matches) {
+          if (matches.isEmpty) {
+            return CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  child: AppEmptyState(
+                    icon: LucideIcons.messageCircleHeart,
+                    title: 'Aucun match',
+                    description: 'Les matchs apparaîtront ici quand l\'intérêt sera mutuel.',
+                  ),
+                ),
+              ],
             );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('Erreur: $e')),
+          }
+          return GridView.builder(
+            key: const ValueKey('matches'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.70,
+            ),
+            itemCount: matches.length,
+            itemBuilder: (context, index) {
+              final p = matches[index];
+              return MatchedProfileCard(
+                profile: p,
+                onTap: () {
+                  _showSocialsModal(context, p);
+                },
+              );
+            },
+          );
+        },
+        loading: () => AppLoading(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.70,
+            ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return MatchedProfileCard(
+                profile: _dummyProfile,
+                onTap: () {},
+              );
+            },
+          ),
+        ),
+        error: (e, st) => CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              child: AppErrorState(
+                message: "Impossible de charger les matchs.",
+                onRetry: () => ref.invalidate(matchesProvider),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _showSocialsModal(BuildContext context, ProfileModel p) {
+  void _showSocialsModal(BuildContext context, DetailedProfileModel pDetailed) {
+    final p = pDetailed.profile;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;

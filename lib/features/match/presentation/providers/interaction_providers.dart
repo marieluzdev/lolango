@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:lolango_v2/core/supabase/supabase_client.dart';
 import 'package:lolango_v2/features/match/data/interaction_repository.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 
 final interactionRepositoryProvider = Provider<InteractionRepository>((ref) {
-  return InteractionRepository(Supabase.instance.client);
+  return InteractionRepository(ref.watch(supabaseProvider));
 });
 
 final interactedProfilesProvider = FutureProvider<List<String>>((ref) async {
@@ -12,12 +12,12 @@ final interactedProfilesProvider = FutureProvider<List<String>>((ref) async {
   return repo.getInteractedProfileIds();
 });
 
-final pendingLikesProvider = FutureProvider<List<ProfileModel>>((ref) async {
+final pendingLikesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
   final repo = ref.read(interactionRepositoryProvider);
   return repo.getPendingLikes();
 });
 
-final matchesProvider = FutureProvider<List<ProfileModel>>((ref) async {
+final matchesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
   final repo = ref.read(interactionRepositoryProvider);
   return repo.getMatches();
 });

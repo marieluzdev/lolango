@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
-import 'package:lolango_v2/features/discovery/data/discovery_repository.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
+import 'package:lolango_v2/core/errors/failures.dart';
 
 class InteractionRepository {
   final SupabaseClient _client;
@@ -10,44 +10,37 @@ class InteractionRepository {
 
   String get _currentUserId {
     final user = _client.auth.currentUser;
-    if (user == null) throw Exception("User not logged in");
+    if (user == null) throw const AuthFailure("User not logged in");
     return user.id;
   }
 
   Future<List<String>> getInteractedProfileIds() async {
     try {
-      debugPrint('[INTERACTION] Fetching interacted profile IDs for $_currentUserId');
       final res = await _client
           .from('interactions')
           .select('target_id')
           .eq('user_id', _currentUserId);
-      final ids = (res as List).map((row) => row['target_id'] as String).toList();
-      debugPrint('[INTERACTION] Interacted IDs: $ids');
-      return ids;
+      return (res as List).map((row) => row['target_id'] as String).toList();
     } catch (e) {
-      debugPrint('[INTERACTION] Erreur getInteractedProfileIds: $e');
-      return [];
+      throw Failure.from(e);
     }
   }
 
   Future<void> passProfile(String targetId) async {
     try {
-      debugPrint('[PASS] Passing profile: $targetId');
       await _client.from('interactions').upsert({
         'user_id': _currentUserId,
         'target_id': targetId,
         'status': 'pass',
         'created_at': DateTime.now().toIso8601String(),
       });
-      debugPrint('[PASS] Successfully passed profile $targetId');
     } catch (e) {
-      debugPrint('[PASS] Erreur passProfile: $e');
+      throw Failure.from(e);
     }
   }
 
   Future<bool> likeProfile(String targetId) async {
     try {
-      debugPrint('[LIKE] Liking profile: $targetId');
       await _client.from('interactions').upsert({
         'user_id': _currentUserId,
         'target_id': targetId,
@@ -64,7 +57,6 @@ class InteractionRepository {
           .maybeSingle();
 
       if (checkRes != null) {
-        debugPrint('[MATCH] Match found with $targetId ! Creating match record.');
         await _client.from('matches').insert({
           'user1_id': _currentUserId,
           'user2_id': targetId,
@@ -88,7 +80,6 @@ class InteractionRepository {
         return true;
       } else {
         // Notification for the liked user
-        debugPrint('[LIKE] No match yet. Sending notification to $targetId.');
         await _client.from('notifications').insert({
           'user_id': targetId,
           'title': "Quelqu'un s'intéresse à toi",
@@ -97,14 +88,69 @@ class InteractionRepository {
       }
       return false;
     } catch (e) {
-      debugPrint('[LIKE] Erreur likeProfile: $e');
-      return false;
+      throw Failure.from(e);
     }
   }
 
-  Future<List<ProfileModel>> getPendingLikes() async {
+  Future<List<DetailedProfileModel>> _fetchDetailedProfilesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final results = await Future.wait([
+      _client.from('profiles').select().inFilter('id', ids),
+      _client.from('profile_photos').select().inFilter('user_id', ids).order('position', ascending: true),
+      _client.from('profile_socials').select().inFilter('user_id', ids),
+      _client.from('profile_interests').select('user_id, interests(name)').inFilter('user_id', ids),
+    ]);
+
+    final profilesRes = results[0] as List<dynamic>;
+    final photosRes = results[1] as List<dynamic>;
+    final socialsRes = results[2] as List<dynamic>;
+    final interestsRes = results[3] as List<dynamic>;
+
+    final Map<String, List<String>> photosByUser = {};
+    for (final row in photosRes) {
+      final userId = row['user_id']?.toString();
+      final url = row['url']?.toString();
+      if (userId != null && url != null && url.isNotEmpty) {
+        photosByUser.putIfAbsent(userId, () => []).add(url);
+      }
+    }
+
+    final Map<String, Map<String, String>> socialsByUser = {};
+    for (final row in socialsRes) {
+      final userId = row['user_id']?.toString();
+      final platform = row['platform']?.toString();
+      final username = row['username']?.toString();
+      if (userId != null && platform != null && username != null) {
+        socialsByUser.putIfAbsent(userId, () => {})[platform] = username;
+      }
+    }
+
+    final Map<String, List<String>> interestsByUser = {};
+    for (final row in interestsRes) {
+      final userId = row['user_id']?.toString();
+      final interest = row['interests'];
+      if (userId != null && interest is Map<String, dynamic>) {
+        final name = interest['name']?.toString();
+        if (name != null && name.trim().isNotEmpty) {
+          interestsByUser.putIfAbsent(userId, () => []).add(name.trim());
+        }
+      }
+    }
+
+    return profilesRes.map((e) {
+      final m = Map<String, dynamic>.from(e as Map);
+      final id = m['id']?.toString() ?? '';
+      return DetailedProfileModel.fromMap(
+        m,
+        socialsOverride: socialsByUser[id],
+        photoUrlsOverride: photosByUser[id],
+        interestsOverride: interestsByUser[id],
+      );
+    }).toList();
+  }
+
+  Future<List<DetailedProfileModel>> getPendingLikes() async {
     try {
-      debugPrint('[INTERACTION] Fetching pending likes for $_currentUserId');
       final likesRes = await _client
           .from('interactions')
           .select('user_id')
@@ -128,19 +174,14 @@ class InteractionRepository {
       
       if (pendingLikerIds.isEmpty) return [];
       
-      final DiscoveryRepository discRepo = DiscoveryRepository(_client);
-      final allProfiles = await discRepo.fetchProfiles();
-      
-      return allProfiles.where((p) => pendingLikerIds.contains(p.id)).toList();
+      return await _fetchDetailedProfilesByIds(pendingLikerIds);
     } catch (e) {
-      debugPrint('[INTERACTION] Erreur getPendingLikes: $e');
-      return [];
+      throw Failure.from(e);
     }
   }
   
-  Future<List<ProfileModel>> getMatches() async {
+  Future<List<DetailedProfileModel>> getMatches() async {
     try {
-      debugPrint('[INTERACTION] Fetching matches for $_currentUserId');
       final matchesRes = await _client
           .from('matches')
           .select('user1_id, user2_id')
@@ -152,13 +193,9 @@ class InteractionRepository {
       
       if (matchedIds.isEmpty) return [];
       
-      final DiscoveryRepository discRepo = DiscoveryRepository(_client);
-      final allProfiles = await discRepo.fetchProfiles();
-      
-      return allProfiles.where((p) => matchedIds.contains(p.id)).toList();
+      return await _fetchDetailedProfilesByIds(matchedIds.cast<String>());
     } catch (e) {
-      debugPrint('[INTERACTION] Erreur getMatches: $e');
-      return [];
+      throw Failure.from(e);
     }
   }
 }

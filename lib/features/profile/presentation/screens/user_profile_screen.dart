@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.dart';
@@ -20,7 +21,7 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
-  Map<String, dynamic>? _profile;
+  DetailedProfileModel? _profile;
   bool _isLoading = true;
 
   @override
@@ -49,7 +50,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final textPrimary =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
-    final title = widget.userName ?? _profile?['first_name'] as String? ?? 'Profil';
+    final title = widget.userName ?? _profile?.profile.name ?? 'Profil';
 
     return Scaffold(
       backgroundColor: background,
@@ -69,7 +70,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _profile == null || _profile!.isEmpty
+          : _profile == null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -101,70 +102,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 
   Widget _buildProfileCard() {
-    final p = _profile!;
-    final firstName = (p['first_name'] as String?) ?? 'Prénom';
-    final city = p['location_label'] as String?;
-    final bio = p['bio'] as String?;
-
-    // Socials
-    final socialsList =
-        (p['socials'] as List<dynamic>? ?? <dynamic>[]);
-    final Map<String, String> socialsMap = {};
-    for (final item in socialsList) {
-      if (item is Map<String, dynamic>) {
-        final platform = item['platform'] as String?;
-        final username = item['username'] as String?;
-        if (platform != null &&
-            username != null &&
-            platform.isNotEmpty) {
-          socialsMap[platform] = username;
-        }
-      }
-    }
-
-    // Interests
-    final interests =
-        (p['interests'] as List<dynamic>? ?? <dynamic>[])
-            .map((e) => e.toString())
-            .toList();
-
-    // Photos
-    final photosList =
-        p['photos'] as List<dynamic>? ?? <dynamic>[];
-    final photoUrls = <String>[];
-    for (final photo in photosList) {
-      if (photo is Map<String, dynamic>) {
-        final url = photo['url'] as String?;
-        if (url != null && url.isNotEmpty) photoUrls.add(url);
-      } else if (photo is String && photo.isNotEmpty) {
-        photoUrls.add(photo);
-      }
-    }
-
-    // Age
-    int? age;
-    final birthDateRaw = p['birth_date'];
-    if (birthDateRaw is String && birthDateRaw.isNotEmpty) {
-      try {
-        final birthDate = DateTime.parse(birthDateRaw);
-        final now = DateTime.now();
-        age = now.year - birthDate.year;
-        if (now.month < birthDate.month ||
-            (now.month == birthDate.month &&
-                now.day < birthDate.day)) {
-          age -= 1;
-        }
-      } catch (_) {}
-    }
+    final detailedP = _profile!;
+    final p = detailedP.profile;
 
     return ProfileCard(
-      name: firstName,
-      age: age,
-      city: city,
-      photoUrls: photoUrls,
-      bio: bio,
-      socials: socialsMap,
-      interests: interests,
+      name: p.name,
+      age: p.age,
+      city: p.city,
+      photoUrls: detailedP.photoUrls,
+      bio: p.bio,
+      socials: detailedP.socials,
+      interests: detailedP.interests,
       showActionButtons: false,
     );
   }

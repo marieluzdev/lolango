@@ -5,56 +5,30 @@ import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.
 import 'package:lolango_v2/features/discovery/presentation/widgets/filter_modal.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 import 'package:lolango_v2/features/discovery/presentation/providers/discovery_providers.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/features/discovery/presentation/providers/discovery_filter_init_provider.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
-
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
+import 'package:lolango_v2/core/widgets/app_empty_state.dart';
+import 'package:lolango_v2/core/widgets/app_error_state.dart';
+import 'package:lolango_v2/core/widgets/app_loading.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DiscoveryScreen extends ConsumerWidget {
   const DiscoveryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Écoute de l'initialisation du filtre (sans effet direct sur le rendu local)
+    ref.watch(discoveryFilterInitProvider);
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
     final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final border = isDark ? AppColors.borderDark : AppColors.borderLight;
 
-    final filtered = ref.watch(filteredProfilesProvider);
+    final filteredAsync = ref.watch(filteredProfilesProvider);
     final filterState = ref.watch(discoveryFilterProvider);
-    final currentUserAsync = ref.watch(currentUserProfileProvider);
-
-    // Initialisation du filtre depuis les préférences onboarding.
-    currentUserAsync.whenData((userMap) {
-      try {
-        if (userMap != null) {
-          final prefs = (userMap['discovery_preferences'] is List)
-              ? List<String>.from(userMap['discovery_preferences'])
-              : <String>[];
-          final isDefault = filterState.ageRange.start == 18 &&
-              filterState.ageRange.end == 80 &&
-              filterState.gender == null &&
-              (filterState.city == null || filterState.city == '') &&
-              filterState.socials.isEmpty;
-          if (prefs.isNotEmpty && isDefault) {
-            final first = prefs.first.toLowerCase();
-            String? mapped;
-            if (first.contains('fem')) { mapped = 'female'; }
-            else if (first.contains('hom')) { mapped = 'male'; }
-            if (mapped != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
-                  ageRange: filterState.ageRange,
-                  gender: mapped,
-                  city: filterState.city,
-                  socials: filterState.socials,
-                );
-              });
-            }
-          }
-        }
-      } catch (_) {}
-    });
 
     return Scaffold(
       backgroundColor: background,
@@ -78,15 +52,12 @@ class DiscoveryScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () async {
                       final surfaceColor = Theme.of(context).cardColor;
-                      final textColor =
-                          Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+                      final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
-                      final userMap = ref.read(currentUserProfileProvider).value;
+                      final userProfile = ref.read(profileProvider).value;
                       String? userCity;
-                      if (userMap != null) {
-                        userCity = (userMap['location_label'] as String?) ??
-                            (userMap['city'] as String?) ??
-                            (userMap['location'] as String?);
+                      if (userProfile != null) {
+                        userCity = userProfile.profile.city;
                       }
 
                       final initial = DiscoveryFilter(
@@ -113,23 +84,45 @@ class DiscoveryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: filtered.isEmpty
-                    ? Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: border),
-                        ),
-                        child: Text(
-                          'Aucun profil trouvé selon les filtres.',
-                          style: TextStyle(color: textPrimary, fontSize: 16),
-                        ),
-                      )
-                    : GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(allProfilesProvider);
+                    ref.invalidate(interactedProfilesProvider);
+                  },
+                  child: filteredAsync.when(
+                    loading: () => const AppSpinner(),
+                    error: (error, _) => AppErrorState(
+                      message: "Erreur lors du chargement des profils.",
+                      onRetry: () {
+                        ref.invalidate(allProfilesProvider);
+                        ref.invalidate(interactedProfilesProvider);
+                      },
+                    ),
+                    data: (filtered) {
+                      if (filtered.isEmpty) {
+                        return CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverFillRemaining(
+                              child: AppEmptyState(
+                                icon: LucideIcons.users,
+                                title: 'Aucun profil',
+                                description: 'Aucun profil trouvé selon les filtres actuels.',
+                                actionLabel: 'Réinitialiser',
+                                onAction: () {
+                                  ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
+                                    ageRange: const RangeValues(18, 80),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return GridView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
@@ -139,36 +132,33 @@ class DiscoveryScreen extends ConsumerWidget {
                         itemBuilder: (context, i) {
                           final p = filtered[i];
                           return ProfileCard(
-                            name: p.name,
-                            age: p.age,
-                            city: p.city,
-                            country: p.country,
+                            name: p.profile.name,
+                            age: p.profile.age,
+                            city: p.profile.city,
+                            country: p.profile.country,
                             photoUrls: p.photoUrls,
-                            bio: p.bio,
+                            bio: p.profile.bio,
                             socials: p.socials,
                             interests: p.interests,
                             isGridMode: true,
                             onPass: () {
-                              debugPrint('[DISCOVERY] Grid - onPass clicked for ${p.id}');
                               ref.read(hiddenProfilesProvider.notifier).update((state) {
                                 final newState = Set<String>.from(state);
-                                newState.add(p.id);
+                                newState.add(p.profile.id);
                                 return newState;
                               });
-                              ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
+                              ref.read(interactionRepositoryProvider).passProfile(p.profile.id).then((_) {
                                 ref.invalidate(interactedProfilesProvider);
                               });
                             },
                             onConnect: () {
-                              debugPrint('[DISCOVERY] Grid - onConnect clicked for ${p.id}');
                               ref.read(hiddenProfilesProvider.notifier).update((state) {
                                 final newState = Set<String>.from(state);
-                                newState.add(p.id);
+                                newState.add(p.profile.id);
                                 return newState;
                               });
-                              ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
+                              ref.read(interactionRepositoryProvider).likeProfile(p.profile.id).then((isMatch) {
                                 if (isMatch) {
-                                  debugPrint('[DISCOVERY] Match found! Incrementing badge.');
                                   ref.read(matchNotificationBadgeProvider.notifier).state++;
                                   ref.invalidate(matchesProvider);
                                 }
@@ -176,12 +166,14 @@ class DiscoveryScreen extends ConsumerWidget {
                               });
                             },
                             onTap: () {
-                              _showActionModal(context, ref, p,
-                                  theme: Theme.of(context));
+                              _showActionModal(context, ref, p, theme: Theme.of(context));
                             },
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -190,15 +182,17 @@ class DiscoveryScreen extends ConsumerWidget {
     );
   }
 
-  void _showActionModal(BuildContext context, WidgetRef ref, ProfileModel p,
+  void _showActionModal(BuildContext context, WidgetRef ref, DetailedProfileModel pDetailed,
       {required ThemeData theme}) {
+    final p = pDetailed.profile;
+    final socials = pDetailed.socials;
+
     showReusableModalBottomSheet(
       context: context,
       title: p.name,
       surface: theme.cardColor,
       textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
       children: [
-        // Description
         if (p.bio != null && p.bio!.isNotEmpty) ...[
           Text(
             p.bio!,
@@ -207,14 +201,13 @@ class DiscoveryScreen extends ConsumerWidget {
           const SizedBox(height: 20),
         ],
 
-        // Réseaux sociaux
-        if (p.socials.isNotEmpty) ...[
+        if (socials.isNotEmpty) ...[
           const Text(
             'Réseaux sociaux',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          ...p.socials.entries.map((e) {
+          ...socials.entries.map((e) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _SocialRow(
@@ -239,13 +232,11 @@ class DiscoveryScreen extends ConsumerWidget {
           ),
         ],
 
-        // Boutons X et Like
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
                 onPressed: () {
-                  debugPrint('[DISCOVERY] Modal - onPass clicked for ${p.id}');
                   ref.read(hiddenProfilesProvider.notifier).update((state) {
                     final newState = Set<String>.from(state);
                     newState.add(p.id);
@@ -271,7 +262,6 @@ class DiscoveryScreen extends ConsumerWidget {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  debugPrint('[DISCOVERY] Modal - onConnect clicked for ${p.id}');
                   ref.read(hiddenProfilesProvider.notifier).update((state) {
                     final newState = Set<String>.from(state);
                     newState.add(p.id);
@@ -279,7 +269,6 @@ class DiscoveryScreen extends ConsumerWidget {
                   });
                   ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
                     if (isMatch) {
-                      debugPrint('[DISCOVERY] Match found! Incrementing badge.');
                       ref.read(matchNotificationBadgeProvider.notifier).state++;
                       ref.invalidate(matchesProvider);
                     }
@@ -323,9 +312,6 @@ class DiscoveryScreen extends ConsumerWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Ligne de réseau social avec design par plateforme
-// ---------------------------------------------------------------------------
 class _SocialRow extends StatelessWidget {
   const _SocialRow({
     required this.platform,

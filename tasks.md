@@ -45,3 +45,13 @@
 - Le schéma Supabase ajoute `fcm_token` et une table `notifications` pour déclencher l’envoi.
 - L’Edge Function `supabase/functions/send-push/index.ts` lit l’INSERT sur `notifications`, récupère le `fcm_token` du destinataire et appelle l’API FCM v1 avec un access token Google OAuth2.
 - Prévoir l’ajout des secrets Supabase : `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `FIREBASE_SERVICE_ACCOUNT`.
+
+## Refactoring : Bonnes Pratiques Flutter Modernes
+
+- [ ] **Phase 1 : Core** (Fondations et infrastructure : lints, erreurs, logger, debouncer, extensions, widgets réutilisables, thème)
+- [ ] **Phase 2 : Data** (Repositories et modèles : modèles typés, factorisation requêtes, pagination)
+- [ ] **Phase 3 : Providers** (Riverpod propre : nettoyage Supabase direct, cache, initialisation filtre)
+- [ ] **Phase 4 : Présentation** (UI et états : décomposition God Widgets, empty/error/loading states)
+- [ ] **Phase 5 : Performance et cache** (CachedNetworkImage, debounce, invalidations)
+- [ ] **Phase 6 : Qualité et polish** (Format, analyse, nettoyage des print et code mort)
+- [ ] **Phase 7 : Tests unitaires et widgets** (Erreurs, debouncer, repositories, widgets réutilisables)

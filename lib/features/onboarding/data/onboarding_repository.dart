@@ -1,8 +1,10 @@
 import 'dart:convert';
-
 import 'package:image_picker/image_picker.dart';
+import 'package:lolango_v2/core/errors/failures.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class OnboardingRepository {
   final SupabaseClient supabase;
@@ -21,8 +23,9 @@ class OnboardingRepository {
           .limit(1);
 
       return (result as List).isEmpty;
-    } catch (_) {
-      return true;
+    } catch (e) {
+      AppLogger.e('Error checking username', e);
+      return false;
     }
   }
 
@@ -62,15 +65,17 @@ class OnboardingRepository {
           "Le bucket Supabase Storage 'profile-photos' est introuvable. Créez-le dans Supabase > Storage > New bucket, puis réessayez.",
         );
       }
-      rethrow;
+      throw Failure.from(error);
+    } catch (e) {
+      throw Failure.from(e);
     }
   }
 
   Future<void> saveProfile(Map<String, dynamic> payload) async {
     final user = supabase.auth.currentUser;
     if (user == null) {
-      print('DEBUG onboarding repo: no authenticated user');
-      throw StateError('Aucun utilisateur connecté.');
+      AppLogger.w('onboarding repo: no authenticated user');
+      throw const AuthFailure('Aucun utilisateur connecté.');
     }
 
     final profilePayload = {
@@ -89,16 +94,14 @@ class OnboardingRepository {
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
-    print('DEBUG onboarding repo: userId=${user.id}');
-    print('DEBUG onboarding repo: profilePayload=${profilePayload}');
+    AppLogger.d('onboarding repo: userId=${user.id}');
 
     try {
-      print('DEBUG onboarding repo: start profiles upsert');
+      AppLogger.d('onboarding repo: start profiles upsert');
       await supabase.from('profiles').upsert(profilePayload, onConflict: 'id');
-      print('DEBUG onboarding repo: profiles upsert done');
 
       final photos = payload['photos'] as List<dynamic>? ?? const [];
-      print('DEBUG onboarding repo: photosCount=${photos.length}');
+      AppLogger.d('onboarding repo: photosCount=${photos.length}');
       await supabase.from('profile_photos').delete().eq('user_id', user.id);
       if (photos.isNotEmpty) {
         final photoRows = List.generate(photos.length, (index) {
@@ -110,14 +113,11 @@ class OnboardingRepository {
             'position': index,
           };
         });
-
-        print('DEBUG onboarding repo: inserting photoRows=${photoRows.length}');
         await supabase.from('profile_photos').insert(photoRows);
-        print('DEBUG onboarding repo: photo insert done');
       }
 
       final socials = payload['social_links'] as Map<String, dynamic>? ?? const {};
-      print('DEBUG onboarding repo: socialsCount=${socials.length}');
+      AppLogger.d('onboarding repo: socialsCount=${socials.length}');
       await supabase.from('profile_socials').delete().eq('user_id', user.id);
       if (socials.isNotEmpty) {
         final socialRows = socials.entries
@@ -129,15 +129,13 @@ class OnboardingRepository {
                 })
             .toList();
 
-        print('DEBUG onboarding repo: inserting socialRows=${socialRows.length}');
         if (socialRows.isNotEmpty) {
           await supabase.from('profile_socials').insert(socialRows);
-          print('DEBUG onboarding repo: social insert done');
         }
       }
 
       final selectedInterests = payload['selected_interests'] as List<dynamic>? ?? const [];
-      print('DEBUG onboarding repo: selectedInterestsCount=${selectedInterests.length}');
+      AppLogger.d('onboarding repo: selectedInterestsCount=${selectedInterests.length}');
       await supabase.from('profile_interests').delete().eq('user_id', user.id);
       if (selectedInterests.isNotEmpty) {
         final names = selectedInterests.map((item) => item.toString()).toSet();
@@ -148,8 +146,6 @@ class OnboardingRepository {
             .map((entry) => entry['id'] as String)
             .toList();
 
-        print('DEBUG onboarding repo: matchedInterestIds=${interestIds.length}');
-
         if (interestIds.isNotEmpty) {
           final profileInterestRows = interestIds
               .map((interestId) => {
@@ -158,20 +154,16 @@ class OnboardingRepository {
                   })
               .toList();
 
-          print('DEBUG onboarding repo: inserting profileInterestRows=${profileInterestRows.length}');
           await supabase.from('profile_interests').insert(profileInterestRows);
-          print('DEBUG onboarding repo: profile_interests insert done');
         }
       }
 
-      print('DEBUG onboarding repo: saveProfile success');
+      AppLogger.d('onboarding repo: saveProfile success');
     } catch (error, stackTrace) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('draft_onboarding', jsonEncode(profilePayload));
-      print('DEBUG onboarding repo: saveProfile failed');
-      print('DEBUG onboarding repo: error=$error');
-      print('DEBUG onboarding repo: stackTrace=$stackTrace');
-      rethrow;
+      AppLogger.e('onboarding repo: saveProfile failed', error, stackTrace);
+      throw Failure.from(error);
     }
   }
 

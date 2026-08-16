@@ -1,6 +1,7 @@
 class ProfileModel {
   final String id;
   final String name;
+  final String username;
   final int? age;
   final String? city;
   final String? country;
@@ -9,10 +10,12 @@ class ProfileModel {
   final List<String> photoUrls;
   final Map<String, String> socials;
   final List<String> interests;
+  final List<String> discoveryPreferences;
 
   ProfileModel({
     required this.id,
     required this.name,
+    this.username = '',
     this.age,
     this.city,
     this.country,
@@ -21,9 +24,11 @@ class ProfileModel {
     List<String>? photoUrls,
     Map<String, String>? socials,
     List<String>? interests,
+    List<String>? discoveryPreferences,
   })  : photoUrls = photoUrls ?? [],
         socials = socials ?? {},
-        interests = interests ?? [];
+        interests = interests ?? [],
+        discoveryPreferences = discoveryPreferences ?? [];
 
   /// Getter de compatibilité — retourne la première photo ou null.
   String? get photoUrl => photoUrls.isNotEmpty ? photoUrls.first : null;
@@ -55,6 +60,13 @@ class ProfileModel {
           }
         } catch (_) {}
       }
+    }
+
+    // discovery_preferences
+    List<String> prefs = [];
+    final rawPrefs = m['discovery_preferences'];
+    if (rawPrefs is List) {
+      prefs = rawPrefs.map((e) => e.toString()).toList();
     }
 
     // Photos : depuis l'override injecté par le repository, sinon depuis la map.
@@ -105,6 +117,7 @@ class ProfileModel {
           m['display_name']?.toString() ??
           m['name']?.toString() ??
           'Nom',
+      username: m['username']?.toString() ?? '',
       age: age,
       city: m['location_label']?.toString() ?? m['city']?.toString(),
       country: m['country']?.toString(),
@@ -113,6 +126,7 @@ class ProfileModel {
       photoUrls: photoUrls,
       socials: socials,
       interests: interests,
+      discoveryPreferences: prefs,
     );
   }
 }

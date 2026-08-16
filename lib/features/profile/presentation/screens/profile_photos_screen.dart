@@ -30,17 +30,7 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
   Future<void> _loadPhotos() async {
     setState(() => _isLoading = true);
     final profile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
-    final photos = (profile['photos'] as List<dynamic>? ?? const <dynamic>[]);
-    
-    final photoUrls = <String>[];
-    for (final photo in photos) {
-      if (photo is Map<String, dynamic>) {
-        final url = photo['url'] as String?;
-        if (url != null && url.isNotEmpty) photoUrls.add(url);
-      } else if (photo is String && photo.isNotEmpty) {
-        photoUrls.add(photo);
-      }
-    }
+    final photoUrls = profile?.photoUrls ?? <String>[];
 
     if (mounted) {
       setState(() {

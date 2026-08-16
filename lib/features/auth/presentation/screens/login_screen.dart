@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/google_account_bottom_sheet.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/core/widgets/app_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -186,60 +187,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // ==================================================
                       // BOUTON GOOGLE
                       // ==================================================
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleGoogleSignIn,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: surface,
-                            foregroundColor: textPrimary,
-                            disabledBackgroundColor: surface,
-                            disabledForegroundColor: textPrimary.withValues(
-                              alpha: 0.5,
-                            ),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(color: borderColor, width: 1),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_isLoading)
-                                SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      primary,
-                                    ),
-                                  ),
-                                )
-                              else
-                                Image.asset(
-                                  'assets/icons/google.png',
-                                  width: 22,
-                                  height: 22,
-                                ),
-
-                              const SizedBox(width: 12),
-
-                              Text(
-                                _isLoading
-                                    ? 'Connexion en cours…'
-                                    : 'Continuer avec Google',
-                                style: TextStyle(
-                                  fontSize: 15.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
+                      AppButton(
+                        label: 'Continuer avec Google',
+                        onPressed: _isLoading ? null : _handleGoogleSignIn,
+                        isLoading: _isLoading,
+                        isFullWidth: true,
+                        type: AppButtonType.outline,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        prefixWidget: Image.asset(
+                          'assets/icons/google.png',
+                          width: 22,
+                          height: 22,
                         ),
                       ),
 

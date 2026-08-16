@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
+import 'package:lolango_v2/core/errors/failures.dart';
+import 'package:lolango_v2/core/supabase/supabase_client.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
-  return ProfileRepository(Supabase.instance.client);
+  return ProfileRepository(ref.watch(supabaseProvider));
 });
 
 class ProfileRepository {
@@ -46,93 +49,37 @@ class ProfileRepository {
     }
   }
 
-  Future<Map<String, dynamic>> fetchDetailedProfileById(String userId) async {
-    final profile = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
+  Future<DetailedProfileModel?> fetchDetailedProfileById(String userId) async {
+    try {
+      final results = await Future.wait([
+        supabase.from('profiles').select().eq('id', userId).maybeSingle(),
+        supabase.from('profile_photos').select().eq('user_id', userId).order('position', ascending: true),
+        supabase.from('profile_socials').select().eq('user_id', userId),
+        supabase.from('profile_interests').select('interest_id, interests(name)').eq('user_id', userId),
+      ]);
 
-    final photos = await supabase
-        .from('profile_photos')
-        .select()
-        .eq('user_id', userId)
-        .order('position', ascending: true);
+      final profile = results[0] as Map<String, dynamic>?;
+      if (profile == null) return null;
 
-    final socials = await supabase
-        .from('profile_socials')
-        .select()
-        .eq('user_id', userId);
+      final photos = results[1] as List<dynamic>? ?? [];
+      final socials = results[2] as List<dynamic>? ?? [];
+      final interestRecords = results[3] as List<dynamic>? ?? [];
 
-    final interestRecords = await supabase
-        .from('profile_interests')
-        .select('interest_id, interests(name)')
-        .eq('user_id', userId);
-
-    final interests = <String>[];
-    for (final item in (interestRecords as List<dynamic>? ?? <dynamic>[])) {
-      final dynamic interest = item['interests'];
-      if (interest is Map<String, dynamic>) {
-        final name = interest['name'];
-        if (name is String && name.trim().isNotEmpty) {
-          interests.add(name);
-        }
-      }
+      return DetailedProfileModel.fromMap({
+        ...profile,
+        'photos': photos,
+        'socials': socials,
+        'interests': interestRecords,
+      });
+    } catch (e) {
+      throw Failure.from(e);
     }
-
-    return {
-      ...(profile ?? <String, dynamic>{}),
-      'photos': photos,
-      'socials': socials,
-      'interests': interests,
-    };
   }
 
-  Future<Map<String, dynamic>> fetchDetailedProfile() async {
+  Future<DetailedProfileModel?> fetchDetailedProfile() async {
     final user = supabase.auth.currentUser;
-    if (user == null) {
-      return {};
-    }
-
-    final profile = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .maybeSingle();
-
-    final photos = await supabase
-        .from('profile_photos')
-        .select()
-        .eq('user_id', user.id)
-        .order('position', ascending: true);
-
-    final socials = await supabase
-        .from('profile_socials')
-        .select()
-        .eq('user_id', user.id);
-
-    final interestRecords = await supabase
-        .from('profile_interests')
-        .select('interest_id, interests(name)')
-        .eq('user_id', user.id);
-
-    final interests = <String>[];
-    for (final item in (interestRecords as List<dynamic>? ?? <dynamic>[])) {
-      final dynamic interest = item['interests'];
-      if (interest is Map<String, dynamic>) {
-        final name = interest['name'];
-        if (name is String && name.trim().isNotEmpty) {
-          interests.add(name);
-        }
-      }
-    }
-
-    return {
-      ...(profile ?? <String, dynamic>{}),
-      'photos': photos,
-      'socials': socials,
-      'interests': interests,
-    };
+    if (user == null) return null;
+    return fetchDetailedProfileById(user.id);
   }
 
   Future<void> upsertProfile(Map<String, dynamic> data) async {

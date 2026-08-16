@@ -17,6 +17,12 @@ class AppException implements Exception {
     if (errorStr.contains('timeout')) {
       return AppException('La requête a pris trop de temps.', originalError: e);
     }
+    if (errorStr.contains('authexception') || errorStr.contains('invalid login credentials')) {
+      return AppException('Erreur d\'authentification. Veuillez vérifier vos identifiants.', originalError: e);
+    }
+    if (errorStr.contains('not found')) {
+      return AppException('Ressource introuvable.', originalError: e);
+    }
     return AppException('Une erreur inattendue est survenue.', originalError: e);
   }
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
-import 'package:lolango_v2/features/discovery/domain/profile_model.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MatchedProfileCard extends StatelessWidget {
-  final ProfileModel profile;
+  final DetailedProfileModel profile;
   final VoidCallback onTap;
 
   const MatchedProfileCard({
@@ -38,9 +38,9 @@ class MatchedProfileCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: profile.photoUrl != null
+              child: profile.primaryPhotoUrl != null
                   ? Image.network(
-                      profile.photoUrl!,
+                      profile.primaryPhotoUrl!,
                       fit: BoxFit.cover,
                     )
                   : Container(
@@ -55,7 +55,7 @@ class MatchedProfileCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${profile.name}${profile.age != null ? ', ${profile.age}' : ''}',
+                    '${profile.profile.name}${profile.profile.age != null ? ', ${profile.profile.age}' : ''}',
                     style: TextStyle(
                       color: textPrimary,
                       fontSize: 16,
