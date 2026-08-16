@@ -8,7 +8,9 @@ import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/onboarding/data/location_service.dart';
 import 'package:lolango_v2/features/onboarding/domain/onboarding_models.dart';
 import 'package:lolango_v2/features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
+import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/utils/debouncer.dart';
 
 class OnboardingFlowScreen extends ConsumerStatefulWidget {
   final String? initialFirstName;
@@ -31,6 +33,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     TextEditingController(),
     TextEditingController(),
   ];
+  final Debouncer _usernameDebouncer = Debouncer(milliseconds: 500);
 
   int _currentStep = 0;
   final List<OnboardingInterestCategory> _categories =
@@ -115,6 +118,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _dayController.dispose();
     _monthController.dispose();
     _yearController.dispose();
+    _usernameDebouncer.dispose();
     super.dispose();
   }
 
@@ -251,7 +255,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   }
 
   void _nextPage() {
-    final total = 10;
+    const total = 10;
     if (_currentStep < total - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 250),
@@ -437,6 +441,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       };
 
       await ref.read(onboardingViewModelProvider.notifier).saveProfile(payload);
+      ref.read(profileStatusProvider.notifier).markAsCompleted();
       if (mounted) context.go('/home');
     } catch (error) {
       if (mounted) {
@@ -481,8 +486,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     if (_selectedDay > _daysInSelectedBirthMonth) {
       _selectedDay = _daysInSelectedBirthMonth;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_dayController.hasClients)
+        if (_dayController.hasClients) {
           _dayController.jumpToItem(_selectedDay - 1);
+        }
       });
     }
 
@@ -549,7 +555,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                       ),
                       onChanged: (value) {
                         setState(() {});
-                        if (value.trim().length >= 3) _checkUsername(value);
+                        if (value.trim().length >= 3) {
+                          _usernameDebouncer.run(() => _checkUsername(value));
+                        }
                       },
                     ),
                   ),
@@ -985,8 +993,8 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryLight.withOpacity(
-                                        0.95,
+                                      color: AppColors.primaryLight.withValues(
+                                        alpha: 0.95,
                                       ),
                                       borderRadius: BorderRadius.circular(999),
                                     ),

@@ -25,10 +25,10 @@ class ProfileModel {
     Map<String, String>? socials,
     List<String>? interests,
     List<String>? discoveryPreferences,
-  })  : photoUrls = photoUrls ?? [],
-        socials = socials ?? {},
-        interests = interests ?? [],
-        discoveryPreferences = discoveryPreferences ?? [];
+  }) : photoUrls = photoUrls ?? [],
+       socials = socials ?? {},
+       interests = interests ?? [],
+       discoveryPreferences = discoveryPreferences ?? [];
 
   /// Getter de compatibilité — retourne la première photo ou null.
   String? get photoUrl => photoUrls.isNotEmpty ? photoUrls.first : null;
@@ -70,7 +70,7 @@ class ProfileModel {
     }
 
     // Photos : depuis l'override injecté par le repository, sinon depuis la map.
-    List<String> photoUrls = photoUrlsOverride ?? [];
+    final List<String> photoUrls = photoUrlsOverride ?? [];
     if (photoUrls.isEmpty) {
       final rawPhotos = m['photos'];
       if (rawPhotos is List) {
@@ -85,7 +85,8 @@ class ProfileModel {
       }
       // Fallback sur photo_url / avatar_url unique.
       if (photoUrls.isEmpty) {
-        final single = m['photo_url']?.toString() ?? m['avatar_url']?.toString();
+        final single =
+            m['photo_url']?.toString() ?? m['avatar_url']?.toString();
         if (single != null && single.isNotEmpty) photoUrls.add(single);
       }
     }
@@ -100,7 +101,7 @@ class ProfileModel {
     }
 
     // Intérêts.
-    List<String> interests = interestsOverride ?? [];
+    final List<String> interests = interestsOverride ?? [];
     if (interests.isEmpty) {
       final rawInterests = m['interests'];
       if (rawInterests is List) {
@@ -113,7 +114,8 @@ class ProfileModel {
 
     return ProfileModel(
       id: m['id']?.toString() ?? '',
-      name: m['first_name']?.toString() ??
+      name:
+          m['first_name']?.toString() ??
           m['display_name']?.toString() ??
           m['name']?.toString() ??
           'Nom',

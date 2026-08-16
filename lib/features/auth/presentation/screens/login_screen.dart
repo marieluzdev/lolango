@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +6,7 @@ import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/google_account_bottom_sheet.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/core/widgets/app_button.dart';
+import 'package:lolango_v2/core/routing/app_router.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -49,15 +48,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       final firstName = viewModel.getGoogleFirstName(googleAccount);
+      ref.read(pendingFirstNameProvider.notifier).state = firstName;
+      
       await viewModel.completeSignInWithGoogle(googleAccount);
-
-      if (mounted) {
-        final safeFirstName = firstName.trim();
-        final route = safeFirstName.isEmpty
-            ? '/onboarding'
-            : '/onboarding?firstName=${Uri.encodeComponent(safeFirstName)}';
-        context.go(route);
-      }
 
       // Pas besoin de remettre _isLoading à false :
       // la navigation vers l'écran suivant va détruire ce widget.
@@ -84,12 +77,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final textSecondary = isDark
         ? AppColors.textSecondaryDark
         : AppColors.textSecondaryLight;
-
-    final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
-
-    final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     final errorColor = isDark ? AppColors.errorDark : AppColors.errorLight;
 

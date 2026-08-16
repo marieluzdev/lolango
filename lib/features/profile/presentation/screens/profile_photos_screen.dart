@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
@@ -12,7 +13,8 @@ class ProfilePhotosScreen extends ConsumerStatefulWidget {
   const ProfilePhotosScreen({super.key});
 
   @override
-  ConsumerState<ProfilePhotosScreen> createState() => _ProfilePhotosScreenState();
+  ConsumerState<ProfilePhotosScreen> createState() =>
+      _ProfilePhotosScreenState();
 }
 
 class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
@@ -29,7 +31,9 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
 
   Future<void> _loadPhotos() async {
     setState(() => _isLoading = true);
-    final profile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+    final profile = await ref
+        .read(profileRepositoryProvider)
+        .fetchDetailedProfile();
     final photoUrls = profile?.photoUrls ?? <String>[];
 
     if (mounted) {
@@ -75,11 +79,13 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
       try {
         final bytes = await File(picked.path).readAsBytes();
         final ext = picked.path.split('.').last.toLowerCase();
-        final extension = (ext == 'jpg' || ext == 'jpeg' || ext == 'png') ? ext : 'jpg';
-        
+        final extension = (ext == 'jpg' || ext == 'jpeg' || ext == 'png')
+            ? ext
+            : 'jpg';
+
         final repo = ref.read(profileRepositoryProvider);
         final newUrl = await repo.uploadPhoto(bytes, extension);
-        
+
         if (newUrl != null) {
           final newPhotos = List<String>.from(_photos)..add(newUrl);
           await repo.upsertPhotos(newPhotos);
@@ -125,10 +131,10 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
         try {
           final repo = ref.read(profileRepositoryProvider);
           final newPhotos = _photos.where((url) => url != photoUrl).toList();
-          
+
           await repo.upsertPhotos(newPhotos);
           await repo.deletePhotoStorage(photoUrl);
-          
+
           setState(() {
             _photos = newPhotos;
           });
@@ -164,8 +170,8 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                 minScale: 0.5,
                 maxScale: 4.0,
                 child: Center(
-                  child: Image.network(
-                    photoUrl,
+                  child: AppCachedImage(
+                    imageUrl: photoUrl,
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -181,7 +187,11 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(8),
-                    child: const Icon(LucideIcons.x, color: Colors.white, size: 24),
+                    child: const Icon(
+                      LucideIcons.x,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
               ),
@@ -195,11 +205,17 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final primaryColor = isDark
+        ? AppColors.primaryDark
+        : AppColors.primaryLight;
 
     return Scaffold(
       backgroundColor: background,
@@ -232,7 +248,7 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                   mainAxisSpacing: 10,
                 ),
                 itemCount: 6,
-                itemBuilder: (_, __) => Container(
+                itemBuilder: (_, _) => Container(
                   decoration: BoxDecoration(
                     color: surface,
                     borderRadius: BorderRadius.circular(18),
@@ -245,7 +261,11 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(LucideIcons.image, size: 64, color: textPrimary.withValues(alpha: 0.3)),
+                  Icon(
+                    LucideIcons.image,
+                    size: 64,
+                    color: textPrimary.withValues(alpha: 0.3),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Aucune photo ajoutée',
@@ -285,12 +305,13 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 0.72,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.72,
+                        ),
                     itemCount: _photos.length,
                     itemBuilder: (context, index) {
                       final photoUrl = _photos[index];
@@ -306,13 +327,9 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                                   color: surface,
                                   border: Border.all(color: border, width: 1),
                                 ),
-                                child: Image.network(
-                                  photoUrl,
+                                child: AppCachedImage(
+                                  imageUrl: photoUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: surface,
-                                    child: Icon(LucideIcons.imageOff, color: textPrimary.withValues(alpha: 0.5)),
-                                  ),
                                 ),
                               ),
                             ),
@@ -328,7 +345,11 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(4),
-                                child: const Icon(LucideIcons.x, color: Colors.white, size: 16),
+                                child: const Icon(
+                                  LucideIcons.x,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -337,7 +358,10 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
                               left: 6,
                               bottom: 6,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: primaryColor,
                                   borderRadius: BorderRadius.circular(8),
@@ -362,9 +386,7 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
           if (_isUploading)
             Container(
               color: Colors.black45,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),

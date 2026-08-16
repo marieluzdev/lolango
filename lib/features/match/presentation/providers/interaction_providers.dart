@@ -12,7 +12,9 @@ final interactedProfilesProvider = FutureProvider<List<String>>((ref) async {
   return repo.getInteractedProfileIds();
 });
 
-final pendingLikesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
+final pendingLikesProvider = FutureProvider<List<DetailedProfileModel>>((
+  ref,
+) async {
   final repo = ref.read(interactionRepositoryProvider);
   return repo.getPendingLikes();
 });

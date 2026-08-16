@@ -10,7 +10,7 @@ class AuthViewModel extends StateNotifier<AsyncValue<User?>> {
   late final StreamSubscription<AuthState> _authStateSubscription;
 
   AuthViewModel(this._authRepository)
-      : super(AsyncData(_authRepository.currentUser)) {
+    : super(AsyncData(_authRepository.currentUser)) {
     _authStateSubscription = _authRepository.authStateChanges.listen((data) {
       state = AsyncData(data.session?.user);
     });
@@ -56,6 +56,7 @@ class AuthViewModel extends StateNotifier<AsyncValue<User?>> {
   }
 }
 
-final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<User?>>((ref) {
-  return AuthViewModel(ref.watch(authRepositoryProvider));
-});
+final authViewModelProvider =
+    StateNotifierProvider<AuthViewModel, AsyncValue<User?>>((ref) {
+      return AuthViewModel(ref.watch(authRepositoryProvider));
+    });

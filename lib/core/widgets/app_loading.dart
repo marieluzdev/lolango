@@ -6,11 +6,7 @@ class AppLoading extends StatelessWidget {
   final Widget child;
   final bool enabled;
 
-  const AppLoading({
-    super.key,
-    required this.child,
-    this.enabled = true,
-  });
+  const AppLoading({super.key, required this.child, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {

@@ -59,11 +59,17 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     final profileState = ref.watch(profileProvider);
@@ -114,30 +120,38 @@ class ProfileScreen extends ConsumerWidget {
             // ==================================================
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () => ref.read(profileProvider.notifier).refreshProfile(),
+                onRefresh: () =>
+                    ref.read(profileProvider.notifier).refreshProfile(),
                 child: profileState.when(
                   loading: () => const AppSpinner(),
                   error: (err, stack) => AppErrorState(
                     message: err.toString(),
-                    onRetry: () => ref.read(profileProvider.notifier).refreshProfile(),
+                    onRetry: () =>
+                        ref.read(profileProvider.notifier).refreshProfile(),
                   ),
                   data: (profile) {
                     if (profile == null) {
                       return AppErrorState(
                         message: "Impossible de charger le profil.",
-                        onRetry: () => ref.read(profileProvider.notifier).refreshProfile(),
+                        onRetry: () =>
+                            ref.read(profileProvider.notifier).refreshProfile(),
                       );
                     }
 
-                    final firstName = profile.profile.name ?? 'Ton profil';
-                    final username = profile.profile.username ?? '@username';
-                    final bio = profile.profile.bio ?? 'Ajoute une bio pour te présenter.';
-                    final location = profile.profile.city ?? 'Localisation non renseignée';
+                    final firstName = profile.profile.name;
+                    final username = profile.profile.username;
+                    final bio =
+                        profile.profile.bio ??
+                        'Ajoute une bio pour te présenter.';
+                    final location =
+                        profile.profile.city ?? 'Localisation non renseignée';
                     final gender = profile.profile.gender ?? 'Non renseigné';
-                    final socials = profile.socials ?? const <String, String>{};
-                    final interests = profile.interests ?? const <String>[];
-                    final photoUrls = profile.photoUrls ?? const <String>[];
-                    final primaryPhotoUrl = photoUrls.isNotEmpty ? photoUrls.first : null;
+                    final socials = profile.socials;
+                    final interests = profile.interests;
+                    final photoUrls = profile.photoUrls;
+                    final primaryPhotoUrl = photoUrls.isNotEmpty
+                        ? photoUrls.first
+                        : null;
                     final age = profile.profile.age;
 
                     return SingleChildScrollView(

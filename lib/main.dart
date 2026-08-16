@@ -26,9 +26,5 @@ void main() async {
     publishableKey: Env.supabaseAnonKey,
   );
 
-  runApp(
-    const ProviderScope(
-      child: MainApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MainApp()));
 }

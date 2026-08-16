@@ -12,8 +12,12 @@ Future<bool> showConfirmationModalBottomSheet({
 }) async {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-  final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-  final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+  final textPrimary = isDark
+      ? AppColors.textPrimaryDark
+      : AppColors.textPrimaryLight;
+  final textSecondary = isDark
+      ? AppColors.textSecondaryDark
+      : AppColors.textSecondaryLight;
 
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -89,7 +93,9 @@ Future<bool> showConfirmationModalBottomSheet({
                     child: FilledButton(
                       onPressed: () => Navigator.of(sheetContext).pop(true),
                       style: FilledButton.styleFrom(
-                        backgroundColor: destructive ? Colors.red : AppColors.primaryLight,
+                        backgroundColor: destructive
+                            ? Colors.red
+                            : AppColors.primaryLight,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(

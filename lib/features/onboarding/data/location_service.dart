@@ -41,12 +41,15 @@ class LocationService {
     final uri = Uri.parse(
       'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$latitude&lon=$longitude&accept-language=fr',
     );
-    final response = await http.get(uri, headers: {
-      'User-Agent': 'lolango_v2/1.0 (https://lolango-v2)',
-    });
+    final response = await http.get(
+      uri,
+      headers: {'User-Agent': 'lolango_v2/1.0 (https://lolango-v2)'},
+    );
 
     if (response.statusCode != 200) {
-      throw StateError('Impossible de récupérer la localisation depuis OpenStreetMap.');
+      throw StateError(
+        'Impossible de récupérer la localisation depuis OpenStreetMap.',
+      );
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -55,7 +58,8 @@ class LocationService {
       throw StateError('Aucune adresse trouvée pour cette position.');
     }
 
-    final locality = address['city'] ??
+    final locality =
+        address['city'] ??
         address['town'] ??
         address['village'] ??
         address['hamlet'] ??
@@ -73,6 +77,8 @@ class LocationService {
       return country as String;
     }
 
-    throw StateError('Impossible de déterminer une localisation approximative.');
+    throw StateError(
+      'Impossible de déterminer une localisation approximative.',
+    );
   }
 }

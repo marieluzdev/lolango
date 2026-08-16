@@ -2,22 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
 class ProfilePhotoGallery extends StatelessWidget {
   final List<String> photoUrls;
 
-  const ProfilePhotoGallery({
-    super.key,
-    required this.photoUrls,
-  });
+  const ProfilePhotoGallery({super.key, required this.photoUrls});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
-    final secondary = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
+    final secondary = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
 
@@ -190,14 +194,7 @@ class _PhotoTile extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(color: border, width: 1),
               ),
-              child: Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: surface,
-                  child: Icon(LucideIcons.imageOff, color: border),
-                ),
-              ),
+              child: AppCachedImage(imageUrl: url, fit: BoxFit.cover),
             ),
             if (badgeLabel != null)
               Positioned(

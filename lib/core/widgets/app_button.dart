@@ -9,6 +9,10 @@ class AppButton extends StatefulWidget {
   final AppButtonType type;
   final IconData? icon;
   final Widget? prefixWidget;
+  final bool isLoading;
+  final bool isFullWidth;
+  final double borderRadius;
+  final EdgeInsetsGeometry padding;
 
   const AppButton({
     super.key,
@@ -32,11 +36,11 @@ class _AppButtonState extends State<AppButton> {
 
   void _handlePress() async {
     if (widget.isLoading || _isProcessing || widget.onPressed == null) return;
-    
+
     // Protection double clic minimal
     setState(() => _isProcessing = true);
     widget.onPressed!();
-    
+
     // Le Future.delayed permet d'éviter un autre tap immédiatement (debounce visuel)
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
@@ -47,12 +51,20 @@ class _AppButtonState extends State<AppButton> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primaryLight;
-    final secondaryColor = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+
+    final primaryColor = isDark
+        ? AppColors.primaryDark
+        : AppColors.primaryLight;
+    final secondaryColor = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     Color backgroundColor;
     Color textColor;
@@ -82,8 +94,8 @@ class _AppButtonState extends State<AppButton> {
     if (widget.onPressed == null) {
       backgroundColor = surfaceColor;
       textColor = textPrimary.withValues(alpha: 0.5);
-      borderSide = widget.type == AppButtonType.outline 
-          ? BorderSide(color: borderColor.withValues(alpha: 0.5)) 
+      borderSide = widget.type == AppButtonType.outline
+          ? BorderSide(color: borderColor.withValues(alpha: 0.5))
           : BorderSide.none;
     }
 

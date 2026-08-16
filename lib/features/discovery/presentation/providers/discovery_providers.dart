@@ -14,59 +14,133 @@ final discoveryFilterProvider = StateProvider<DiscoveryFilter>(
   (ref) => DiscoveryFilter(ageRange: const RangeValues(18, 80)),
 );
 
-final allProfilesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
-  final repo = ref.read(discoveryRepositoryProvider);
-  return repo.fetchProfiles();
+// ---------------------------------------------------------------------------
+// DiscoveryNotifier — gère la liste paginée des profils
+// ---------------------------------------------------------------------------
+
+class DiscoveryState {
+  final List<DetailedProfileModel> profiles;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final int page;
+
+  const DiscoveryState({
+    this.profiles = const [],
+    this.isLoadingMore = false,
+    this.hasMore = true,
+    this.page = 0,
+  });
+
+  DiscoveryState copyWith({
+    List<DetailedProfileModel>? profiles,
+    bool? isLoadingMore,
+    bool? hasMore,
+    int? page,
+  }) {
+    return DiscoveryState(
+      profiles: profiles ?? this.profiles,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+      page: page ?? this.page,
+    );
+  }
+}
+
+class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
+  static const int _pageSize = 20;
+
+  @override
+  Future<DiscoveryState> build() async {
+    // Réagit aux changements de filtres : recharge depuis la page 0
+    final filter = ref.watch(discoveryFilterProvider);
+    final interactedIds = await ref.read(interactedProfilesProvider.future);
+    final hiddenIds = ref.read(hiddenProfilesProvider);
+
+    final excludeIds = {...interactedIds, ...hiddenIds};
+
+    final repo = ref.read(discoveryRepositoryProvider);
+    final profiles = await repo.fetchProfiles(
+      page: 0,
+      limit: _pageSize,
+      filter: filter,
+      excludeIds: excludeIds,
+    );
+
+    return DiscoveryState(
+      profiles: profiles,
+      page: 0,
+      hasMore: profiles.length == _pageSize,
+      isLoadingMore: false,
+    );
+  }
+
+  /// Charge la page suivante et ajoute les résultats à la liste existante.
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || current.isLoadingMore || !current.hasMore) return;
+
+    // Signal : chargement en cours
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    try {
+      final filter = ref.read(discoveryFilterProvider);
+      final interactedIds = await ref.read(interactedProfilesProvider.future);
+      final hiddenIds = ref.read(hiddenProfilesProvider);
+      final excludeIds = {
+        ...interactedIds,
+        ...hiddenIds,
+        ...current.profiles.map((p) => p.profile.id),
+      };
+
+      final nextPage = current.page + 1;
+      final repo = ref.read(discoveryRepositoryProvider);
+      final newProfiles = await repo.fetchProfiles(
+        page: nextPage,
+        limit: _pageSize,
+        filter: filter,
+        excludeIds: excludeIds,
+      );
+
+      state = AsyncData(
+        current.copyWith(
+          profiles: [...current.profiles, ...newProfiles],
+          page: nextPage,
+          hasMore: newProfiles.length == _pageSize,
+          isLoadingMore: false,
+        ),
+      );
+    } catch (e) {
+      // Ne pas écraser toute la liste — juste stopper le chargement
+      state = AsyncData(current.copyWith(isLoadingMore: false, hasMore: false));
+    }
+  }
+
+  /// Rafraîchit complètement la liste depuis la page 0.
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    ref.invalidateSelf();
+  }
+}
+
+final discoveryNotifierProvider =
+    AsyncNotifierProvider<DiscoveryNotifier, DiscoveryState>(
+      DiscoveryNotifier.new,
+    );
+
+// ---------------------------------------------------------------------------
+// Keep backward-compatible alias so existing code still compiles
+// ---------------------------------------------------------------------------
+
+/// @deprecated — Utiliser `discoveryNotifierProvider` à la place.
+final allProfilesProvider = FutureProvider<List<DetailedProfileModel>>((
+  ref,
+) async {
+  final state = await ref.watch(discoveryNotifierProvider.future);
+  return state.profiles;
 });
 
-final filteredProfilesProvider = Provider<AsyncValue<List<DetailedProfileModel>>>((ref) {
-  final filter = ref.watch(discoveryFilterProvider);
-  final allAsync = ref.watch(allProfilesProvider);
-  final interactedAsync = ref.watch(interactedProfilesProvider);
-  final hiddenIds = ref.watch(hiddenProfilesProvider);
-
-  if (allAsync.hasError) {
-    return AsyncValue.error(allAsync.error!, allAsync.stackTrace!);
-  }
-
-  if (interactedAsync.hasError) {
-    return AsyncValue.error(interactedAsync.error!, interactedAsync.stackTrace!);
-  }
-
-  if (!allAsync.hasValue || !interactedAsync.hasValue) {
-    return const AsyncValue.loading();
-  }
-
-  final all = allAsync.requireValue;
-  final interactedIds = interactedAsync.requireValue;
-
-  bool matchesPref(String? profileGender, String? pref) {
-    if (pref == null) return true;
-    final pg = profileGender?.toLowerCase() ?? '';
-    final pf = pref.toLowerCase();
-    if (pf.contains('fem')) return pg.contains('fem');
-    if (pf.contains('hom')) return pg.contains('hom');
-    if (pf.contains('female')) return pg.contains('fem') || pg.contains('female');
-    if (pf.contains('male')) return pg.contains('hom') || pg.contains('male');
-    return false;
-  }
-
-  final filteredList = all.where((detailedP) {
-    final p = detailedP.profile;
-    if (interactedIds.contains(p.id) || hiddenIds.contains(p.id)) return false;
-    
-    final ageOk = p.age == null ||
-        (p.age! >= filter.ageRange.start && p.age! <= filter.ageRange.end);
-    final genderOk =
-        filter.gender == null || matchesPref(p.gender, filter.gender);
-    final cityOk = filter.city == null ||
-        (p.city?.toLowerCase().contains(filter.city!.toLowerCase()) ?? false);
-    final socialsOk = filter.socials.isEmpty ||
-        filter.socials.any(
-          (s) => detailedP.socials.keys.map((k) => k.toLowerCase()).contains(s),
-        );
-    return ageOk && genderOk && cityOk && socialsOk;
-  }).toList();
-
-  return AsyncValue.data(filteredList);
-});
+/// @deprecated — Utiliser `discoveryNotifierProvider` à la place.
+final filteredProfilesProvider =
+    Provider<AsyncValue<List<DetailedProfileModel>>>((ref) {
+      return ref.watch(discoveryNotifierProvider).whenData((s) => s.profiles);
+    });

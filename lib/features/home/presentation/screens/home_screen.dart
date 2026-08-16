@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.dart';
 import 'package:lolango_v2/features/discovery/presentation/providers/discovery_providers.dart';
 import 'package:lolango_v2/features/discovery/presentation/providers/discovery_filter_init_provider.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<DetailedProfileModel> _cards = [];
   int _lastFilterHash = -1;
   bool _isProcessingAction = false;
+  bool _isFinished = false;
 
   @override
   void dispose() {
@@ -38,12 +40,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_isProcessingAction) return;
     _isProcessingAction = true;
 
-    // Retirer immédiatement la carte de la liste locale
-    if (mounted) {
-      setState(() {
-        _cards.removeWhere((card) => card.profile.id == p.profile.id);
-      });
-    }
+
 
     // Cacher dans le provider (filtrage global)
     ref.read(hiddenProfilesProvider.notifier).update((state) {
@@ -54,9 +51,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     try {
       if (isLike) {
-        final isMatch = await ref.read(interactionRepositoryProvider).likeProfile(p.profile.id);
+        final isMatch = await ref
+            .read(interactionRepositoryProvider)
+            .likeProfile(p.profile.id);
         if (isMatch) {
-          debugPrint('[HOME] Match found for ${p.profile.id}! Incrementing badge.');
+          AppLogger.d(
+            '[HOME] Match found for ${p.profile.id}! Incrementing badge.',
+          );
           ref.read(matchNotificationBadgeProvider.notifier).state++;
           ref.invalidate(matchesProvider);
         }
@@ -75,30 +76,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.watch(discoveryFilterInitProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final backgroundColor = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     final filterState = ref.watch(discoveryFilterProvider);
     final filteredAsync = ref.watch(filteredProfilesProvider);
 
-    ref.listen<AsyncValue<List<DetailedProfileModel>>>(filteredProfilesProvider, (prev, next) {
-      if (next.hasValue && next.value != null) {
-        final filterChanged = filterState.hashCode != _lastFilterHash;
-        if (filterChanged) {
-          debugPrint('[HOME] Filter changed, resetting cards: ${next.value!.length}');
-          setState(() {
-            _cards = List.from(next.value!);
-            _lastFilterHash = filterState.hashCode;
-          });
-        } else if (_cards.isEmpty && _lastFilterHash == -1) {
-          debugPrint('[HOME] Initial load: ${next.value!.length} cards');
-          setState(() {
-            _cards = List.from(next.value!);
-            _lastFilterHash = filterState.hashCode;
-          });
+    ref.listen<AsyncValue<List<DetailedProfileModel>>>(
+      filteredProfilesProvider,
+      (prev, next) {
+        if (next.hasValue && next.value != null) {
+          final filterChanged = filterState.hashCode != _lastFilterHash;
+          if (filterChanged) {
+            AppLogger.d(
+              '[HOME] Filter changed, resetting cards: ${next.value!.length}',
+            );
+            setState(() {
+              _isFinished = false;
+              _cards = List.from(next.value!);
+              _lastFilterHash = filterState.hashCode;
+            });
+          } else if (_cards.isEmpty && _lastFilterHash == -1) {
+            AppLogger.d('[HOME] Initial load: ${next.value!.length} cards');
+            setState(() {
+              _cards = List.from(next.value!);
+              _lastFilterHash = filterState.hashCode;
+            });
+          } else if (next.value!.length > _cards.length) {
+            AppLogger.d('[HOME] Pagination load: ${next.value!.length} cards');
+            setState(() {
+              _isFinished = false;
+              _cards = List.from(next.value!);
+            });
+          }
         }
-      }
-    });
+      },
+    );
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -122,7 +139,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   IconButton(
                     onPressed: () async {
                       final surface = Theme.of(context).cardColor;
-                      final textCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+                      final textCol =
+                          Theme.of(context).textTheme.bodyLarge?.color ??
+                          Colors.black;
 
                       final userProfile = ref.read(profileProvider).value;
                       String? userCity;
@@ -164,14 +183,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
                   data: (data) {
-                    if (_cards.isEmpty && _lastFilterHash != -1) {
+                    if (_isFinished || (_cards.isEmpty && _lastFilterHash != -1)) {
                       return AppEmptyState(
                         icon: LucideIcons.ghost,
                         title: "Plus aucun profil",
-                        description: "Tu as swipé tous les profils disponibles avec ces filtres.",
+                        description:
+                            "Tu as swipé tous les profils disponibles avec ces filtres.",
                         actionLabel: "Voir tout le monde",
                         onAction: () {
-                          ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
+                          ref
+                              .read(discoveryFilterProvider.notifier)
+                              .state = DiscoveryFilter(
                             ageRange: const RangeValues(18, 80),
                           );
                         },
@@ -179,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
 
                     if (_cards.isEmpty) {
-                       return const AppSpinner();
+                      return const AppSpinner();
                     }
 
                     return CardSwiper(
@@ -187,38 +209,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       cardsCount: _cards.length,
                       numberOfCardsDisplayed: _cards.length > 1 ? 2 : 1,
                       isLoop: false,
-                      cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
-                        if (index >= _cards.length) return const SizedBox.shrink();
-                        final p = _cards[index];
-                        return ProfileCard(
-                          name: p.profile.name,
-                          age: p.profile.age,
-                          city: p.profile.city,
-                          country: p.profile.country,
-                          photoUrls: p.photoUrls,
-                          bio: p.profile.bio,
-                          socials: p.socials,
-                          interests: p.interests,
-                          onPass: () {
-                            if (!_isProcessingAction) {
-                               _swiperController.swipe(CardSwiperDirection.left);
-                            }
-                          },
-                          onConnect: () {
-                            if (!_isProcessingAction) {
-                              _swiperController.swipe(CardSwiperDirection.right);
-                            }
-                          },
-                        );
+                      onEnd: () {
+                        final hasMore = ref.read(discoveryNotifierProvider).valueOrNull?.hasMore ?? false;
+                        if (!hasMore) {
+                          setState(() {
+                            _isFinished = true;
+                          });
+                        } else {
+                          ref.read(discoveryNotifierProvider.notifier).loadMore();
+                        }
                       },
+                      cardBuilder:
+                          (
+                            context,
+                            index,
+                            percentThresholdX,
+                            percentThresholdY,
+                          ) {
+                            if (index >= _cards.length)
+                              return const SizedBox.shrink();
+                            final p = _cards[index];
+                            return ProfileCard(
+                              name: p.profile.name,
+                              age: p.profile.age,
+                              city: p.profile.city,
+                              country: p.profile.country,
+                              photoUrls: p.photoUrls,
+                              bio: p.profile.bio,
+                              socials: p.socials,
+                              interests: p.interests,
+                              onPass: () {
+                                if (!_isProcessingAction) {
+                                  _swiperController.swipe(
+                                    CardSwiperDirection.left,
+                                  );
+                                }
+                              },
+                              onConnect: () {
+                                if (!_isProcessingAction) {
+                                  _swiperController.swipe(
+                                    CardSwiperDirection.right,
+                                  );
+                                }
+                              },
+                            );
+                          },
                       onSwipe: (previousIndex, currentIndex, direction) {
                         if (previousIndex >= _cards.length) return true;
-                        if (_isProcessingAction) return false; // Prevent double swipe
-                        
-                        final p = _cards[previousIndex];
-                        debugPrint('[HOME] onSwipe: ${p.profile.id}, direction: $direction');
+                        if (_isProcessingAction)
+                          return false; // Prevent double swipe
 
-                        _handleAction(direction == CardSwiperDirection.right, p);
+                        if (currentIndex != null && currentIndex >= _cards.length - 3) {
+                          ref.read(discoveryNotifierProvider.notifier).loadMore();
+                        }
+
+                        final p = _cards[previousIndex];
+                        AppLogger.d(
+                          '[HOME] onSwipe: ${p.profile.id}, direction: $direction',
+                        );
+
+                        _handleAction(
+                          direction == CardSwiperDirection.right,
+                          p,
+                        );
                         return true;
                       },
                     );

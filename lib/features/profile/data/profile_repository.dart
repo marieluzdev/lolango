@@ -53,9 +53,16 @@ class ProfileRepository {
     try {
       final results = await Future.wait([
         supabase.from('profiles').select().eq('id', userId).maybeSingle(),
-        supabase.from('profile_photos').select().eq('user_id', userId).order('position', ascending: true),
+        supabase
+            .from('profile_photos')
+            .select()
+            .eq('user_id', userId)
+            .order('position', ascending: true),
         supabase.from('profile_socials').select().eq('user_id', userId),
-        supabase.from('profile_interests').select('interest_id, interests(name)').eq('user_id', userId),
+        supabase
+            .from('profile_interests')
+            .select('interest_id, interests(name)')
+            .eq('user_id', userId),
       ]);
 
       final profile = results[0] as Map<String, dynamic>?;
@@ -86,14 +93,11 @@ class ProfileRepository {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    await supabase.from('profiles').upsert(
-      {
-        'id': user.id,
-        ...data,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      },
-      onConflict: 'id',
-    );
+    await supabase.from('profiles').upsert({
+      'id': user.id,
+      ...data,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, onConflict: 'id');
   }
 
   Future<void> upsertSocials(Map<String, String> socials) async {
@@ -102,11 +106,13 @@ class ProfileRepository {
 
     final rows = socials.entries
         .where((entry) => entry.value.trim().isNotEmpty)
-        .map((entry) => {
-              'user_id': user.id,
-              'platform': entry.key,
-              'username': entry.value.trim(),
-            })
+        .map(
+          (entry) => {
+            'user_id': user.id,
+            'platform': entry.key,
+            'username': entry.value.trim(),
+          },
+        )
         .toList();
 
     if (rows.isEmpty) {
@@ -114,7 +120,9 @@ class ProfileRepository {
       return;
     }
 
-    await supabase.from('profile_socials').upsert(rows, onConflict: 'user_id,platform');
+    await supabase
+        .from('profile_socials')
+        .upsert(rows, onConflict: 'user_id,platform');
   }
 
   Future<void> upsertInterests(List<String> interests) async {
@@ -130,10 +138,9 @@ class ProfileRepository {
           .inFilter('name', interests);
 
       if (tagsData.isNotEmpty) {
-        final records = tagsData.map((tag) => {
-          'user_id': user.id,
-          'interest_id': tag['id'],
-        }).toList();
+        final records = tagsData
+            .map((tag) => {'user_id': user.id, 'interest_id': tag['id']})
+            .toList();
         await supabase.from('profile_interests').insert(records);
       }
     }
@@ -148,14 +155,19 @@ class ProfileRepository {
       return;
     }
 
-    final rows = List.generate(urls.length, (index) => {
-      'user_id': user.id,
-      'url': urls[index],
-      'position': index,
-      'is_primary': index == 0,
-    });
+    final rows = List.generate(
+      urls.length,
+      (index) => {
+        'user_id': user.id,
+        'url': urls[index],
+        'position': index,
+        'is_primary': index == 0,
+      },
+    );
 
-    await supabase.from('profile_photos').upsert(rows, onConflict: 'user_id,position');
+    await supabase
+        .from('profile_photos')
+        .upsert(rows, onConflict: 'user_id,position');
   }
 
   Future<String?> uploadPhoto(List<int> imageBytes, String extension) async {
@@ -165,7 +177,9 @@ class ProfileRepository {
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
     final path = '${user.id}/$fileName';
 
-    await supabase.storage.from('profile-photos').uploadBinary(
+    await supabase.storage
+        .from('profile-photos')
+        .uploadBinary(
           path,
           Uint8List.fromList(imageBytes),
           fileOptions: FileOptions(
@@ -200,7 +214,10 @@ class ProfileRepository {
       await supabase.from('profile_photos').delete().eq('user_id', user.id);
       await supabase.from('profile_socials').delete().eq('user_id', user.id);
       await supabase.from('profile_interests').delete().eq('user_id', user.id);
-      await supabase.from('discovery_preferences').delete().eq('user_id', user.id);
+      await supabase
+          .from('discovery_preferences')
+          .delete()
+          .eq('user_id', user.id);
     } catch (_) {
       // graceful no-op: the app still signs out and the user can retry.
     }
@@ -219,10 +236,7 @@ class ProfileRepository {
 
     final response = await supabase.rpc(
       'send_test_notification',
-      params: {
-        'title': title,
-        'body': body,
-      },
+      params: {'title': title, 'body': body},
     );
 
     if (response is String) {

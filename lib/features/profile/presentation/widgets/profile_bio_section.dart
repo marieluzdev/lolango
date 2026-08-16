@@ -4,16 +4,17 @@ import 'package:lolango_v2/core/constants/app_colors.dart';
 class ProfileBioSection extends StatelessWidget {
   final String bio;
 
-  const ProfileBioSection({
-    super.key,
-    required this.bio,
-  });
+  const ProfileBioSection({super.key, required this.bio});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final secondary = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final secondary = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

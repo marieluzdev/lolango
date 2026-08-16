@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 
 import '../../data/onboarding_repository.dart';
 
@@ -27,20 +28,21 @@ class OnboardingViewModel extends StateNotifier<AsyncValue<void>> {
   Future<void> saveProfile(Map<String, dynamic> payload) async {
     state = const AsyncLoading();
     try {
-      print('DEBUG onboarding viewmodel: calling repository.saveProfile');
+      AppLogger.d('DEBUG onboarding viewmodel: calling repository.saveProfile');
       await repository.saveProfile(payload);
-      print('DEBUG onboarding viewmodel: repository.saveProfile success');
+      AppLogger.d('DEBUG onboarding viewmodel: repository.saveProfile success');
       state = const AsyncData(null);
     } catch (error, stack) {
-      print('DEBUG onboarding viewmodel: repository.saveProfile failed');
-      print('DEBUG onboarding viewmodel: error=$error');
-      print('DEBUG onboarding viewmodel: stack=$stack');
+      AppLogger.d('DEBUG onboarding viewmodel: repository.saveProfile failed');
+      AppLogger.d('DEBUG onboarding viewmodel: error=$error');
+      AppLogger.d('DEBUG onboarding viewmodel: stack=$stack');
       state = AsyncError(error, stack);
       rethrow;
     }
   }
 }
 
-final onboardingViewModelProvider = StateNotifierProvider<OnboardingViewModel, AsyncValue<void>>((ref) {
-  return OnboardingViewModel(ref.watch(onboardingRepositoryProvider));
-});
+final onboardingViewModelProvider =
+    StateNotifierProvider<OnboardingViewModel, AsyncValue<void>>((ref) {
+      return OnboardingViewModel(ref.watch(onboardingRepositoryProvider));
+    });

@@ -56,12 +56,9 @@ class _MainAppState extends State<MainApp> {
             if (child == null) {
               return const SplashScreen();
             }
-            
+
             final bg = Theme.of(context).scaffoldBackgroundColor;
-            return ColoredBox(
-              color: bg,
-              child: child,
-            );
+            return ColoredBox(color: bg, child: child);
           },
         );
       },

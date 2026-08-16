@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Tile réutilisable pour une action dans un modal
 class ModalActionTile extends StatelessWidget {
   const ModalActionTile({
+    super.key,
     required this.icon,
     required this.label,
     required this.textColor,
@@ -20,9 +21,11 @@ class ModalActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = backgroundColor ?? (isDangerous 
-        ? Colors.red.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.04));
+    final effectiveColor =
+        backgroundColor ??
+        (isDangerous
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.04));
     final effectiveTextColor = isDangerous ? Colors.red : textColor;
 
     return InkWell(

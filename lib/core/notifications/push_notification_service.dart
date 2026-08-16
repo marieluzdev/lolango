@@ -7,13 +7,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lolango_v2/core/supabase/supabase_client.dart';
 import 'package:lolango_v2/firebase_options.dart';
 
-final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
+final pushNotificationServiceProvider = Provider<PushNotificationService>((
+  ref,
+) {
   return PushNotificationService(ref.watch(supabaseProvider));
 });
 
 const _androidNotificationChannelId = 'lolango_notifications';
 const _androidNotificationChannelName = 'Notifications Lolango';
-const _androidNotificationChannelDescription = 'Canal de notifications pour Lolango';
+const _androidNotificationChannelDescription =
+    'Canal de notifications pour Lolango';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -24,7 +27,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class PushNotificationService {
   final SupabaseClient _supabase;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   PushNotificationService(this._supabase);
@@ -45,7 +49,9 @@ class PushNotificationService {
     debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
     debugPrint('[FCM] Authorization details: $settings');
 
-    const androidInitializationSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInitializationSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iOSInitializationSettings = DarwinInitializationSettings();
     const initializationSettings = InitializationSettings(
       android: androidInitializationSettings,
@@ -65,7 +71,9 @@ class PushNotificationService {
       importance: Importance.high,
     );
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
 
     FirebaseMessaging.onMessage.listen((message) async {
@@ -94,7 +102,9 @@ class PushNotificationService {
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
-    debugPrint('[FCM] Showing local notification for message: ${message.messageId}');
+    debugPrint(
+      '[FCM] Showing local notification for message: ${message.messageId}',
+    );
     if (notification == null) {
       debugPrint('[FCM] No notification payload to show.');
       return;
@@ -104,7 +114,7 @@ class PushNotificationService {
     final body = notification.body ?? '';
     final payload = message.data.isNotEmpty ? message.data.toString() : null;
 
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       _androidNotificationChannelId,
       _androidNotificationChannelName,
       channelDescription: _androidNotificationChannelDescription,
@@ -114,7 +124,10 @@ class PushNotificationService {
       ticker: 'ticker',
     );
     const iosDetails = DarwinNotificationDetails();
-    final platformDetails = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
     await _localNotifications.show(
       id: message.hashCode,
@@ -136,7 +149,9 @@ class PushNotificationService {
       sound: true,
     );
 
-    debugPrint('[FCM] Permission status on refresh: ${settings.authorizationStatus}');
+    debugPrint(
+      '[FCM] Permission status on refresh: ${settings.authorizationStatus}',
+    );
 
     final token = await _messaging.getToken();
     debugPrint('[FCM] Retrieved refreshed token: $token');
@@ -154,7 +169,9 @@ class PushNotificationService {
       debugPrint('[FCM] Aucun utilisateur connecté, token non enregistré.');
       return false;
     }
-    debugPrint('[FCM] Saving token to Supabase, userId=${user.id}, token=$token');
+    debugPrint(
+      '[FCM] Saving token to Supabase, userId=${user.id}, token=$token',
+    );
 
     try {
       final profileCheck = await _supabase
@@ -164,27 +181,34 @@ class PushNotificationService {
           .maybeSingle();
 
       if (profileCheck == null) {
-        debugPrint('[FCM] Aucun profil existant pour user ${user.id}. Impossible de stocker fcm_token dans public.profiles.');
+        debugPrint(
+          '[FCM] Aucun profil existant pour user ${user.id}. Impossible de stocker fcm_token dans public.profiles.',
+        );
         return false;
       }
 
-      final response = await _supabase.from('profiles').update(
-        {
-          'fcm_token': token,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-      ).eq('id', user.id);
+      final response = await _supabase
+          .from('profiles')
+          .update({
+            'fcm_token': token,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', user.id);
 
       debugPrint('[FCM] Réponse update FCM token: $response');
       if (response is Map<String, dynamic> && response['error'] != null) {
-        debugPrint('[FCM] Erreur lors de l\'enregistrement du token FCM : ${response['error']}');
+        debugPrint(
+          '[FCM] Erreur lors de l\'enregistrement du token FCM : ${response['error']}',
+        );
         return false;
       }
 
       debugPrint('[FCM] Token enregistré pour user ${user.id}.');
       return true;
     } catch (error) {
-      debugPrint('[FCM] Erreur lors de l\'enregistrement du token FCM : $error');
+      debugPrint(
+        '[FCM] Erreur lors de l\'enregistrement du token FCM : $error',
+      );
       return false;
     }
   }

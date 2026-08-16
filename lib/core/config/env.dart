@@ -10,12 +10,8 @@ class Env {
   );
 
   /// Supabase URL
-  static const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-  );
+  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
   /// Supabase Anon Key
-  static const supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-  );
+  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 }

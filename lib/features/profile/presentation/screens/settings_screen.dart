@@ -16,11 +16,17 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final themeMode = ref.watch(themeModeProvider);
 
     Future<void> signOut() async {
@@ -42,7 +48,8 @@ class SettingsScreen extends ConsumerWidget {
       final confirmed = await showConfirmationModalBottomSheet(
         context: context,
         title: 'Supprimer mon compte ?',
-        content: 'Cette action est définitive. Toutes les données associées à ton compte seront supprimées.',
+        content:
+            'Cette action est définitive. Toutes les données associées à ton compte seront supprimées.',
         cancelText: 'Annuler',
         confirmText: 'Supprimer',
         destructive: true,
@@ -78,16 +85,21 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Icon(LucideIcons.moonStar, color: textPrimary),
                       const SizedBox(width: 12),
-                      Text('Mode sombre', style: TextStyle(color: textPrimary, fontSize: 16)),
+                      Text(
+                        'Mode sombre',
+                        style: TextStyle(color: textPrimary, fontSize: 16),
+                      ),
                     ],
                   ),
                   Switch(
                     value: themeMode == ThemeMode.dark,
-                    activeColor: AppColors.primaryLight,
+                    activeThumbColor: AppColors.primaryLight,
                     onChanged: (value) async {
-                      await ref.read(themeModeProvider.notifier).setThemeMode(
-                        value ? ThemeMode.dark : ThemeMode.light,
-                      );
+                      await ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(
+                            value ? ThemeMode.dark : ThemeMode.light,
+                          );
                     },
                   ),
                 ],
@@ -97,15 +109,27 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(LucideIcons.bell, color: textPrimary),
-              title: Text('Tester les notifications', style: TextStyle(color: textPrimary)),
-              subtitle: Text('Envoie une notification de test via Supabase', style: TextStyle(color: textSecondary)),
+              title: Text(
+                'Tester les notifications',
+                style: TextStyle(color: textPrimary),
+              ),
+              subtitle: Text(
+                'Envoie une notification de test via Supabase',
+                style: TextStyle(color: textSecondary),
+              ),
               onTap: () async {
                 try {
-                  await ref.read(pushNotificationServiceProvider).refreshToken();
-                  await ref.read(profileRepositoryProvider).sendTestNotification();
+                  await ref
+                      .read(pushNotificationServiceProvider)
+                      .refreshToken();
+                  await ref
+                      .read(profileRepositoryProvider)
+                      .sendTestNotification();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notification de test envoyée.')),
+                      const SnackBar(
+                        content: Text('Notification de test envoyée.'),
+                      ),
                     );
                   }
                 } catch (error) {
@@ -120,12 +144,22 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(LucideIcons.shieldCheck, color: textPrimary),
-              title: Text('Vérifier le token FCM', style: TextStyle(color: textPrimary)),
-              subtitle: Text('Affiche le token local et le token stocké dans Supabase', style: TextStyle(color: textSecondary)),
+              title: Text(
+                'Vérifier le token FCM',
+                style: TextStyle(color: textPrimary),
+              ),
+              subtitle: Text(
+                'Affiche le token local et le token stocké dans Supabase',
+                style: TextStyle(color: textSecondary),
+              ),
               onTap: () async {
                 try {
-                  final localToken = await ref.read(pushNotificationServiceProvider).refreshToken();
-                  final storedToken = await ref.read(profileRepositoryProvider).fetchStoredFcmToken();
+                  final localToken = await ref
+                      .read(pushNotificationServiceProvider)
+                      .refreshToken();
+                  final storedToken = await ref
+                      .read(profileRepositoryProvider)
+                      .fetchStoredFcmToken();
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -149,15 +183,30 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(LucideIcons.logOut, color: textPrimary),
-              title: Text('Se déconnecter', style: TextStyle(color: textPrimary)),
-              subtitle: Text('Déconnexion de Supabase', style: TextStyle(color: textSecondary)),
+              title: Text(
+                'Se déconnecter',
+                style: TextStyle(color: textPrimary),
+              ),
+              subtitle: Text(
+                'Déconnexion de Supabase',
+                style: TextStyle(color: textSecondary),
+              ),
               onTap: signOut,
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.trash2, color: AppColors.errorLight),
-              title: Text('Supprimer mon compte', style: TextStyle(color: AppColors.errorLight)),
-              subtitle: Text('Suppression définitive', style: TextStyle(color: textSecondary)),
+              leading: const Icon(
+                LucideIcons.trash2,
+                color: AppColors.errorLight,
+              ),
+              title: const Text(
+                'Supprimer mon compte',
+                style: TextStyle(color: AppColors.errorLight),
+              ),
+              subtitle: Text(
+                'Suppression définitive',
+                style: TextStyle(color: textSecondary),
+              ),
               onTap: deleteAccount,
             ),
           ],

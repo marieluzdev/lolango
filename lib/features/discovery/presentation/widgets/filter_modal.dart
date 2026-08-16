@@ -11,7 +11,7 @@ class DiscoveryFilter {
     this.gender,
     this.city,
     Set<String>? socials,
-  }) : socials = socials ?? {}; 
+  }) : socials = socials ?? {};
 }
 
 class FilterModal extends StatefulWidget {
@@ -57,11 +57,14 @@ class _FilterModalState extends State<FilterModal> {
           min: 18,
           max: 80,
           divisions: 62,
-          labels: RangeLabels(_age.start.round().toString(), _age.end.round().toString()),
+          labels: RangeLabels(
+            _age.start.round().toString(),
+            _age.end.round().toString(),
+          ),
           onChanged: (v) => setState(() => _age = v),
         ),
         const SizedBox(height: 8),
-        Text('Sexe'),
+        const Text('Sexe'),
         Row(
           children: [
             ChoiceChip(
@@ -89,7 +92,7 @@ class _FilterModalState extends State<FilterModal> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Ville'),
+              const Text('Ville'),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -102,7 +105,8 @@ class _FilterModalState extends State<FilterModal> {
                   ChoiceChip(
                     label: Text(_city!),
                     selected: _city != null,
-                    onSelected: (_) => setState(() => _city = widget.initial.city),
+                    onSelected: (_) =>
+                        setState(() => _city = widget.initial.city),
                   ),
                 ],
               ),
@@ -111,7 +115,7 @@ class _FilterModalState extends State<FilterModal> {
         else
           const SizedBox.shrink(),
         const SizedBox(height: 12),
-        Text('Réseaux sociaux'),
+        const Text('Réseaux sociaux'),
         Wrap(
           spacing: 8,
           children: ['Instagram', 'Snapchat', 'TikTok'].map((label) {
@@ -133,7 +137,10 @@ class _FilterModalState extends State<FilterModal> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annuler')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuler'),
+            ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {

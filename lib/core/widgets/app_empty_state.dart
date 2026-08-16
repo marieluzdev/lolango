@@ -20,8 +20,12 @@ class AppEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
 
     return Center(
@@ -32,10 +36,7 @@ class AppEmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: surface,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: surface, shape: BoxShape.circle),
               child: Icon(icon, size: 48, color: textSecondary),
             ),
             const SizedBox(height: 24),
@@ -52,18 +53,17 @@ class AppEmptyState extends StatelessWidget {
             Text(
               description,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: textSecondary,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 16, color: textSecondary, height: 1.5),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),

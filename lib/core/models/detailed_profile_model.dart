@@ -14,7 +14,8 @@ class DetailedProfileModel {
   });
 
   /// The main photo URL (usually the first one in the gallery).
-  String? get primaryPhotoUrl => photoUrls.isNotEmpty ? photoUrls.first : profile.photoUrl;
+  String? get primaryPhotoUrl =>
+      photoUrls.isNotEmpty ? photoUrls.first : profile.photoUrl;
 
   /// Creates a DetailedProfileModel from a Map and optional overrides.
   factory DetailedProfileModel.fromMap(
@@ -46,7 +47,7 @@ class DetailedProfileModel {
         }
       }
     }
-    
+
     // Fallback on basic profile photos if still empty
     if (photos.isEmpty) {
       photos = profile.photoUrls;
@@ -83,8 +84,8 @@ class DetailedProfileModel {
             // Nested structure like { interests: { name: '...' } }
             final interestMap = i['interests'];
             if (interestMap is Map<String, dynamic>) {
-               final name = interestMap['name']?.toString();
-               if (name != null && name.isNotEmpty) interests.add(name);
+              final name = interestMap['name']?.toString();
+              if (name != null && name.isNotEmpty) interests.add(name);
             }
           } else {
             final s = i?.toString();

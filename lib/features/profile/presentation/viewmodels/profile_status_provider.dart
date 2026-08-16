@@ -10,7 +10,7 @@ class ProfileStatusNotifier extends AsyncNotifier<bool> {
     if (user == null) {
       return false;
     }
-    
+
     try {
       return await ref.read(profileRepositoryProvider).hasCompletedProfile();
     } catch (_) {
@@ -23,6 +23,7 @@ class ProfileStatusNotifier extends AsyncNotifier<bool> {
   }
 }
 
-final profileStatusProvider = AsyncNotifierProvider<ProfileStatusNotifier, bool>(() {
-  return ProfileStatusNotifier();
-});
+final profileStatusProvider =
+    AsyncNotifierProvider<ProfileStatusNotifier, bool>(() {
+      return ProfileStatusNotifier();
+    });

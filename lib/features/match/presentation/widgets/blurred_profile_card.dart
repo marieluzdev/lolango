@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 import 'dart:ui';
 
 class BlurredProfileCard extends StatelessWidget {
@@ -17,7 +18,6 @@ class BlurredProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
     return Container(
       decoration: BoxDecoration(
@@ -25,7 +25,7 @@ class BlurredProfileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -37,8 +37,8 @@ class BlurredProfileCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: profile.primaryPhotoUrl != null
-                ? Image.network(
-                    profile.primaryPhotoUrl!,
+                ? AppCachedImage(
+                    imageUrl: profile.primaryPhotoUrl!,
                     fit: BoxFit.cover,
                   )
                 : Container(color: Colors.grey),
@@ -47,25 +47,19 @@ class BlurredProfileCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                color: Colors.black.withOpacity(0.3),
-              ),
+              child: Container(color: Colors.black.withValues(alpha: 0.3)),
             ),
           ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.favorite,
-                  color: Color(0xFFFE3C72),
-                  size: 48,
-                ),
+                const Icon(Icons.favorite, color: Color(0xFFFE3C72), size: 48),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   "Quelqu'un s'intéresse\nà toi",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

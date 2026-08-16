@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/errors/failures.dart';
 
 class InteractionRepository {
   final SupabaseClient _client;
-  
+
   InteractionRepository(this._client);
 
   String get _currentUserId {
@@ -62,7 +61,7 @@ class InteractionRepository {
           'user2_id': targetId,
           'created_at': DateTime.now().toIso8601String(),
         });
-        
+
         // Notifications for both users
         await _client.from('notifications').insert([
           {
@@ -74,9 +73,9 @@ class InteractionRepository {
             'user_id': targetId,
             'title': 'Nouveau match !',
             'body': 'Tu as un nouveau match. Découvre-le vite !',
-          }
+          },
         ]);
-        
+
         return true;
       } else {
         // Notification for the liked user
@@ -92,13 +91,22 @@ class InteractionRepository {
     }
   }
 
-  Future<List<DetailedProfileModel>> _fetchDetailedProfilesByIds(List<String> ids) async {
+  Future<List<DetailedProfileModel>> _fetchDetailedProfilesByIds(
+    List<String> ids,
+  ) async {
     if (ids.isEmpty) return [];
     final results = await Future.wait([
       _client.from('profiles').select().inFilter('id', ids),
-      _client.from('profile_photos').select().inFilter('user_id', ids).order('position', ascending: true),
+      _client
+          .from('profile_photos')
+          .select()
+          .inFilter('user_id', ids)
+          .order('position', ascending: true),
       _client.from('profile_socials').select().inFilter('user_id', ids),
-      _client.from('profile_interests').select('user_id, interests(name)').inFilter('user_id', ids),
+      _client
+          .from('profile_interests')
+          .select('user_id, interests(name)')
+          .inFilter('user_id', ids),
     ]);
 
     final profilesRes = results[0] as List<dynamic>;
@@ -156,43 +164,54 @@ class InteractionRepository {
           .select('user_id')
           .eq('target_id', _currentUserId)
           .eq('status', 'like');
-          
-      final likerIds = (likesRes as List).map((row) => row['user_id'] as String).toList();
-      
+
+      final likerIds = (likesRes as List)
+          .map((row) => row['user_id'] as String)
+          .toList();
+
       if (likerIds.isEmpty) return [];
 
       final matchesRes = await _client
           .from('matches')
           .select('user1_id, user2_id')
           .or('user1_id.eq.$_currentUserId,user2_id.eq.$_currentUserId');
-          
+
       final matchedIds = (matchesRes as List).map((row) {
-        return row['user1_id'] == _currentUserId ? row['user2_id'] : row['user1_id'];
+        return row['user1_id'] == _currentUserId
+            ? row['user2_id']
+            : row['user1_id'];
       }).toSet();
-      
-      final pendingLikerIds = likerIds.where((id) => !matchedIds.contains(id)).toList();
-      
+
+      final pendingLikerIds = likerIds
+          .where((id) => !matchedIds.contains(id))
+          .toList();
+
       if (pendingLikerIds.isEmpty) return [];
-      
+
       return await _fetchDetailedProfilesByIds(pendingLikerIds);
     } catch (e) {
       throw Failure.from(e);
     }
   }
-  
+
   Future<List<DetailedProfileModel>> getMatches() async {
     try {
       final matchesRes = await _client
           .from('matches')
           .select('user1_id, user2_id')
           .or('user1_id.eq.$_currentUserId,user2_id.eq.$_currentUserId');
-          
-      final matchedIds = (matchesRes as List).map((row) {
-        return row['user1_id'] == _currentUserId ? row['user2_id'] : row['user1_id'];
-      }).toSet().toList();
-      
+
+      final matchedIds = (matchesRes as List)
+          .map((row) {
+            return row['user1_id'] == _currentUserId
+                ? row['user2_id']
+                : row['user1_id'];
+          })
+          .toSet()
+          .toList();
+
       if (matchedIds.isEmpty) return [];
-      
+
       return await _fetchDetailedProfilesByIds(matchedIds.cast<String>());
     } catch (e) {
       throw Failure.from(e);

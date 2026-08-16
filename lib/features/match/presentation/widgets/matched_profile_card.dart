@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
 class MatchedProfileCard extends StatelessWidget {
   final DetailedProfileModel profile;
@@ -17,7 +17,9 @@ class MatchedProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     return GestureDetector(
       onTap: onTap,
@@ -27,7 +29,7 @@ class MatchedProfileCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -39,13 +41,17 @@ class MatchedProfileCard extends StatelessWidget {
           children: [
             Expanded(
               child: profile.primaryPhotoUrl != null
-                  ? Image.network(
-                      profile.primaryPhotoUrl!,
+                  ? AppCachedImage(
+                      imageUrl: profile.primaryPhotoUrl!,
                       fit: BoxFit.cover,
                     )
                   : Container(
                       color: Colors.grey.shade300,
-                      child: Icon(Icons.person, size: 48, color: Colors.grey.shade600),
+                      child: Icon(
+                        Icons.person,
+                        size: 48,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
             ),
             Padding(
@@ -68,7 +74,10 @@ class MatchedProfileCard extends StatelessWidget {
                   if (profile.socials.isNotEmpty) ...[
                     const Text(
                       'Réseaux :',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Wrap(
@@ -76,14 +85,19 @@ class MatchedProfileCard extends StatelessWidget {
                       runSpacing: 4,
                       children: profile.socials.keys.take(3).map((social) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withOpacity(0.1),
+                            color: AppColors.primaryLight.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             social,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.primaryLight,
                               fontWeight: FontWeight.w600,
@@ -95,7 +109,10 @@ class MatchedProfileCard extends StatelessWidget {
                   ] else ...[
                     const Text(
                       'Aucun réseau',
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ],

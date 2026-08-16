@@ -53,5 +53,5 @@
 - [ ] **Phase 3 : Providers** (Riverpod propre : nettoyage Supabase direct, cache, initialisation filtre)
 - [ ] **Phase 4 : Présentation** (UI et états : décomposition God Widgets, empty/error/loading states)
 - [ ] **Phase 5 : Performance et cache** (CachedNetworkImage, debounce, invalidations)
-- [ ] **Phase 6 : Qualité et polish** (Format, analyse, nettoyage des print et code mort)
+- [x] **Phase 6 : Qualité et polish** (Format, analyse, nettoyage des print et code mort)
 - [ ] **Phase 7 : Tests unitaires et widgets** (Erreurs, debouncer, repositories, widgets réutilisables)

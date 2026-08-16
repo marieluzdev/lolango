@@ -29,7 +29,9 @@ Future<bool> showConfirmationDialog({
                 : null,
             child: Text(
               confirmText,
-              style: destructive ? const TextStyle(color: AppColors.errorLight) : null,
+              style: destructive
+                  ? const TextStyle(color: AppColors.errorLight)
+                  : null,
             ),
           ),
         ],

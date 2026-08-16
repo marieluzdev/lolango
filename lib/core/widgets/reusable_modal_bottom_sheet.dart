@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 /// Utilisé pour les options, confirmations et autres modales avec le même design
 class ReusableModalBottomSheet extends StatelessWidget {
   const ReusableModalBottomSheet({
+    super.key,
     required this.context,
     required this.title,
     required this.surface,
@@ -88,8 +89,8 @@ Future<T?> showReusableModalBottomSheet<T>({
         title: title,
         surface: surface,
         textPrimary: textPrimary,
-        children: children,
         onClose: onClose,
+        children: children,
       );
     },
   );

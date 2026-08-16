@@ -5,7 +5,6 @@ import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class OnboardingRepository {
   final SupabaseClient supabase;
 
@@ -60,7 +59,8 @@ class OnboardingRepository {
 
       return urls;
     } on StorageException catch (error) {
-      if (error.statusCode == 404 || error.message.toLowerCase().contains('bucket not found')) {
+      if (error.statusCode == '404' ||
+          error.message.toLowerCase().contains('bucket not found')) {
         throw StateError(
           "Le bucket Supabase Storage 'profile-photos' est introuvable. Créez-le dans Supabase > Storage > New bucket, puis réessayez.",
         );
@@ -90,7 +90,8 @@ class OnboardingRepository {
       'longitude': payload['longitude'],
       'bio': payload['bio'] ?? '',
       'profile_completed': true,
-      'created_at': payload['created_at'] ?? DateTime.now().toUtc().toIso8601String(),
+      'created_at':
+          payload['created_at'] ?? DateTime.now().toUtc().toIso8601String(),
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -116,17 +117,20 @@ class OnboardingRepository {
         await supabase.from('profile_photos').insert(photoRows);
       }
 
-      final socials = payload['social_links'] as Map<String, dynamic>? ?? const {};
+      final socials =
+          payload['social_links'] as Map<String, dynamic>? ?? const {};
       AppLogger.d('onboarding repo: socialsCount=${socials.length}');
       await supabase.from('profile_socials').delete().eq('user_id', user.id);
       if (socials.isNotEmpty) {
         final socialRows = socials.entries
             .where((entry) => (entry.value as String).trim().isNotEmpty)
-            .map((entry) => {
-                  'user_id': user.id,
-                  'platform': entry.key,
-                  'username': (entry.value as String).trim(),
-                })
+            .map(
+              (entry) => {
+                'user_id': user.id,
+                'platform': entry.key,
+                'username': (entry.value as String).trim(),
+              },
+            )
             .toList();
 
         if (socialRows.isNotEmpty) {
@@ -134,24 +138,32 @@ class OnboardingRepository {
         }
       }
 
-      final selectedInterests = payload['selected_interests'] as List<dynamic>? ?? const [];
-      AppLogger.d('onboarding repo: selectedInterestsCount=${selectedInterests.length}');
+      final selectedInterests =
+          payload['selected_interests'] as List<dynamic>? ?? const [];
+      AppLogger.d(
+        'onboarding repo: selectedInterestsCount=${selectedInterests.length}',
+      );
       await supabase.from('profile_interests').delete().eq('user_id', user.id);
       if (selectedInterests.isNotEmpty) {
         final names = selectedInterests.map((item) => item.toString()).toSet();
-        final allInterestRows = await supabase.from('interests').select('id, name');
+        final allInterestRows = await supabase
+            .from('interests')
+            .select('id, name');
 
         final interestIds = (allInterestRows as List<dynamic>)
-            .where((entry) => entry['name'] is String && names.contains(entry['name'] as String))
+            .where(
+              (entry) =>
+                  entry['name'] is String &&
+                  names.contains(entry['name'] as String),
+            )
             .map((entry) => entry['id'] as String)
             .toList();
 
         if (interestIds.isNotEmpty) {
           final profileInterestRows = interestIds
-              .map((interestId) => {
-                    'user_id': user.id,
-                    'interest_id': interestId,
-                  })
+              .map(
+                (interestId) => {'user_id': user.id, 'interest_id': interestId},
+              )
               .toList();
 
           await supabase.from('profile_interests').insert(profileInterestRows);

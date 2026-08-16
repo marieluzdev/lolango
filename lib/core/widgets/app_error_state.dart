@@ -17,8 +17,12 @@ class AppErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
 
     return Center(
@@ -29,11 +33,12 @@ class AppErrorState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: surface,
-                shape: BoxShape.circle,
+              decoration: BoxDecoration(color: surface, shape: BoxShape.circle),
+              child: const Icon(
+                LucideIcons.alertCircle,
+                size: 48,
+                color: Colors.redAccent,
               ),
-              child: Icon(LucideIcons.alertCircle, size: 48, color: Colors.redAccent),
             ),
             const SizedBox(height: 24),
             Text(
@@ -49,11 +54,7 @@ class AppErrorState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: textSecondary,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 16, color: textSecondary, height: 1.5),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -61,7 +62,10 @@ class AppErrorState extends StatelessWidget {
               icon: const Icon(LucideIcons.refreshCw, size: 18),
               label: const Text('Réessayer'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),

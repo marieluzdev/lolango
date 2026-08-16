@@ -14,20 +14,51 @@ import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class DiscoveryScreen extends ConsumerWidget {
+class DiscoveryScreen extends ConsumerStatefulWidget {
   const DiscoveryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DiscoveryScreen> createState() => _DiscoveryScreenState();
+}
+
+class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300) {
+      ref.read(discoveryNotifierProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     // Écoute de l'initialisation du filtre (sans effet direct sur le rendu local)
     ref.watch(discoveryFilterInitProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
-    final filteredAsync = ref.watch(filteredProfilesProvider);
+    final discoveryAsync = ref.watch(discoveryNotifierProvider);
     final filterState = ref.watch(discoveryFilterProvider);
 
     return Scaffold(
@@ -52,7 +83,9 @@ class DiscoveryScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () async {
                       final surfaceColor = Theme.of(context).cardColor;
-                      final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+                      final textColor =
+                          Theme.of(context).textTheme.bodyLarge?.color ??
+                          Colors.black;
 
                       final userProfile = ref.read(profileProvider).value;
                       String? userCity;
@@ -86,19 +119,20 @@ class DiscoveryScreen extends ConsumerWidget {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(allProfilesProvider);
-                    ref.invalidate(interactedProfilesProvider);
+                    await ref
+                        .read(discoveryNotifierProvider.notifier)
+                        .refresh();
                   },
-                  child: filteredAsync.when(
+                  child: discoveryAsync.when(
                     loading: () => const AppSpinner(),
                     error: (error, _) => AppErrorState(
                       message: "Erreur lors du chargement des profils.",
                       onRetry: () {
-                        ref.invalidate(allProfilesProvider);
-                        ref.invalidate(interactedProfilesProvider);
+                        ref.read(discoveryNotifierProvider.notifier).refresh();
                       },
                     ),
-                    data: (filtered) {
+                    data: (discoveryState) {
+                      final filtered = discoveryState.profiles;
                       if (filtered.isEmpty) {
                         return CustomScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -107,10 +141,13 @@ class DiscoveryScreen extends ConsumerWidget {
                               child: AppEmptyState(
                                 icon: LucideIcons.users,
                                 title: 'Aucun profil',
-                                description: 'Aucun profil trouvé selon les filtres actuels.',
+                                description:
+                                    'Aucun profil trouvé selon les filtres actuels.',
                                 actionLabel: 'Réinitialiser',
                                 onAction: () {
-                                  ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
+                                  ref
+                                      .read(discoveryFilterProvider.notifier)
+                                      .state = DiscoveryFilter(
                                     ageRange: const RangeValues(18, 80),
                                   );
                                 },
@@ -121,15 +158,30 @@ class DiscoveryScreen extends ConsumerWidget {
                       }
 
                       return GridView.builder(
+                        controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.70,
-                        ),
-                        itemCount: filtered.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 0.70,
+                            ),
+                        itemCount: discoveryState.hasMore
+                            ? filtered.length + 1
+                            : filtered.length,
                         itemBuilder: (context, i) {
+                          // Footer : spinner de chargement
+                          if (i == filtered.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
                           final p = filtered[i];
                           return ProfileCard(
                             name: p.profile.name,
@@ -142,31 +194,51 @@ class DiscoveryScreen extends ConsumerWidget {
                             interests: p.interests,
                             isGridMode: true,
                             onPass: () {
-                              ref.read(hiddenProfilesProvider.notifier).update((state) {
+                              ref.read(hiddenProfilesProvider.notifier).update((
+                                state,
+                              ) {
                                 final newState = Set<String>.from(state);
                                 newState.add(p.profile.id);
                                 return newState;
                               });
-                              ref.read(interactionRepositoryProvider).passProfile(p.profile.id).then((_) {
-                                ref.invalidate(interactedProfilesProvider);
-                              });
+                              ref
+                                  .read(interactionRepositoryProvider)
+                                  .passProfile(p.profile.id)
+                                  .then((_) {
+                                    ref.invalidate(interactedProfilesProvider);
+                                  });
                             },
                             onConnect: () {
-                              ref.read(hiddenProfilesProvider.notifier).update((state) {
+                              ref.read(hiddenProfilesProvider.notifier).update((
+                                state,
+                              ) {
                                 final newState = Set<String>.from(state);
                                 newState.add(p.profile.id);
                                 return newState;
                               });
-                              ref.read(interactionRepositoryProvider).likeProfile(p.profile.id).then((isMatch) {
-                                if (isMatch) {
-                                  ref.read(matchNotificationBadgeProvider.notifier).state++;
-                                  ref.invalidate(matchesProvider);
-                                }
-                                ref.invalidate(interactedProfilesProvider);
-                              });
+                              ref
+                                  .read(interactionRepositoryProvider)
+                                  .likeProfile(p.profile.id)
+                                  .then((isMatch) {
+                                    if (isMatch) {
+                                      ref
+                                          .read(
+                                            matchNotificationBadgeProvider
+                                                .notifier,
+                                          )
+                                          .state++;
+                                      ref.invalidate(matchesProvider);
+                                    }
+                                    ref.invalidate(interactedProfilesProvider);
+                                  });
                             },
                             onTap: () {
-                              _showActionModal(context, ref, p, theme: Theme.of(context));
+                              _showActionModal(
+                                context,
+                                ref,
+                                p,
+                                theme: Theme.of(context),
+                              );
                             },
                           );
                         },
@@ -182,8 +254,12 @@ class DiscoveryScreen extends ConsumerWidget {
     );
   }
 
-  void _showActionModal(BuildContext context, WidgetRef ref, DetailedProfileModel pDetailed,
-      {required ThemeData theme}) {
+  void _showActionModal(
+    BuildContext context,
+    WidgetRef ref,
+    DetailedProfileModel pDetailed, {
+    required ThemeData theme,
+  }) {
     final p = pDetailed.profile;
     final socials = pDetailed.socials;
 
@@ -194,10 +270,7 @@ class DiscoveryScreen extends ConsumerWidget {
       textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
       children: [
         if (p.bio != null && p.bio!.isNotEmpty) ...[
-          Text(
-            p.bio!,
-            style: const TextStyle(fontSize: 15, height: 1.5),
-          ),
+          Text(p.bio!, style: const TextStyle(fontSize: 15, height: 1.5)),
           const SizedBox(height: 20),
         ],
 
@@ -242,9 +315,12 @@ class DiscoveryScreen extends ConsumerWidget {
                     newState.add(p.id);
                     return newState;
                   });
-                  ref.read(interactionRepositoryProvider).passProfile(p.id).then((_) {
-                    ref.invalidate(interactedProfilesProvider);
-                  });
+                  ref
+                      .read(interactionRepositoryProvider)
+                      .passProfile(p.id)
+                      .then((_) {
+                        ref.invalidate(interactedProfilesProvider);
+                      });
                   Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
@@ -267,13 +343,18 @@ class DiscoveryScreen extends ConsumerWidget {
                     newState.add(p.id);
                     return newState;
                   });
-                  ref.read(interactionRepositoryProvider).likeProfile(p.id).then((isMatch) {
-                    if (isMatch) {
-                      ref.read(matchNotificationBadgeProvider.notifier).state++;
-                      ref.invalidate(matchesProvider);
-                    }
-                    ref.invalidate(interactedProfilesProvider);
-                  });
+                  ref
+                      .read(interactionRepositoryProvider)
+                      .likeProfile(p.id)
+                      .then((isMatch) {
+                        if (isMatch) {
+                          ref
+                              .read(matchNotificationBadgeProvider.notifier)
+                              .state++;
+                          ref.invalidate(matchesProvider);
+                        }
+                        ref.invalidate(interactedProfilesProvider);
+                      });
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
@@ -305,9 +386,7 @@ class DiscoveryScreen extends ConsumerWidget {
       title: platform,
       surface: theme.cardColor,
       textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
-      children: const [
-        SizedBox(height: 16),
-      ],
+      children: const [SizedBox(height: 16)],
     );
   }
 }
@@ -337,16 +416,31 @@ class _SocialRow extends StatelessWidget {
           ),
         );
       case 'snapchat':
-        return const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFFFFC00));
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFFFFC00),
+        );
       case 'tiktok':
-        return const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF010101));
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF010101),
+        );
       case 'twitter':
       case 'x':
-        return const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF1DA1F2));
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF1DA1F2),
+        );
       case 'facebook':
-        return const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF1877F2));
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF1877F2),
+        );
       default:
-        return const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF555555));
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF555555),
+        );
     }
   }
 
@@ -401,8 +495,10 @@ class _SocialRow extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right,
-              color: textColor.withAlpha((0.4 * 255).round())),
+          Icon(
+            Icons.chevron_right,
+            color: textColor.withAlpha((0.4 * 255).round()),
+          ),
         ],
       ),
     );

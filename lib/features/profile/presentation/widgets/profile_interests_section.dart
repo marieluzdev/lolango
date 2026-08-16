@@ -4,13 +4,11 @@ import 'package:lolango_v2/core/constants/app_colors.dart';
 class ProfileInterestsSection extends StatefulWidget {
   final List<String> interests;
 
-  const ProfileInterestsSection({
-    super.key,
-    required this.interests,
-  });
+  const ProfileInterestsSection({super.key, required this.interests});
 
   @override
-  State<ProfileInterestsSection> createState() => _ProfileInterestsSectionState();
+  State<ProfileInterestsSection> createState() =>
+      _ProfileInterestsSectionState();
 }
 
 class _ProfileInterestsSectionState extends State<ProfileInterestsSection> {
@@ -24,16 +22,21 @@ class _ProfileInterestsSectionState extends State<ProfileInterestsSection> {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final secondary = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
+    final secondary = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
 
     final visibleInterests = _showAllInterests
         ? widget.interests
         : widget.interests.take(_interestsCollapsedLimit).toList();
     final hasMoreInterests =
-        !_showAllInterests && widget.interests.length > _interestsCollapsedLimit;
+        !_showAllInterests &&
+        widget.interests.length > _interestsCollapsedLimit;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +56,10 @@ class _ProfileInterestsSectionState extends State<ProfileInterestsSection> {
           children: [
             ...visibleInterests.map(
               (interest) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: surface,
                   borderRadius: BorderRadius.circular(20),
@@ -73,7 +79,10 @@ class _ProfileInterestsSectionState extends State<ProfileInterestsSection> {
               GestureDetector(
                 onTap: () => setState(() => _showAllInterests = true),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(
                     'Voir plus',
                     style: TextStyle(

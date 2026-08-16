@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String firstName;
@@ -24,8 +25,12 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     return Center(
@@ -34,17 +39,16 @@ class ProfileHeader extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(48),
             child: primaryPhotoUrl != null && primaryPhotoUrl!.isNotEmpty
-                ? Image.network(
-                    primaryPhotoUrl!,
+                ? AppCachedImage(
+                    imageUrl: primaryPhotoUrl!,
                     width: 96,
                     height: 96,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _AvatarInitial(
-                      letter: firstName.isNotEmpty ? firstName[0].toUpperCase() : 'L',
-                    ),
                   )
                 : _AvatarInitial(
-                    letter: firstName.isNotEmpty ? firstName[0].toUpperCase() : 'L',
+                    letter: firstName.isNotEmpty
+                        ? firstName[0].toUpperCase()
+                        : 'L',
                   ),
           ),
           const SizedBox(height: 12),
@@ -57,18 +61,13 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            username,
-            style: TextStyle(
-              color: textSecondary,
-              fontSize: 14,
-            ),
-          ),
+          Text(username, style: TextStyle(color: textSecondary, fontSize: 14)),
           const SizedBox(height: 10),
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (location.isNotEmpty && location != 'Localisation non renseignée')
+              if (location.isNotEmpty &&
+                  location != 'Localisation non renseignée')
                 _InfoPill(
                   icon: LucideIcons.mapPin,
                   label: location,
@@ -98,10 +97,7 @@ class ProfileHeader extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: textPrimary,
               side: BorderSide(color: border),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 22,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(26),
               ),
@@ -109,10 +105,7 @@ class ProfileHeader extends StatelessWidget {
             icon: const Icon(Icons.edit, size: 16),
             label: const Text(
               'Modifier le profil',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -188,11 +181,7 @@ class _InfoDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Container(
-        width: 1,
-        height: 12,
-        color: color,
-      ),
+      child: Container(width: 1, height: 12, color: color),
     );
   }
 }

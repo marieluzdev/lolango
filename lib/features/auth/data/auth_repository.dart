@@ -26,9 +26,7 @@ class AuthRepository {
   /// une fois au démarrage de l'app plutôt qu'à chaque tentative de connexion.
   Future<void> ensureGoogleSignInInitialized() async {
     if (_isGoogleSignInInitialized) return;
-    await _googleSignIn.initialize(
-      serverClientId: Env.googleWebClientId,
-    );
+    await _googleSignIn.initialize(serverClientId: Env.googleWebClientId);
     _isGoogleSignInInitialized = true;
   }
 
@@ -62,10 +60,9 @@ class AuthRepository {
     }
 
     final normalized = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
-    final name = normalized.split(RegExp(r'\s+')).firstWhere(
-      (part) => part.trim().isNotEmpty,
-      orElse: () => '',
-    );
+    final name = normalized
+        .split(RegExp(r'\s+'))
+        .firstWhere((part) => part.trim().isNotEmpty, orElse: () => '');
 
     return name;
   }
@@ -81,8 +78,10 @@ class AuthRepository {
     }
 
     // Autorisation (accessToken) séparée de l'authentification depuis v7.
-    final authorization = await googleUser.authorizationClient
-            .authorizationForScopes(_googleScopes) ??
+    final authorization =
+        await googleUser.authorizationClient.authorizationForScopes(
+          _googleScopes,
+        ) ??
         await googleUser.authorizationClient.authorizeScopes(_googleScopes);
 
     return _supabase.auth.signInWithIdToken(

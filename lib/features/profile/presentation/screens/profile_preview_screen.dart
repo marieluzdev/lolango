@@ -10,7 +10,8 @@ class ProfilePreviewScreen extends ConsumerStatefulWidget {
   const ProfilePreviewScreen({super.key});
 
   @override
-  ConsumerState<ProfilePreviewScreen> createState() => _ProfilePreviewScreenState();
+  ConsumerState<ProfilePreviewScreen> createState() =>
+      _ProfilePreviewScreenState();
 }
 
 class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
@@ -24,7 +25,9 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final profile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+    final profile = await ref
+        .read(profileRepositoryProvider)
+        .fetchDetailedProfile();
     if (mounted) {
       setState(() {
         _profile = profile;
@@ -36,8 +39,12 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     return Scaffold(
       backgroundColor: background,
@@ -58,48 +65,65 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _profile == null
-              ? Center(
-                  child: Text('Profil introuvable.', style: TextStyle(color: textPrimary)),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          ? Center(
+              child: Text(
+                'Profil introuvable.',
+                style: TextStyle(color: textPrimary),
+              ),
+            )
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.surfaceDark
+                          : AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          LucideIcons.eye,
+                          size: 16,
+                          color: textPrimary.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'C\'est ainsi que les autres utilisateurs voient ta carte',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: textPrimary.withValues(alpha: 0.7),
+                            ),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(LucideIcons.eye, size: 16, color: textPrimary.withValues(alpha: 0.7)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'C\'est ainsi que les autres utilisateurs voient ta carte',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: textPrimary.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: _buildProfileCard(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                 ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: _buildProfileCard(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
     );
   }
 

@@ -11,10 +11,7 @@ class ProfilePhoto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'url': url,
-        'is_primary': isPrimary,
-      };
+  Map<String, dynamic> toJson() => {'url': url, 'is_primary': isPrimary};
 }
 
 class OnboardingProfile {
@@ -51,21 +48,21 @@ class OnboardingProfile {
   });
 
   OnboardingProfile.initial()
-      : this(
-          firstName: '',
-          username: '',
-          gender: null,
-          discoveryPreferences: const [],
-          locationLabel: null,
-          latitude: null,
-          longitude: null,
-          selectedInterests: const [],
-          photos: const [],
-          socials: const {},
-          bio: '',
-          usernameCheckPending: false,
-          usernameAvailable: false,
-        );
+    : this(
+        firstName: '',
+        username: '',
+        gender: null,
+        discoveryPreferences: const [],
+        locationLabel: null,
+        latitude: null,
+        longitude: null,
+        selectedInterests: const [],
+        photos: const [],
+        socials: const {},
+        bio: '',
+        usernameCheckPending: false,
+        usernameAvailable: false,
+      );
 
   String get normalizedUsername {
     return username.replaceFirst('@', '').trim();
@@ -272,23 +269,12 @@ const List<OnboardingInterestCategory> onboardingInterestCategories = [
   OnboardingInterestCategory(
     emoji: '🌿',
     name: 'Nature',
-    interests: [
-      'Jardinage',
-      'Animaux',
-      'Écologie',
-      'Camping',
-      'Pêche',
-    ],
+    interests: ['Jardinage', 'Animaux', 'Écologie', 'Camping', 'Pêche'],
   ),
   OnboardingInterestCategory(
     emoji: '🧘',
     name: 'Bien-être',
-    interests: [
-      'Méditation',
-      'Yoga',
-      'Spiritualité',
-      'Nutrition',
-    ],
+    interests: ['Méditation', 'Yoga', 'Spiritualité', 'Nutrition'],
   ),
 ];
 

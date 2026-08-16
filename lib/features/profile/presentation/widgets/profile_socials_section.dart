@@ -5,17 +5,17 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class ProfileSocialsSection extends StatelessWidget {
   final Map<String, String> socials;
 
-  const ProfileSocialsSection({
-    super.key,
-    required this.socials,
-  });
+  const ProfileSocialsSection({super.key, required this.socials});
 
   ({Color color, IconData icon}) _socialStyle(String platform) {
     switch (platform.toLowerCase()) {
       case 'instagram':
         return (color: const Color(0xFFE1306C), icon: LucideIcons.camera);
       case 'snapchat':
-        return (color: const Color(0xFFF7C600), icon: LucideIcons.messageCircle);
+        return (
+          color: const Color(0xFFF7C600),
+          icon: LucideIcons.messageCircle,
+        );
       case 'tiktok':
         return (color: const Color(0xFF000000), icon: LucideIcons.music);
       default:
@@ -30,8 +30,12 @@ class ProfileSocialsSection extends StatelessWidget {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     return Column(
@@ -64,7 +68,10 @@ class ProfileSocialsSection extends StatelessWidget {
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -101,7 +108,11 @@ class ProfileSocialsSection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(LucideIcons.chevronRight, size: 18, color: textSecondary),
+                        Icon(
+                          LucideIcons.chevronRight,
+                          size: 18,
+                          color: textSecondary,
+                        ),
                       ],
                     ),
                   ),

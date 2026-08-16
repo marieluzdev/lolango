@@ -7,13 +7,14 @@ import 'package:lolango_v2/features/auth/presentation/screens/splash_screen.dart
 import 'package:lolango_v2/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:lolango_v2/features/main/presentation/screens/main_shell.dart';
 import 'package:lolango_v2/features/onboarding/presentation/screens/onboarding_flow_screen.dart';
-import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_photos_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_preview_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/settings_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/user_profile_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
+
+final pendingFirstNameProvider = StateProvider<String?>((ref) => null);
 
 /// A [ChangeNotifier] that fires whenever auth state changes,
 /// so GoRouter re-evaluates its redirect without being fully reconstructed.
@@ -39,7 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authViewModelProvider);
       final profileStatus = ref.read(profileStatusProvider);
-      
+
       final isAuthenticated = authState.valueOrNull != null;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToSplash = state.matchedLocation == '/';
@@ -64,6 +65,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (!profileCompleted && !isGoingToOnboarding) {
+        final firstName = ref.read(pendingFirstNameProvider);
+        if (firstName != null && firstName.trim().isNotEmpty) {
+          return '/onboarding?firstName=${Uri.encodeComponent(firstName.trim())}';
+        }
         return '/onboarding';
       }
 
@@ -82,11 +87,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           initialFirstName: state.uri.queryParameters['firstName'],
         ),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const MainShellScreen()),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/profile-edit', builder: (context, state) => const ProfileEditScreen()),
-      GoRoute(path: '/profile-photos', builder: (context, state) => const ProfilePhotosScreen()),
-      GoRoute(path: '/profile-preview', builder: (context, state) => const ProfilePreviewScreen()),
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => const MainShellScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile-edit',
+        builder: (context, state) => const ProfileEditScreen(),
+      ),
+      GoRoute(
+        path: '/profile-photos',
+        builder: (context, state) => const ProfilePhotosScreen(),
+      ),
+      GoRoute(
+        path: '/profile-preview',
+        builder: (context, state) => const ProfilePreviewScreen(),
+      ),
       GoRoute(
         path: '/user-profile/:id',
         builder: (context, state) {

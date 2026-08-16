@@ -6,12 +6,41 @@ import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 
 const _kInterestSuggestions = [
-  'Sport', 'Musique', 'Cinéma', 'Voyage', 'Cuisine', 'Lecture', 'Gaming',
-  'Art', 'Danse', 'Nature', 'Photo', 'Mode', 'Fitness', 'Yoga',
-  'Randonnée', 'Surf', 'Ski', 'Tennis', 'Football', 'Basket', 'Running',
-  'Vélo', 'Escalade', 'Natation', 'Technologie', 'Entrepreneuriat',
-  'Finance', 'Design', 'Animation', 'Séries', 'Podcasts', 'DIY',
-  'Jardinage', 'Animaux', 'Bénévolat',
+  'Sport',
+  'Musique',
+  'Cinéma',
+  'Voyage',
+  'Cuisine',
+  'Lecture',
+  'Gaming',
+  'Art',
+  'Danse',
+  'Nature',
+  'Photo',
+  'Mode',
+  'Fitness',
+  'Yoga',
+  'Randonnée',
+  'Surf',
+  'Ski',
+  'Tennis',
+  'Football',
+  'Basket',
+  'Running',
+  'Vélo',
+  'Escalade',
+  'Natation',
+  'Technologie',
+  'Entrepreneuriat',
+  'Finance',
+  'Design',
+  'Animation',
+  'Séries',
+  'Podcasts',
+  'DIY',
+  'Jardinage',
+  'Animaux',
+  'Bénévolat',
 ];
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
@@ -52,9 +81,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final detailedProfile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+    final detailedProfile = await ref
+        .read(profileRepositoryProvider)
+        .fetchDetailedProfile();
     if (!mounted) return;
-    
+
     if (detailedProfile == null) return;
     final profile = detailedProfile.profile;
 
@@ -116,9 +147,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       await repo.upsertInterests(_interests);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profil mis à jour.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Profil mis à jour.')));
         Navigator.of(context).pop();
       }
     } catch (_) {
@@ -135,11 +166,17 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     return Scaffold(
@@ -272,11 +309,45 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildSocialField('Instagram', LucideIcons.camera, _socialControllers[0], textPrimary, textSecondary, border),
-                    Divider(height: 1, thickness: 1, color: border, indent: 16, endIndent: 16),
-                    _buildSocialField('Snapchat', LucideIcons.messageCircle, _socialControllers[1], textPrimary, textSecondary, border),
-                    Divider(height: 1, thickness: 1, color: border, indent: 16, endIndent: 16),
-                    _buildSocialField('TikTok', LucideIcons.music, _socialControllers[2], textPrimary, textSecondary, border, isLast: true),
+                    _buildSocialField(
+                      'Instagram',
+                      LucideIcons.camera,
+                      _socialControllers[0],
+                      textPrimary,
+                      textSecondary,
+                      border,
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: border,
+                      indent: 16,
+                      endIndent: 16,
+                    ),
+                    _buildSocialField(
+                      'Snapchat',
+                      LucideIcons.messageCircle,
+                      _socialControllers[1],
+                      textPrimary,
+                      textSecondary,
+                      border,
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: border,
+                      indent: 16,
+                      endIndent: 16,
+                    ),
+                    _buildSocialField(
+                      'TikTok',
+                      LucideIcons.music,
+                      _socialControllers[2],
+                      textPrimary,
+                      textSecondary,
+                      border,
+                      isLast: true,
+                    ),
                   ],
                 ),
               ),
@@ -293,7 +364,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  icon: Icon(LucideIcons.save, color: Colors.black),
+                  icon: const Icon(LucideIcons.save, color: Colors.black),
                   label: Text(
                     _isSaving ? 'Enregistrement...' : 'Enregistrer',
                     style: const TextStyle(fontWeight: FontWeight.w700),
@@ -313,14 +384,14 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   Widget _buildSocialField(
-    String label, 
-    IconData icon, 
-    TextEditingController controller, 
-    Color textPrimary, 
-    Color textSecondary, 
-    Color border, 
-    {bool isLast = false}
-  ) {
+    String label,
+    IconData icon,
+    TextEditingController controller,
+    Color textPrimary,
+    Color textSecondary,
+    Color border, {
+    bool isLast = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(

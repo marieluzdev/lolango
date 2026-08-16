@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
-import 'package:lolango_v2/core/models/profile_model.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
-import 'package:lolango_v2/core/widgets/modal_action_tile.dart';
-import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
-import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_card.dart';
-import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
-import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
+import 'package:lolango_v2/core/models/profile_model.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:lolango_v2/core/widgets/app_empty_state.dart';
 import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
+import 'package:lolango_v2/core/widgets/modal_action_tile.dart';
+import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
+import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_card.dart';
+import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
   const MatchScreen({super.key});
@@ -30,7 +31,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   static final _dummyProfile = DetailedProfileModel(
     profile: ProfileModel(
       id: 'dummy',
-      authId: 'dummy',
       name: 'Chargement',
       username: '@loading',
       age: 25,
@@ -58,8 +58,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     return Scaffold(
@@ -87,7 +91,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                  color: isDark
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -106,7 +112,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -118,7 +126,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.black,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               fontSize: 14,
                             ),
                           ),
@@ -134,10 +144,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               Expanded(
                 child: IndexedStack(
                   index: _tabIndex,
-                  children: [
-                    _buildPendingLikesTab(),
-                    _buildMatchesTab(),
-                  ],
+                  children: [_buildPendingLikesTab(), _buildMatchesTab()],
                 ),
               ),
             ],
@@ -155,14 +162,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       child: pendingAsync.when(
         data: (likes) {
           if (likes.isEmpty) {
-            return CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+            return const CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverFillRemaining(
                   child: AppEmptyState(
                     icon: LucideIcons.heart,
                     title: 'Aucun like',
-                    description: 'Tu n\'as pas encore reçu de like. Continue de swiper !',
+                    description:
+                        'Tu n\'as pas encore reçu de like. Continue de swiper !',
                   ),
                 ),
               ],
@@ -183,14 +191,19 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               return BlurredProfileCard(
                 profile: p,
                 onLike: () {
-                  ref.read(interactionRepositoryProvider).likeProfile(p.profile.id).then((isMatch) {
-                    debugPrint('[MATCH] Like back profile: ${p.profile.id}. isMatch: $isMatch');
-                    if (isMatch) {
-                      ref.invalidate(matchesProvider);
-                    }
-                    ref.invalidate(pendingLikesProvider);
-                    ref.invalidate(interactedProfilesProvider);
-                  });
+                  ref
+                      .read(interactionRepositoryProvider)
+                      .likeProfile(p.profile.id)
+                      .then((isMatch) {
+                        AppLogger.d(
+                          '[MATCH] Like back profile: ${p.profile.id}. isMatch: $isMatch',
+                        );
+                        if (isMatch) {
+                          ref.invalidate(matchesProvider);
+                        }
+                        ref.invalidate(pendingLikesProvider);
+                        ref.invalidate(interactedProfilesProvider);
+                      });
                 },
               );
             },
@@ -207,10 +220,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
             ),
             itemCount: 4,
             itemBuilder: (context, index) {
-              return BlurredProfileCard(
-                profile: _dummyProfile,
-                onLike: () {},
-              );
+              return BlurredProfileCard(profile: _dummyProfile, onLike: () {});
             },
           ),
         ),
@@ -237,14 +247,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       child: matchesAsync.when(
         data: (matches) {
           if (matches.isEmpty) {
-            return CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+            return const CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverFillRemaining(
                   child: AppEmptyState(
                     icon: LucideIcons.messageCircleHeart,
                     title: 'Aucun match',
-                    description: 'Les matchs apparaîtront ici quand l\'intérêt sera mutuel.',
+                    description:
+                        'Les matchs apparaîtront ici quand l\'intérêt sera mutuel.',
                   ),
                 ),
               ],
@@ -282,10 +293,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
             ),
             itemCount: 4,
             itemBuilder: (context, index) {
-              return MatchedProfileCard(
-                profile: _dummyProfile,
-                onTap: () {},
-              );
+              return MatchedProfileCard(profile: _dummyProfile, onTap: () {});
             },
           ),
         ),
@@ -308,7 +316,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     final p = pDetailed.profile;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     showReusableModalBottomSheet(

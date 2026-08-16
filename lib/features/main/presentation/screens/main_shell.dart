@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -42,10 +43,10 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   void _setupRealtimeSubscriptions() {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) {
-      debugPrint('[REALTIME] No user, skipping subscriptions.');
+      AppLogger.d('[REALTIME] No user, skipping subscriptions.');
       return;
     }
-    debugPrint('[REALTIME] Setting up subscriptions for $userId');
+    AppLogger.d('[REALTIME] Setting up subscriptions for $userId');
 
     // 1. Nouvelles notifications → badge +1
     _notificationsChannel = Supabase.instance.client
@@ -60,12 +61,16 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
             value: userId,
           ),
           callback: (payload) {
-            debugPrint('[REALTIME] New notification received! Incrementing badge.');
+            AppLogger.d(
+              '[REALTIME] New notification received! Incrementing badge.',
+            );
             ref.read(matchNotificationBadgeProvider.notifier).state++;
           },
         )
         .subscribe((status, error) {
-          debugPrint('[REALTIME] notifications channel status: $status, error: $error');
+          AppLogger.d(
+            '[REALTIME] notifications channel status: $status, error: $error',
+          );
         });
 
     // 2. Quelqu'un me like → rafraîchir "Likes reçus"
@@ -81,12 +86,16 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
             value: userId,
           ),
           callback: (payload) {
-            debugPrint('[REALTIME] Someone liked me! Refreshing pending likes.');
+            AppLogger.d(
+              '[REALTIME] Someone liked me! Refreshing pending likes.',
+            );
             ref.invalidate(pendingLikesProvider);
           },
         )
         .subscribe((status, error) {
-          debugPrint('[REALTIME] interactions channel status: $status, error: $error');
+          AppLogger.d(
+            '[REALTIME] interactions channel status: $status, error: $error',
+          );
         });
 
     // 3. Nouveau match → rafraîchir l'onglet Matchs
@@ -97,13 +106,15 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           schema: 'public',
           table: 'matches',
           callback: (payload) {
-            debugPrint('[REALTIME] New match! Refreshing matches.');
+            AppLogger.d('[REALTIME] New match! Refreshing matches.');
             ref.invalidate(matchesProvider);
             ref.invalidate(pendingLikesProvider);
           },
         )
         .subscribe((status, error) {
-          debugPrint('[REALTIME] matches channel status: $status, error: $error');
+          AppLogger.d(
+            '[REALTIME] matches channel status: $status, error: $error',
+          );
         });
   }
 
@@ -118,22 +129,26 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final badgeCount = ref.watch(matchNotificationBadgeProvider);
 
     // Items de navigation (identiques à v1)
     final navItems = [
-      _NavItem(icon: LucideIcons.house, label: 'Home', index: 0),
-      _NavItem(icon: LucideIcons.search, label: 'Découvrir', index: 1),
-      _NavItem(icon: LucideIcons.heart, label: 'Match', index: 2, badge: badgeCount),
-      _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 3),
+      const _NavItem(icon: LucideIcons.house, label: 'Home', index: 0),
+      const _NavItem(icon: LucideIcons.search, label: 'Découvrir', index: 1),
+      _NavItem(
+        icon: LucideIcons.heart,
+        label: 'Match',
+        index: 2,
+        badge: badgeCount,
+      ),
+      const _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 3),
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: Container(
         color: background,
         padding: EdgeInsets.only(
@@ -173,7 +188,10 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeOut,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? (isDark ? Colors.white : Colors.black)

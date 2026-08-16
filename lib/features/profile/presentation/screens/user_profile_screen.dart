@@ -10,11 +10,7 @@ class UserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
   final String? userName;
 
-  const UserProfileScreen({
-    super.key,
-    required this.userId,
-    this.userName,
-  });
+  const UserProfileScreen({super.key, required this.userId, this.userName});
 
   @override
   ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -45,10 +41,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background =
-        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final textPrimary =
-        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     final title = widget.userName ?? _profile?.profile.name ?? 'Profil';
 
@@ -71,33 +69,37 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _profile == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.userX,
-                          size: 48,
-                          color: textPrimary.withValues(alpha: 0.3)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Profil introuvable.',
-                        style: TextStyle(color: textPrimary),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    LucideIcons.userX,
+                    size: 48,
+                    color: textPrimary.withValues(alpha: 0.3),
                   ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: _buildProfileCard(),
-                      ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Profil introuvable.',
+                    style: TextStyle(color: textPrimary),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                    const SizedBox(height: 16),
-                  ],
+                    child: _buildProfileCard(),
+                  ),
                 ),
+                const SizedBox(height: 16),
+              ],
+            ),
     );
   }
 

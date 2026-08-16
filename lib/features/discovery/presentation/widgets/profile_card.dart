@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
+import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers — design visuel par plateforme sociale
@@ -211,23 +212,27 @@ class _ProfileCardState extends State<ProfileCard> {
   String? _photoForTab(int tabIndex) {
     if (_photoCount == 0) return null;
     if (tabIndex == 0) return _resolvedPhotoUrls[0];
-    if (tabIndex == _tabCount - 1) return _resolvedPhotoUrls[0]; // fond pour le dernier onglet
+    if (tabIndex == _tabCount - 1)
+      return _resolvedPhotoUrls[0]; // fond pour le dernier onglet
     // Onglets intermédiaires : photos 2, 3, 4
     final photoIndex = tabIndex; // tab 1 → photo index 1, tab 2 → index 2, etc.
-    if (photoIndex < _resolvedPhotoUrls.length) return _resolvedPhotoUrls[photoIndex];
+    if (photoIndex < _resolvedPhotoUrls.length)
+      return _resolvedPhotoUrls[photoIndex];
     return _resolvedPhotoUrls[0];
   }
 
-  void _openSocialModal(BuildContext context, String platform, String username) {
+  void _openSocialModal(
+    BuildContext context,
+    String platform,
+    String username,
+  ) {
     final theme = Theme.of(context);
     showReusableModalBottomSheet(
       context: context,
       title: platform,
       surface: theme.cardColor,
       textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
-      children: const [
-        SizedBox(height: 16),
-      ],
+      children: const [SizedBox(height: 16)],
     );
   }
 
@@ -245,7 +250,9 @@ class _ProfileCardState extends State<ProfileCard> {
   Widget _buildGridCard(BuildContext context) {
     final theme = Theme.of(context);
     final photos = _resolvedPhotoUrls;
-    final displayName = widget.age != null ? '${widget.name}, ${widget.age}' : widget.name;
+    final displayName = widget.age != null
+        ? '${widget.name}, ${widget.age}'
+        : widget.name;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -267,11 +274,7 @@ class _ProfileCardState extends State<ProfileCard> {
             fit: StackFit.expand,
             children: [
               photos.isNotEmpty
-                  ? Image.network(
-                      photos.first,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, _e) => _buildPlaceholder(theme),
-                    )
+                  ? AppCachedImage(imageUrl: photos.first, fit: BoxFit.cover)
                   : _buildPlaceholder(theme),
               // Gradient bottom
               Positioned(
@@ -352,7 +355,12 @@ class _ProfileCardState extends State<ProfileCard> {
 
                   if (_tabCount == 1) {
                     // Pas de photo : onglet unique avec placeholder + infos
-                    return _buildInfoTab(context, theme, null, showDetails: false);
+                    return _buildInfoTab(
+                      context,
+                      theme,
+                      null,
+                      showDetails: false,
+                    );
                   }
 
                   if (isFirstTab) {
@@ -360,7 +368,11 @@ class _ProfileCardState extends State<ProfileCard> {
                   }
 
                   if (isLastTab) {
-                    return _buildDetailsTab(context, theme, _photoForTab(tabIndex));
+                    return _buildDetailsTab(
+                      context,
+                      theme,
+                      _photoForTab(tabIndex),
+                    );
                   }
 
                   // Onglets photo intermédiaires
@@ -402,26 +414,30 @@ class _ProfileCardState extends State<ProfileCard> {
   // -------------------------------------------------------------------------
   // Onglet 1 : photo de fond + nom + âge + intérêts + réseaux + boutons
   // -------------------------------------------------------------------------
-  Widget _buildFirstTab(BuildContext context, ThemeData theme, String? photoUrl) {
+  Widget _buildFirstTab(
+    BuildContext context,
+    ThemeData theme,
+    String? photoUrl,
+  ) {
     final socials = widget.socials ?? {};
     final interests = widget.interests ?? [];
-    final displayName = widget.age != null ? '${widget.name}, ${widget.age}' : widget.name;
+    final displayName = widget.age != null
+        ? '${widget.name}, ${widget.age}'
+        : widget.name;
 
     return Stack(
       fit: StackFit.expand,
       children: [
         // Photo de fond
         photoUrl != null && photoUrl.isNotEmpty
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, _e) => _buildPlaceholder(theme),
-              )
+            ? AppCachedImage(imageUrl: photoUrl, fit: BoxFit.cover)
             : _buildPlaceholder(theme),
 
         // Gradient
         Positioned(
-          left: 0, right: 0, bottom: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           top: MediaQuery.of(context).size.height * 0.30,
           child: Container(
             decoration: BoxDecoration(
@@ -440,7 +456,9 @@ class _ProfileCardState extends State<ProfileCard> {
 
         // Contenu bas
         Positioned(
-          left: 0, right: 0, bottom: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
@@ -462,12 +480,19 @@ class _ProfileCardState extends State<ProfileCard> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.white70),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.white70,
+                      ),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           widget.city!,
-                          style: const TextStyle(color: Colors.white70, fontSize: 15),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 15,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -483,7 +508,10 @@ class _ProfileCardState extends State<ProfileCard> {
                     runSpacing: 6,
                     children: interests.take(3).map((interest) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha((0.18 * 255).round()),
                           borderRadius: BorderRadius.circular(999),
@@ -517,7 +545,8 @@ class _ProfileCardState extends State<ProfileCard> {
                             platform: e.key,
                             username: e.value,
                             size: 44,
-                            onTap: () => _openSocialModal(context, e.key, e.value),
+                            onTap: () =>
+                                _openSocialModal(context, e.key, e.value),
                           ),
                         );
                       }).toList(),
@@ -535,7 +564,10 @@ class _ProfileCardState extends State<ProfileCard> {
                           onPressed: widget.onPass,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.white70, width: 2),
+                            side: const BorderSide(
+                              color: Colors.white70,
+                              width: 2,
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -579,11 +611,7 @@ class _ProfileCardState extends State<ProfileCard> {
       fit: StackFit.expand,
       children: [
         photoUrl != null && photoUrl.isNotEmpty
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, _e) => _buildPlaceholder(theme),
-              )
+            ? AppCachedImage(imageUrl: photoUrl, fit: BoxFit.cover)
             : _buildPlaceholder(theme),
       ],
     );
@@ -592,17 +620,17 @@ class _ProfileCardState extends State<ProfileCard> {
   // -------------------------------------------------------------------------
   // Dernier onglet — photo 1 en fond foncé + description + pays + infos
   // -------------------------------------------------------------------------
-  Widget _buildDetailsTab(BuildContext context, ThemeData theme, String? photoUrl) {
+  Widget _buildDetailsTab(
+    BuildContext context,
+    ThemeData theme,
+    String? photoUrl,
+  ) {
     return Stack(
       fit: StackFit.expand,
       children: [
         // Photo de fond
         photoUrl != null && photoUrl.isNotEmpty
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, _e) => _buildPlaceholder(theme),
-              )
+            ? AppCachedImage(imageUrl: photoUrl, fit: BoxFit.cover)
             : _buildPlaceholder(theme),
 
         // Overlay sombre pour lisibilité
@@ -674,7 +702,10 @@ class _ProfileCardState extends State<ProfileCard> {
                   runSpacing: 8,
                   children: widget.interests!.map((interest) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha((0.15 * 255).round()),
                         borderRadius: BorderRadius.circular(999),
@@ -704,14 +735,21 @@ class _ProfileCardState extends State<ProfileCard> {
   // -------------------------------------------------------------------------
   // Onglet info seul (fallback quand aucune photo)
   // -------------------------------------------------------------------------
-  Widget _buildInfoTab(BuildContext context, ThemeData theme, String? photoUrl, {required bool showDetails}) {
+  Widget _buildInfoTab(
+    BuildContext context,
+    ThemeData theme,
+    String? photoUrl, {
+    required bool showDetails,
+  }) {
     return _buildFirstTab(context, theme, photoUrl);
   }
 
   Widget _buildPlaceholder(ThemeData theme) {
     return Container(
       color: theme.dividerColor.withAlpha((0.08 * 255).round()),
-      child: const Center(child: Icon(Icons.person, size: 72, color: Colors.white38)),
+      child: const Center(
+        child: Icon(Icons.person, size: 72, color: Colors.white38),
+      ),
     );
   }
 }
