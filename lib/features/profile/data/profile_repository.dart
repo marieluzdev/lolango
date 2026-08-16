@@ -32,6 +32,51 @@ class ProfileRepository {
     }
   }
 
+  Future<bool> hasSeenPrivacyModal() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select('has_seen_privacy_modal')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (response == null) return false;
+      return response['has_seen_privacy_modal'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> markPrivacyModalSeen() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    await supabase.from('profiles').update({'has_seen_privacy_modal': true}).eq('id', user.id);
+  }
+
+  Future<String?> fetchSocialVisibility() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+    try {
+      final response = await supabase.from('profiles').select('social_visibility').eq('id', user.id).maybeSingle();
+      if (response == null) return null;
+      return response['social_visibility'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> updateSocialVisibility(String mode, List<String>? visiblePlatforms) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    await supabase.from('profiles').update({
+      'social_visibility': mode,
+      'visible_socials': visiblePlatforms,
+    }).eq('id', user.id);
+  }
+
   Future<Map<String, dynamic>?> fetchProfile() async {
     final user = supabase.auth.currentUser;
     if (user == null) return null;

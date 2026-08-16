@@ -3,15 +3,42 @@ import 'profile_model.dart';
 class DetailedProfileModel {
   final ProfileModel profile;
   final List<String> photoUrls;
-  final Map<String, String> socials;
+  final Map<String, String> _socials;
   final List<String> interests;
+
+  String? get city => profile.city;
+  String? get country => profile.country;
+  String? get bio => profile.bio;
+  Map<String, String> get socials => _socials;
+  String? get socialVisibility => profile.socialVisibility;
+  List<String>? get visibleSocials => profile.visibleSocials;
+
+  Map<String, String> filteredSocials(bool isMatched) {
+    if (socialVisibility == 'always') {
+      return socials;
+    }
+    
+    if (socialVisibility == 'after_match') {
+      return isMatched ? socials : {};
+    }
+    
+    if (socialVisibility == 'selective') {
+      if (visibleSocials == null || visibleSocials!.isEmpty) return {};
+      return Map.fromEntries(
+        socials.entries.where((e) => visibleSocials!.contains(e.key))
+      );
+    }
+    
+    // Default to after_match logic if not set
+    return isMatched ? socials : {};
+  }
 
   DetailedProfileModel({
     required this.profile,
     this.photoUrls = const [],
-    this.socials = const {},
+    Map<String, String> socials = const {},
     this.interests = const [],
-  });
+  }) : _socials = socials;
 
   /// The main photo URL (usually the first one in the gallery).
   String? get primaryPhotoUrl =>

@@ -190,9 +190,10 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             country: p.profile.country,
                             photoUrls: p.photoUrls,
                             bio: p.profile.bio,
-                            socials: p.socials,
+                            socials: p.filteredSocials(false),
                             interests: p.interests,
                             isGridMode: true,
+                            isMatched: false,
                             onPass: () {
                               ref.read(hiddenProfilesProvider.notifier).update((
                                 state,
@@ -261,7 +262,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     required ThemeData theme,
   }) {
     final p = pDetailed.profile;
-    final socials = pDetailed.socials;
+    final socials = pDetailed.filteredSocials(false);
 
     showReusableModalBottomSheet(
       context: context,

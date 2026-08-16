@@ -11,6 +11,8 @@ class ProfileModel {
   final Map<String, String> socials;
   final List<String> interests;
   final List<String> discoveryPreferences;
+  final String? socialVisibility;
+  final List<String>? visibleSocials;
 
   ProfileModel({
     required this.id,
@@ -25,6 +27,8 @@ class ProfileModel {
     Map<String, String>? socials,
     List<String>? interests,
     List<String>? discoveryPreferences,
+    this.socialVisibility,
+    this.visibleSocials,
   }) : photoUrls = photoUrls ?? [],
        socials = socials ?? {},
        interests = interests ?? [],
@@ -129,6 +133,8 @@ class ProfileModel {
       socials: socials,
       interests: interests,
       discoveryPreferences: prefs,
+      socialVisibility: m['social_visibility']?.toString(),
+      visibleSocials: (m['visible_socials'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
     );
   }
 }

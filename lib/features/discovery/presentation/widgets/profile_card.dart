@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 import 'package:lolango_v2/core/widgets/app_cached_image.dart';
 
@@ -149,6 +150,8 @@ class ProfileCard extends StatefulWidget {
   final bool isGridMode;
   final bool showActionButtons;
   final VoidCallback? onTap;
+  /// Si l'utilisateur courant a un match avec ce profil (pour filtrage de visibilité)
+  final bool isMatched;
 
   const ProfileCard({
     super.key,
@@ -166,6 +169,7 @@ class ProfileCard extends StatefulWidget {
     this.isGridMode = false,
     this.showActionButtons = true,
     this.onTap,
+    this.isMatched = false,
   });
 
   @override
@@ -221,20 +225,6 @@ class _ProfileCardState extends State<ProfileCard> {
     return _resolvedPhotoUrls[0];
   }
 
-  void _openSocialModal(
-    BuildContext context,
-    String platform,
-    String username,
-  ) {
-    final theme = Theme.of(context);
-    showReusableModalBottomSheet(
-      context: context,
-      title: platform,
-      surface: theme.cardColor,
-      textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
-      children: const [SizedBox(height: 16)],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -545,8 +535,11 @@ class _ProfileCardState extends State<ProfileCard> {
                             platform: e.key,
                             username: e.value,
                             size: 44,
-                            onTap: () =>
-                                _openSocialModal(context, e.key, e.value),
+                            onTap: () => _showSocialCopySheet(
+                              context,
+                              platform: e.key,
+                              username: e.value,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -596,6 +589,98 @@ class _ProfileCardState extends State<ProfileCard> {
                   ),
                 ],
               ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Bottom sheet social avec bouton copier
+  // -------------------------------------------------------------------------
+  void _showSocialCopySheet(
+    BuildContext context, {
+    required String platform,
+    required String username,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white70 : Colors.black54;
+    final style = _socialIconStyle(platform);
+
+    showReusableModalBottomSheet(
+      context: context,
+      title: platform,
+      surface: surface,
+      textPrimary: textPrimary,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: _socialBgDecoration(platform),
+              child: Icon(style.icon, color: style.iconColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    platform,
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '@$username',
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: username));
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Pseudo copié ! @$username'),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.copy_rounded, size: 18),
+            label: const Text(
+              'Copier le pseudo',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF6C63FF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),

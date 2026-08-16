@@ -236,8 +236,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               country: p.profile.country,
                               photoUrls: p.photoUrls,
                               bio: p.profile.bio,
-                              socials: p.socials,
+                              socials: p.filteredSocials(false),
                               interests: p.interests,
+                              isMatched: false,
                               onPass: () {
                                 if (!_isProcessingAction) {
                                   _swiperController.swipe(
