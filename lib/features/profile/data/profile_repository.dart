@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/errors/failures.dart';
@@ -35,25 +36,15 @@ class ProfileRepository {
   Future<bool> hasSeenPrivacyModal() async {
     final user = supabase.auth.currentUser;
     if (user == null) return false;
-
-    try {
-      final response = await supabase
-          .from('profiles')
-          .select('has_seen_privacy_modal')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (response == null) return false;
-      return response['has_seen_privacy_modal'] == true;
-    } catch (_) {
-      return false;
-    }
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_seen_privacy_modal_${user.id}') ?? false;
   }
 
   Future<void> markPrivacyModalSeen() async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
-    await supabase.from('profiles').update({'has_seen_privacy_modal': true}).eq('id', user.id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_privacy_modal_${user.id}', true);
   }
 
   Future<String?> fetchSocialVisibility() async {

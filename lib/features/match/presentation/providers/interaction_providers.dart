@@ -28,3 +28,5 @@ final matchesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
 final hiddenProfilesProvider = StateProvider<Set<String>>((ref) => {});
 
 final matchNotificationBadgeProvider = StateProvider<int>((ref) => 0);
+final seenLikesCountProvider = StateProvider<int>((ref) => 0);
+final seenMatchesCountProvider = StateProvider<int>((ref) => 0);

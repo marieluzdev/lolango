@@ -200,8 +200,12 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
               trailing: Icon(LucideIcons.chevronRight, color: textSecondary, size: 18),
-              onTap: () {
-                _showPrivacySettingsSheet(context, ref, textPrimary, textSecondary);
+              onTap: () async {
+                final p = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+                final userPlatforms = p?.socials.keys.toList() ?? [];
+                if (context.mounted) {
+                  _showPrivacySettingsSheet(context, ref, textPrimary, textSecondary, userPlatforms);
+                }
               },
             ),
             ListTile(
@@ -246,6 +250,7 @@ void _showPrivacySettingsSheet(
   WidgetRef ref,
   Color textPrimary,
   Color textSecondary,
+  List<String> userPlatforms,
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
@@ -285,7 +290,7 @@ void _showPrivacySettingsSheet(
                     children: [
                       Expanded(
                         child: Text(
-                          '🔐 Confidentialité des réseaux',
+                          'Confidentialité des réseaux',
                           style: TextStyle(
                             color: textPrimary,
                             fontSize: 20,
@@ -302,7 +307,7 @@ void _showPrivacySettingsSheet(
                   const SizedBox(height: 16),
                   ...SocialVisibility.values.map((mode) {
                     final isSelected = selectedMode == mode;
-                    return GestureDetector(
+                    final card = GestureDetector(
                       onTap: () => setSheetState(() => selectedMode = mode),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -337,7 +342,7 @@ void _showPrivacySettingsSheet(
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: primary.withValues(alpha: 0.2),
+                                            color: primary,
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Text(
@@ -370,6 +375,42 @@ void _showPrivacySettingsSheet(
                         ),
                       ),
                     );
+
+                    if (mode == SocialVisibility.selective && isSelected && userPlatforms.isNotEmpty) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          card,
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                            child: Column(
+                              children: userPlatforms.map((platform) {
+                                final isPlatformSelected = selectedPlatforms.contains(platform);
+                                return CheckboxListTile(
+                                  value: isPlatformSelected,
+                                  onChanged: (val) {
+                                    setSheetState(() {
+                                      if (val == true) {
+                                        selectedPlatforms.add(platform);
+                                      } else {
+                                        selectedPlatforms.remove(platform);
+                                      }
+                                    });
+                                  },
+                                  title: Text(platform, style: TextStyle(color: textPrimary)),
+                                  activeColor: primary,
+                                  checkColor: Colors.black,
+                                  contentPadding: EdgeInsets.zero,
+                                  controlAffinity: ListTileControlAffinity.leading,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    return card;
                   }),
                   const SizedBox(height: 12),
                   SizedBox(

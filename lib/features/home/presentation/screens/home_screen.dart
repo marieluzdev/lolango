@@ -167,7 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ref.read(discoveryFilterProvider.notifier).state = res;
                       }
                     },
-                    icon: const Icon(Icons.filter_list),
+                    icon: const Icon(LucideIcons.slidersHorizontal),
                   ),
                 ],
               ),
@@ -236,7 +236,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               country: p.profile.country,
                               photoUrls: p.photoUrls,
                               bio: p.profile.bio,
-                              socials: p.filteredSocials(false),
+                              socials: p.socials,
+                              blurredSocials: p.getBlurredSocials(false),
                               interests: p.interests,
                               isMatched: false,
                               onPass: () {

@@ -33,6 +33,24 @@ class DetailedProfileModel {
     return isMatched ? socials : {};
   }
 
+  Set<String> getBlurredSocials(bool isMatched) {
+    if (socialVisibility == 'always') {
+      return {};
+    }
+    
+    if (socialVisibility == 'after_match') {
+      return isMatched ? {} : socials.keys.toSet();
+    }
+    
+    if (socialVisibility == 'selective') {
+      if (visibleSocials == null || visibleSocials!.isEmpty) return socials.keys.toSet();
+      return socials.keys.where((k) => !visibleSocials!.contains(k)).toSet();
+    }
+    
+    // Default to after_match logic if not set
+    return isMatched ? {} : socials.keys.toSet();
+  }
+
   DetailedProfileModel({
     required this.profile,
     this.photoUrls = const [],

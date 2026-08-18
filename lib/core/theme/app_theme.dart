@@ -36,6 +36,18 @@ class AppTheme {
           statusBarBrightness: Brightness.light, // iOS
         ),
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        selectedColor: AppColors.primaryLight, // jaune opaque
+        disabledColor: AppColors.surfaceLight,
+        labelStyle: const TextStyle(color: AppColors.textPrimaryLight, fontWeight: FontWeight.w500),
+        secondaryLabelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        secondarySelectedColor: AppColors.primaryLight,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: const BorderSide(color: AppColors.borderLight),
+        showCheckmark: false,
+      ),
     );
   }
 
@@ -70,6 +82,18 @@ class AppTheme {
               Brightness.light, // icônes blanches (dark mode)
           statusBarBrightness: Brightness.dark, // iOS
         ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        selectedColor: AppColors.primaryDark, // jaune opaque
+        disabledColor: AppColors.surfaceDark,
+        labelStyle: const TextStyle(color: AppColors.textPrimaryDark, fontWeight: FontWeight.w500),
+        secondaryLabelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        secondarySelectedColor: AppColors.primaryDark,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: const BorderSide(color: AppColors.borderDark),
+        showCheckmark: false,
       ),
     );
   }

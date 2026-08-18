@@ -132,17 +132,15 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     final background = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
-    final badgeCount = ref.watch(matchNotificationBadgeProvider);
 
     // Items de navigation (identiques à v1)
     final navItems = [
       const _NavItem(icon: LucideIcons.house, label: 'Home', index: 0),
-      const _NavItem(icon: LucideIcons.search, label: 'Découvrir', index: 1),
-      _NavItem(
+      const _NavItem(icon: LucideIcons.compass, label: 'Découvrir', index: 1),
+      const _NavItem(
         icon: LucideIcons.heart,
         label: 'Match',
         index: 2,
-        badge: badgeCount,
       ),
       const _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 3),
     ];
@@ -165,18 +163,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
                 : (isSelected ? Colors.white : Colors.black);
 
             Widget iconWidget = Icon(item.icon, size: 24, color: iconColor);
-
-            // Badge sur Match
-            if (item.badge != null && item.badge! > 0) {
-              iconWidget = Badge(
-                backgroundColor: Colors.red,
-                label: Text(
-                  '${item.badge}',
-                  style: const TextStyle(fontSize: 9, color: Colors.white),
-                ),
-                child: iconWidget,
-              );
-            }
 
             return GestureDetector(
               onTap: () => setState(() => _selectedIndex = item.index),
@@ -214,11 +200,9 @@ class _NavItem {
   final IconData icon;
   final String label;
   final int index;
-  final int? badge;
   const _NavItem({
     required this.icon,
     required this.label,
     required this.index,
-    this.badge,
   });
 }

@@ -28,7 +28,9 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
   }
 
   Future<void> _loadUserPlatforms() async {
-    final profile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+    final profile = await ref
+        .read(profileRepositoryProvider)
+        .fetchDetailedProfile();
     if (profile != null) {
       _userPlatforms = profile.socials.keys.toList();
       _selectedPlatforms = _userPlatforms.toSet();
@@ -49,10 +51,12 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
       final notifier = ref.read(socialVisibilityProvider.notifier);
       await notifier.saveVisibility(
         _selectedMode,
-        _selectedMode == SocialVisibility.selective ? _selectedPlatforms.toList() : [],
+        _selectedMode == SocialVisibility.selective
+            ? _selectedPlatforms.toList()
+            : [],
       );
       await notifier.markPrivacyModalSeen();
-      
+
       if (mounted) {
         context.go('/home');
       }
@@ -75,26 +79,34 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final background = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
     final border = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
-    final secondary = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
+    final secondary = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
 
     return Scaffold(
       backgroundColor: Colors.black54, // Semi-transparent backdrop
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               width: double.infinity,
               decoration: BoxDecoration(
                 color: background,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: BorderRadius.circular(28),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              padding: const EdgeInsets.all(24),
               child: _isLoading
                   ? const SizedBox(
                       height: 300,
@@ -105,7 +117,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🔐 Qui peut voir tes réseaux ?',
+                          'Qui peut voir tes réseaux ?',
                           style: TextStyle(
                             color: textPrimary,
                             fontSize: 24,
@@ -113,16 +125,9 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          'Tes réseaux sont cachés par défaut.\nTu gardes le contrôle sur les personnes qui peuvent les voir.',
-                          style: TextStyle(
-                            color: textSecondary,
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                        ),
+
                         const SizedBox(height: 24),
-                        
+
                         // Option 1
                         _buildOptionCard(
                           mode: SocialVisibility.afterMatch,
@@ -133,7 +138,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           textSecondary: textSecondary,
                           primary: primary,
                         ),
-                        
+
                         // Option 2
                         _buildOptionCard(
                           mode: SocialVisibility.selective,
@@ -144,13 +149,20 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           textSecondary: textSecondary,
                           primary: primary,
                         ),
-                        
-                        if (_selectedMode == SocialVisibility.selective && _userPlatforms.isNotEmpty)
+
+                        if (_selectedMode == SocialVisibility.selective &&
+                            _userPlatforms.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 16,
+                            ),
                             child: Column(
                               children: _userPlatforms.map((platform) {
-                                final isSelected = _selectedPlatforms.contains(platform);
+                                final isSelected = _selectedPlatforms.contains(
+                                  platform,
+                                );
                                 return CheckboxListTile(
                                   value: isSelected,
                                   onChanged: (val) {
@@ -162,16 +174,20 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                                       }
                                     });
                                   },
-                                  title: Text(platform, style: TextStyle(color: textPrimary)),
+                                  title: Text(
+                                    platform,
+                                    style: TextStyle(color: textPrimary),
+                                  ),
                                   activeColor: primary,
                                   checkColor: Colors.black,
                                   contentPadding: EdgeInsets.zero,
-                                  controlAffinity: ListTileControlAffinity.leading,
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
                                 );
                               }).toList(),
                             ),
                           ),
-                          
+
                         // Option 3
                         _buildOptionCard(
                           mode: SocialVisibility.always,
@@ -182,7 +198,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           textSecondary: textSecondary,
                           primary: primary,
                         ),
-                        
+
                         const SizedBox(height: 16),
                         Center(
                           child: Text(
@@ -195,7 +211,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -203,7 +219,9 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                             onPressed: _isSaving ? null : _handleConfirm,
                             style: FilledButton.styleFrom(
                               backgroundColor: secondary,
-                              foregroundColor: isDark ? Colors.black : Colors.white,
+                              foregroundColor: isDark
+                                  ? Colors.black
+                                  : Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
@@ -231,7 +249,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                       ],
                     ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -247,7 +265,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
     required Color primary,
   }) {
     final isSelected = _selectedMode == mode;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -269,11 +287,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? primary : textPrimary,
-              size: 24,
-            ),
+            Icon(icon, color: isSelected ? primary : textPrimary, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -292,9 +306,12 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                       if (mode == SocialVisibility.afterMatch) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: primary.withValues(alpha: 0.2),
+                            color: primary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -306,7 +323,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                             ),
                           ),
                         ),
-                      ]
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -322,11 +339,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
               ),
             ),
             if (isSelected)
-              Icon(
-                LucideIcons.checkCircle2,
-                color: primary,
-                size: 24,
-              ),
+              Icon(LucideIcons.checkCircle2, color: primary, size: 24),
           ],
         ),
       ),

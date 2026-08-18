@@ -114,6 +114,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       photoUrls: detailedP.photoUrls,
       bio: p.bio,
       socials: detailedP.socials,
+      blurredSocials: detailedP.getBlurredSocials(false),
       interests: detailedP.interests,
       showActionButtons: false,
     );

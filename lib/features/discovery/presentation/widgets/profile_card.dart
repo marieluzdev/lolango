@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
@@ -144,6 +145,7 @@ class ProfileCard extends StatefulWidget {
 
   final String? bio;
   final Map<String, String>? socials;
+  final Set<String>? blurredSocials;
   final List<String>? interests;
   final VoidCallback? onPass;
   final VoidCallback? onConnect;
@@ -163,6 +165,7 @@ class ProfileCard extends StatefulWidget {
     this.photoUrls,
     this.bio,
     this.socials,
+    this.blurredSocials,
     this.interests,
     this.onPass,
     this.onConnect,
@@ -529,18 +532,33 @@ class _ProfileCardState extends State<ProfileCard> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: socials.entries.map((e) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: _SocialBadge(
+                        final isBlurred = widget.blurredSocials?.contains(e.key) ?? false;
+                        Widget badge = _SocialBadge(
+                          platform: e.key,
+                          username: e.value,
+                          size: 44,
+                          onTap: isBlurred ? null : () => _showSocialCopySheet(
+                            context,
                             platform: e.key,
                             username: e.value,
-                            size: 44,
-                            onTap: () => _showSocialCopySheet(
-                              context,
-                              platform: e.key,
-                              username: e.value,
-                            ),
                           ),
+                        );
+                        
+                        if (isBlurred) {
+                          badge = ClipOval(
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                              child: Opacity(
+                                opacity: 0.8,
+                                child: badge,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: badge,
                         );
                       }).toList(),
                     ),

@@ -10,6 +10,7 @@ import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
 import 'package:lolango_v2/core/widgets/modal_action_tile.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
+import 'package:lolango_v2/core/widgets/search_bar_widget.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_card.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
@@ -24,6 +25,7 @@ class MatchScreen extends ConsumerStatefulWidget {
 
 class _MatchScreenState extends ConsumerState<MatchScreen> {
   int _tabIndex = 0;
+  String _searchQuery = '';
 
   static const _tabs = ['Likes reçus', 'Matchs'];
 
@@ -65,6 +67,24 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         ? AppColors.textPrimaryDark
         : AppColors.textPrimaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+
+    final pendingAsync = ref.watch(pendingLikesProvider);
+    final pendingCount = pendingAsync.valueOrNull?.length ?? 0;
+    final seenLikesCount = ref.watch(seenLikesCountProvider);
+    final unreadLikesCount = (pendingCount - seenLikesCount).clamp(0, 999);
+    
+    final matchesAsync = ref.watch(matchesProvider);
+    final matchesCount = matchesAsync.valueOrNull?.length ?? 0;
+    final seenMatchesCount = ref.watch(seenMatchesCountProvider);
+    final unreadMatchesCount = (matchesCount - seenMatchesCount).clamp(0, 999);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_tabIndex == 0 && pendingCount != seenLikesCount) {
+        ref.read(seenLikesCountProvider.notifier).state = pendingCount;
+      } else if (_tabIndex == 1 && matchesCount != seenMatchesCount) {
+        ref.read(seenMatchesCountProvider.notifier).state = matchesCount;
+      }
+    });
 
     return Scaffold(
       backgroundColor: background,
@@ -121,16 +141,57 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                                   ]
                                 : null,
                           ),
-                          child: Text(
-                            _tabs[i],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 14,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _tabs[i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              if (i == 0 && unreadLikesCount > 0) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$unreadLikesCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (i == 1 && unreadMatchesCount > 0) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$unreadMatchesCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
@@ -142,9 +203,45 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               const SizedBox(height: 16),
 
               Expanded(
-                child: IndexedStack(
-                  index: _tabIndex,
-                  children: [_buildPendingLikesTab(), _buildMatchesTab()],
+                child: Stack(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.04),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey(_tabIndex),
+                        child: _tabIndex == 0
+                            ? _buildPendingLikesTab()
+                            : _buildMatchesTab(),
+                      ),
+                    ),
+                    // ── Barre de recherche fixe en bas au centre ──
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: SearchBarWidget(
+                          hint: 'Rechercher...',
+                          onChanged: (q) => setState(() => _searchQuery = q),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
