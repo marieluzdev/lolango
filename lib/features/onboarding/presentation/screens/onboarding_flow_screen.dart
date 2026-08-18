@@ -103,6 +103,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _yearController = FixedExtentScrollController(
       initialItem: _birthYears.indexOf(_selectedYear),
     );
+
+    // Récupérer la localisation par défaut
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchLocation();
+    });
   }
 
   @override
@@ -497,16 +502,22 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         title: 'Comment veux-tu qu’on t’appelle ?',
         subtitle:
             'Nous avons récupéré ton prénom depuis ton compte Google. Tu peux le modifier si tu veux.',
-        child: TextField(
-          controller: _firstNameController,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Prénom',
-            filled: true,
-            fillColor: surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: border),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border),
+          ),
+          child: TextField(
+            controller: _firstNameController,
+            onChanged: (_) => setState(() {}),
+            style: TextStyle(fontSize: 17, color: textPrimary),
+            decoration: const InputDecoration(
+              hintText: 'Prénom',
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 16),
             ),
           ),
         ),
@@ -712,7 +723,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: textPrimary,
+                          color: isSelected ? Colors.black : textPrimary,
                         ),
                       ),
                     ),
@@ -793,67 +804,49 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _locationController,
-              onChanged: (value) =>
-                  setState(() => _locationLabel = value.trim()),
-              decoration: InputDecoration(
-                hintText: 'Dakar, Sénégal',
-                helperText:
-                    'Tu peux modifier la localisation approximative si nécessaire.',
-                filled: true,
-                fillColor: surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: border),
-                ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: border),
               ),
-            ),
-            const SizedBox(height: 12),
-            if (_isLocationLoading)
-              Row(
+              child: Row(
                 children: [
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Récupération de la localisation…',
-                    style: TextStyle(color: textSecondary),
+                  Icon(LucideIcons.mapPin, color: textSecondary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _locationController,
+                      onChanged: (value) =>
+                          setState(() => _locationLabel = value.trim()),
+                      style: TextStyle(fontSize: 17, color: textPrimary),
+                      decoration: const InputDecoration(
+                        hintText: 'Dakar, Sénégal',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
                   ),
                 ],
-              )
-            else if (_locationError != null)
-              Text(
-                _locationError!,
-                style: TextStyle(color: error, fontWeight: FontWeight.w600),
-              )
-            else if (!_locationAttempted)
-              Text(
-                'Appuie sur le bouton pour récupérer ta localisation approximative.',
-                style: TextStyle(color: textSecondary),
-              )
-            else if (_locationLabel != null && _locationLabel!.isNotEmpty)
-              Text(
-                'Localisation approximative trouvée',
-                style: TextStyle(
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
               ),
+            ),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _isLocationLoading ? null : _fetchLocation,
-              icon: const Icon(LucideIcons.mapPin),
-              label: const Text('Récupérer ma localisation'),
-              style: FilledButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+            GestureDetector(
+              onTap: _isLocationLoading ? null : _fetchLocation,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.locateFixed, color: primary, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Récupérer ma localisation',
+                    style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
