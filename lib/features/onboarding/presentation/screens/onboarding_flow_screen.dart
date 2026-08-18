@@ -1126,16 +1126,22 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             for (int index = 0; index < _socialControllers.length; index++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  controller: _socialControllers[index],
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: _getSocialHint(index),
-                    filled: true,
-                    fillColor: surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: border),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
+                  ),
+                  child: TextField(
+                    controller: _socialControllers[index],
+                    onChanged: (_) => setState(() {}),
+                    style: TextStyle(fontSize: 17, color: textPrimary),
+                    decoration: InputDecoration(
+                      hintText: _getSocialHint(index),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -1149,18 +1155,25 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             'Présente-toi en quelques mots et donne envie de découvrir ton univers.',
         child: Column(
           children: [
-            TextField(
-              controller: _bioController,
-              onChanged: (_) => setState(() {}),
-              maxLength: 150,
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintText: 'Passionné de musique, football et voyages 🌍',
-                filled: true,
-                fillColor: surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: border),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: border),
+              ),
+              child: TextField(
+                controller: _bioController,
+                onChanged: (_) => setState(() {}),
+                maxLength: 150,
+                maxLines: 5,
+                style: TextStyle(fontSize: 17, color: textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Passionné de musique, football et voyages 🌍',
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  counterText: '',
                 ),
               ),
             ),
