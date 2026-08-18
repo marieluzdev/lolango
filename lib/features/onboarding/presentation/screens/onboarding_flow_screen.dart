@@ -522,10 +522,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Pseudo / Alias',
-              style: TextStyle(fontSize: 14, color: textTertiary),
-            ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -699,9 +695,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                 ),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? primary.withValues(alpha: isDark ? 0.18 : 0.16)
-                      : surface,
+                  color: isSelected ? primary : surface,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
                     color: isSelected ? primary : border,
@@ -724,7 +718,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                     ),
                     Icon(
                       isSelected ? Icons.check_circle : Icons.circle_outlined,
-                      color: isSelected ? primary : border,
+                      color: isSelected ? Colors.black : border,
                       size: 22,
                     ),
                   ],
@@ -739,27 +733,54 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         title: 'Qui souhaites-tu découvrir ?',
         subtitle:
             'Choisis les personnes que tu aimerais voir dans tes découvertes.',
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        child: Column(
           children: onboardingDiscoveryOptions.map((option) {
-            final selected = _discoveryPreferences.contains(option);
-            return FilterChip(
-              label: Text(option),
-              selected: selected,
-              onSelected: (_) {
-                setState(() {
-                  if (selected) {
-                    _discoveryPreferences.remove(option);
-                  } else {
-                    _discoveryPreferences.add(option);
-                  }
-                });
-              },
-              selectedColor: primary,
-              labelStyle: TextStyle(
-                color: selected ? Colors.black : textPrimary,
-                fontWeight: FontWeight.w600,
+            final isSelected = _discoveryPreferences.contains(option);
+            return GestureDetector(
+              onTap: () => setState(() {
+                if (isSelected) {
+                  _discoveryPreferences.remove(option);
+                } else {
+                  _discoveryPreferences.add(option);
+                }
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isSelected ? primary : surface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isSelected ? primary : border,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        option,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected ? Colors.black : textPrimary,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      isSelected ? Icons.check_circle : Icons.circle_outlined,
+                      color: isSelected ? Colors.black : border,
+                      size: 22,
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
@@ -1086,25 +1107,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
               child: Row(
                 children: [
                   if (_currentStep > 0)
-                    IconButton(
-                      onPressed: _previousPage,
-                      icon: const Icon(LucideIcons.arrowLeft),
+                    GestureDetector(
+                      onTap: _previousPage,
+                      child: const Icon(LucideIcons.arrowLeft),
                     ),
-                  const Spacer(),
-                  Text(
-                    '${_currentStep + 1}/10',
-                    style: TextStyle(color: textSecondary),
-                  ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: LinearProgressIndicator(
-                value: (_currentStep + 1) / 10,
-                backgroundColor: border,
-                valueColor: AlwaysStoppedAnimation<Color>(primary),
-                minHeight: 6,
               ),
             ),
             Expanded(
@@ -1118,10 +1125,10 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             // BOUTON CONTINUER — pilule sombre pleine largeur (façon capture)
             // ==================================================
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 64,
                 child: FilledButton(
                   onPressed: _canContinue && !_isSubmitting
                       ? _handleContinuePressed
@@ -1187,7 +1194,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 0),
             Text(
               title,
               style: TextStyle(
