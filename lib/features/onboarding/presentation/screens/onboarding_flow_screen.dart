@@ -53,6 +53,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   bool _usernameAvailable = false;
   bool _isSubmitting = false;
 
+  // Nombre de centres d'intérêt affichés par catégorie avant repli.
+  static const int _interestsPreviewCount = 3;
+  // Catégories actuellement dépliées (toutes leurs options visibles).
+  final Set<String> _expandedCategories = <String>{};
+
   // ============================================================
   // DATE DE NAISSANCE — roues défilantes (façon capture de référence)
   // ============================================================
@@ -852,106 +857,188 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           ],
         ),
       ),
+
+      // ==================================================
+      // ÉTAPE 7 — CENTRES D'INTÉRÊT (cartes façon capture de référence :
+      // icône, nom, "X au total", chevron qui déplie tout, 3 puces visibles
+      // par défaut + puce "+ N autres").
+      // ==================================================
       _buildStep(
         title: 'Qu’est-ce que tu aimes ?',
         subtitle:
             'Choisis les activités, passions et sujets qui te ressemblent.',
-        child: SizedBox(
-          height: 420,
-          child: ListView.builder(
-            itemCount: _categories.length,
-            itemBuilder: (context, categoryIndex) {
-              final category = _categories[categoryIndex];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${category.emoji} ${category.name}',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+        child: Column(
+          children: _categories.map((category) {
+            final isExpanded = _expandedCategories.contains(category.name);
+            final totalCount = category.interests.length;
+            final visibleInterests = isExpanded
+                ? category.interests
+                : category.interests.take(_interestsPreviewCount).toList();
+            final remainingCount = totalCount - _interestsPreviewCount;
+
+            void toggleExpanded() {
+              setState(() {
+                if (isExpanded) {
+                  _expandedCategories.remove(category.name);
+                } else {
+                  _expandedCategories.add(category.name);
+                }
+              });
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          category.emoji,
+                          style: const TextStyle(fontSize: 22),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: category.interests.map((interest) {
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$totalCount au total',
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: toggleExpanded,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            isExpanded
+                                ? LucideIcons.chevronUp
+                                : LucideIcons.chevronDown,
+                            color: textPrimary,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ...visibleInterests.map((interest) {
                         final checked = _selectedInterests.contains(interest);
-                        return ChoiceChip(
-                          label: Text(interest),
-                          selected: checked,
-                          onSelected: (_) {
-                            setState(() {
-                              if (checked) {
-                                _selectedInterests.remove(interest);
-                              } else {
-                                _selectedInterests.add(interest);
-                              }
-                            });
-                          },
-                          selectedColor: primary,
-                          labelStyle: TextStyle(
-                            color: checked ? Colors.black : textPrimary,
-                            fontWeight: FontWeight.w600,
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            if (checked) {
+                              _selectedInterests.remove(interest);
+                            } else {
+                              _selectedInterests.add(interest);
+                            }
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: checked ? primary : background,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: checked ? primary : border,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  interest,
+                                  style: TextStyle(
+                                    color: checked ? Colors.black : textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (checked) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.check,
+                                    size: 15,
+                                    color: Colors.black,
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                      }),
+                      if (!isExpanded && remainingCount > 0)
+                        GestureDetector(
+                          onTap: toggleExpanded,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: background,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: border),
+                            ),
+                            child: Text(
+                              '+ $remainingCount autres',
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ),
       ),
+
       _buildStep(
         title: 'Ajoute une photo qui te représente 📸',
         subtitle: 'Sélectionne au moins une photo pour compléter ton profil.',
         child: Column(
           children: [
-            InkWell(
-              onTap: _pickPhotos,
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: border, width: 1.2),
-                ),
-                child: Column(
-                  children: [
-                    Icon(LucideIcons.imagePlus, size: 30, color: primary),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Choisir des photos',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Jusqu’à 4 photos pour ton profil',
-                      style: TextStyle(color: textSecondary, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
