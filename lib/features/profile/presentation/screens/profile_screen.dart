@@ -35,8 +35,7 @@ class ProfileScreen extends ConsumerWidget {
         ModalActionTile(
           icon: LucideIcons.eye,
           label: 'Aperçu profil',
-          textColor: Colors.black,
-          backgroundColor: primary,
+          textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/profile-preview');

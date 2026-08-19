@@ -510,8 +510,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         ModalActionTile(
           icon: LucideIcons.user,
           label: 'Voir profil',
-          textColor: Colors.black,
-          backgroundColor: primary,
+          textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/user-profile/${p.id}', extra: p.name);

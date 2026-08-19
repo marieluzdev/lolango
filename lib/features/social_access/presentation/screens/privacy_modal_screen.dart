@@ -219,11 +219,9 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                             onPressed: _isSaving ? null : _handleConfirm,
                             style: FilledButton.styleFrom(
                               backgroundColor: secondary,
-                              foregroundColor: isDark
-                                  ? Colors.black
-                                  : Colors.white,
+                              foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
                             child: _isSaving
@@ -233,7 +231,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        isDark ? Colors.black : Colors.white,
+                                        Colors.black,
                                       ),
                                     ),
                                   )
@@ -277,17 +275,17 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? primary.withValues(alpha: 0.15) : surface,
+          color: isSelected ? Colors.black : surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? primary : border,
+            color: isSelected ? Colors.black : border,
             width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: isSelected ? primary : textPrimary, size: 24),
+            Icon(icon, color: isSelected ? Colors.white : textPrimary, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -298,7 +296,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                       Text(
                         mode.label,
                         style: TextStyle(
-                          color: textPrimary,
+                          color: isSelected ? Colors.white : textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -311,13 +309,13 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: primary,
+                            color: isSelected ? Colors.white : primary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             'Défaut',
                             style: TextStyle(
-                              color: primary,
+                              color: Colors.black,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -330,7 +328,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                   Text(
                     mode.description,
                     style: TextStyle(
-                      color: textSecondary,
+                      color: isSelected ? Colors.white.withValues(alpha: 0.7) : textSecondary,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -339,7 +337,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
               ),
             ),
             if (isSelected)
-              Icon(LucideIcons.checkCircle2, color: primary, size: 24),
+              Icon(LucideIcons.checkCircle2, color: Colors.white, size: 24),
           ],
         ),
       ),

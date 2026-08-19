@@ -9,6 +9,7 @@ import 'package:lolango_v2/core/theme/theme_mode_provider.dart';
 import 'package:lolango_v2/core/widgets/confirmation_modal_bottom_sheet.dart';
 import 'package:lolango_v2/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
 import 'package:lolango_v2/features/social_access/domain/social_visibility_model.dart';
 import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
 
@@ -277,10 +278,10 @@ void _showPrivacySettingsSheet(
             ),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               decoration: BoxDecoration(
                 color: surface,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -311,13 +312,13 @@ void _showPrivacySettingsSheet(
                       onTap: () => setSheetState(() => selectedMode = mode),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(14),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? primary.withValues(alpha: 0.15) : surface,
-                          borderRadius: BorderRadius.circular(16),
+                          color: isSelected ? Colors.black : surface,
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? primary : border,
+                            color: isSelected ? Colors.black : border,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -332,7 +333,7 @@ void _showPrivacySettingsSheet(
                                       Text(
                                         mode.label,
                                         style: TextStyle(
-                                          color: textPrimary,
+                                          color: isSelected ? Colors.white : textPrimary,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -342,13 +343,13 @@ void _showPrivacySettingsSheet(
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: primary,
+                                            color: isSelected ? Colors.white : primary,
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Text(
                                             'Défaut',
                                             style: TextStyle(
-                                              color: primary,
+                                              color: Colors.black,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -361,7 +362,7 @@ void _showPrivacySettingsSheet(
                                   Text(
                                     mode.description,
                                     style: TextStyle(
-                                      color: textSecondary,
+                                      color: isSelected ? Colors.white.withValues(alpha: 0.7) : textSecondary,
                                       fontSize: 12,
                                       height: 1.4,
                                     ),
@@ -370,7 +371,7 @@ void _showPrivacySettingsSheet(
                               ),
                             ),
                             if (isSelected)
-                              Icon(Icons.check_circle_rounded, color: primary, size: 22),
+                              Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
                           ],
                         ),
                       ),
@@ -386,22 +387,25 @@ void _showPrivacySettingsSheet(
                             child: Column(
                               children: userPlatforms.map((platform) {
                                 final isPlatformSelected = selectedPlatforms.contains(platform);
-                                return CheckboxListTile(
-                                  value: isPlatformSelected,
-                                  onChanged: (val) {
-                                    setSheetState(() {
-                                      if (val == true) {
-                                        selectedPlatforms.add(platform);
-                                      } else {
-                                        selectedPlatforms.remove(platform);
-                                      }
-                                    });
-                                  },
-                                  title: Text(platform, style: TextStyle(color: textPrimary)),
-                                  activeColor: primary,
-                                  checkColor: Colors.black,
-                                  contentPadding: EdgeInsets.zero,
-                                  controlAffinity: ListTileControlAffinity.leading,
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: CheckboxListTile(
+                                    value: isPlatformSelected,
+                                    onChanged: (val) {
+                                      setSheetState(() {
+                                        if (val == true) {
+                                          selectedPlatforms.add(platform);
+                                        } else {
+                                          selectedPlatforms.remove(platform);
+                                        }
+                                      });
+                                    },
+                                    title: Text(platform, style: TextStyle(color: textPrimary)),
+                                    activeColor: primary,
+                                    checkColor: Colors.black,
+                                    contentPadding: EdgeInsets.zero,
+                                    controlAffinity: ListTileControlAffinity.leading,
+                                  ),
                                 );
                               }).toList(),
                             ),
@@ -412,41 +416,80 @@ void _showPrivacySettingsSheet(
 
                     return card;
                   }),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: () async {
-                        Navigator.of(sheetContext).pop();
-                        await ref.read(socialVisibilityProvider.notifier).saveVisibility(
-                          selectedMode,
-                          selectedMode == SocialVisibility.selective
-                              ? selectedPlatforms.toList()
-                              : [],
-                        );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Visibilité mise à jour ✓'),
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 2),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              Navigator.of(sheetContext).pop();
+                              final saved = await _showEditNetworksModal(
+                                context,
+                                ref,
+                                textPrimary,
+                                textSecondary,
+                                surface,
+                                border,
+                                primary,
+                              );
+                              if (saved == false && context.mounted) {
+                                _showPrivacySettingsSheet(context, ref, textPrimary, textSecondary, userPlatforms);
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: textPrimary,
+                              side: BorderSide(color: border),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
-                          );
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                            child: const Text(
+                              'Modifier',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'Enregistrer',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: FilledButton(
+                            onPressed: () async {
+                              Navigator.of(sheetContext).pop();
+                              await ref.read(socialVisibilityProvider.notifier).saveVisibility(
+                                selectedMode,
+                                selectedMode == SocialVisibility.selective
+                                    ? selectedPlatforms.toList()
+                                    : [],
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Visibilité mise à jour ✓'),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'Enregistrer',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -455,5 +498,207 @@ void _showPrivacySettingsSheet(
         },
       );
     },
+  );
+}
+
+/// Ouvre un modal pour modifier les réseaux sociaux
+Future<bool> _showEditNetworksModal(
+  BuildContext parentContext,
+  WidgetRef ref,
+  Color textPrimary,
+  Color textSecondary,
+  Color surface,
+  Color border,
+  Color primary,
+) async {
+  // Charger les réseaux sociaux actuels
+  final profile = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+  final instagramValue = profile?.socials['Instagram'] ?? '';
+  final snapchatValue = profile?.socials['Snapchat'] ?? '';
+  final tiktokValue = profile?.socials['TikTok'] ?? '';
+
+  final result = await showModalBottomSheet<bool>(
+    context: parentContext,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (editCtx) {
+      final instagramController = TextEditingController(text: instagramValue);
+      final snapchatController = TextEditingController(text: snapchatValue);
+      final tiktokController = TextEditingController(text: tiktokValue);
+
+      return StatefulBuilder(
+        builder: (editCtx, setEditState) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              (MediaQuery.of(editCtx).viewInsets.bottom > 0
+                  ? MediaQuery.of(editCtx).viewInsets.bottom
+                  : MediaQuery.of(editCtx).padding.bottom) + 16,
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Modifier les réseaux',
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.of(editCtx).pop(false);
+                          },
+                          icon: Icon(Icons.close, color: textPrimary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSocialField(
+                      controller: instagramController,
+                      hintText: 'Instagram',
+                      textPrimary: textPrimary,
+                      surface: surface,
+                      border: border,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSocialField(
+                      controller: snapchatController,
+                      hintText: 'Snapchat',
+                      textPrimary: textPrimary,
+                      surface: surface,
+                      border: border,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSocialField(
+                      controller: tiktokController,
+                      hintText: 'TikTok',
+                      textPrimary: textPrimary,
+                      surface: surface,
+                      border: border,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.of(editCtx).pop(false);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: textPrimary,
+                              side: BorderSide(color: border),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'Annuler',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: FilledButton(
+                            onPressed: () async {
+                              final socialMap = <String, String>{};
+                              if (instagramController.text.trim().isNotEmpty) {
+                                socialMap['Instagram'] = instagramController.text.trim();
+                              }
+                              if (snapchatController.text.trim().isNotEmpty) {
+                                socialMap['Snapchat'] = snapchatController.text.trim();
+                              }
+                              if (tiktokController.text.trim().isNotEmpty) {
+                                socialMap['TikTok'] = tiktokController.text.trim();
+                              }
+                              
+                              await ref.read(profileRepositoryProvider).upsertSocials(socialMap);
+                              ref.invalidate(profileProvider);
+                              if (parentContext.mounted) {
+                                Navigator.of(editCtx).pop(true);
+                                ScaffoldMessenger.of(parentContext).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Réseaux mis à jour ✓'),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'Enregistrer',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    },
+  );
+  
+  return result ?? false;
+}
+
+Widget _buildSocialField({
+  required TextEditingController controller,
+  required String hintText,
+  required Color textPrimary,
+  required Color surface,
+  required Color border,
+}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    decoration: BoxDecoration(
+      color: surface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: border),
+    ),
+    child: TextField(
+      controller: controller,
+      style: TextStyle(fontSize: 17, color: textPrimary),
+      decoration: InputDecoration(
+        hintText: hintText,
+        border: InputBorder.none,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+    ),
   );
 }

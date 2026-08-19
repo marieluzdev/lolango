@@ -1,25 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileSocialsSection extends StatelessWidget {
   final Map<String, String> socials;
 
   const ProfileSocialsSection({super.key, required this.socials});
 
-  ({Color color, IconData icon}) _socialStyle(String platform) {
+  /// Retourne la décoration de fond (BoxDecoration) pour l'icône d'un réseau.
+  BoxDecoration _socialBgDecoration(String platform) {
     switch (platform.toLowerCase()) {
       case 'instagram':
-        return (color: const Color(0xFFE1306C), icon: LucideIcons.camera);
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [Color(0xFF833AB4), Color(0xFFFD1D1D), Color(0xFFF56040)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        );
       case 'snapchat':
-        return (
-          color: const Color(0xFFF7C600),
-          icon: LucideIcons.messageCircle,
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFFFFC00),
         );
       case 'tiktok':
-        return (color: const Color(0xFF000000), icon: LucideIcons.music);
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF010101),
+        );
+      case 'twitter':
+      case 'x':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF1DA1F2),
+        );
+      case 'facebook':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF1877F2),
+        );
+      case 'youtube':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFFF0000),
+        );
+      case 'linkedin':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF0A66C2),
+        );
+      case 'pinterest':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFE60023),
+        );
+      case 'discord':
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF5865F2),
+        );
       default:
-        return (color: const Color(0xFF999999), icon: LucideIcons.link);
+        return const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFF555555),
+        );
+    }
+  }
+
+  /// Retourne l'icône et la couleur d'icône pour un réseau social.
+  ({IconData icon, Color iconColor}) _socialIconStyle(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return (icon: Icons.camera_alt, iconColor: Colors.white);
+      case 'snapchat':
+        return (icon: Icons.chat_bubble, iconColor: Colors.black);
+      case 'tiktok':
+        return (icon: Icons.music_note, iconColor: Colors.white);
+      case 'twitter':
+      case 'x':
+        return (icon: Icons.alternate_email, iconColor: Colors.white);
+      case 'facebook':
+        return (icon: Icons.facebook, iconColor: Colors.white);
+      case 'youtube':
+        return (icon: Icons.play_arrow, iconColor: Colors.white);
+      case 'linkedin':
+        return (icon: Icons.work, iconColor: Colors.white);
+      case 'pinterest':
+        return (icon: Icons.push_pin, iconColor: Colors.white);
+      case 'discord':
+        return (icon: Icons.headset_mic, iconColor: Colors.white);
+      default:
+        return (icon: Icons.link, iconColor: Colors.white);
+    }
+  }
+
+  String? _getAssetPath(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return 'assets/icons/instagram.png';
+      case 'snapchat':
+        return 'assets/icons/snapchat.png';
+      case 'tiktok':
+        return 'assets/icons/tiktok.png';
+      default:
+        return null;
     }
   }
 
