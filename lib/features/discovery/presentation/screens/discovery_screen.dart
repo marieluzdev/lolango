@@ -442,6 +442,19 @@ class _SocialRow extends StatelessWidget {
   final ThemeData theme;
   final VoidCallback? onTap;
 
+  String? _getAssetPath(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return 'assets/icons/instagram.png';
+      case 'snapchat':
+        return 'assets/icons/snapchat.png';
+      case 'tiktok':
+        return 'assets/icons/tiktok.png';
+      default:
+        return null;
+    }
+  }
+
   BoxDecoration _bgDecoration() {
     switch (platform.toLowerCase()) {
       case 'instagram':
@@ -497,6 +510,7 @@ class _SocialRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final assetPath = _getAssetPath(platform);
     final style = _iconStyle();
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
 
@@ -508,7 +522,15 @@ class _SocialRow extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: _bgDecoration(),
-            child: Icon(style.icon, color: style.color, size: 22),
+            child: assetPath != null
+                ? Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      assetPath,
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : Icon(style.icon, color: style.color, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(

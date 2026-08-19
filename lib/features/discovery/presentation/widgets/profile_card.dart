@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 import 'package:lolango_v2/core/widgets/app_cached_image.dart';
+import 'package:lolango_v2/core/constants/app_colors.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers — design visuel par plateforme sociale
@@ -112,16 +113,42 @@ class _SocialBadge extends StatelessWidget {
   final double size;
   final VoidCallback? onTap;
 
+  String? _getAssetPath(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return 'assets/icons/instagram.png';
+      case 'snapchat':
+        return 'assets/icons/snapchat.png';
+      case 'tiktok':
+        return 'assets/icons/tiktok.png';
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final style = _socialIconStyle(platform);
+    final assetPath = _getAssetPath(platform);
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: size,
         height: size,
         decoration: _socialBgDecoration(platform),
-        child: Icon(style.icon, color: style.iconColor, size: size * 0.48),
+        child: assetPath != null
+            ? Padding(
+                padding: EdgeInsets.all(size * 0.15),
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.contain,
+                ),
+              )
+            : Icon(
+                _socialIconStyle(platform).icon,
+                color: _socialIconStyle(platform).iconColor,
+                size: size * 0.48,
+              ),
       ),
     );
   }
@@ -373,28 +400,33 @@ class _ProfileCardState extends State<ProfileCard> {
                 },
               ),
 
-              // Indicateur de dots
+              // Indicateur de pages (barres prenant toute la largeur)
               if (_tabCount > 1)
                 Positioned(
                   top: 14,
                   left: 0,
                   right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_tabCount, (i) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: _currentPage == i ? 20 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: _currentPage == i
-                              ? Colors.white
-                              : Colors.white.withAlpha((0.5 * 255).round()),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    }),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: List.generate(_tabCount, (i) {
+                        return Expanded(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: EdgeInsets.only(
+                              right: i < _tabCount - 1 ? 4 : 0,
+                            ),
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: _currentPage == i
+                                  ? Colors.white
+                                  : Colors.white.withAlpha((0.3 * 255).round()),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
             ],
@@ -412,6 +444,7 @@ class _ProfileCardState extends State<ProfileCard> {
     ThemeData theme,
     String? photoUrl,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final socials = widget.socials ?? {};
     final interests = widget.interests ?? [];
     final displayName = widget.age != null
@@ -593,7 +626,9 @@ class _ProfileCardState extends State<ProfileCard> {
                           onPressed: widget.onConnect,
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            backgroundColor: const Color(0xFFFE3C72),
+                            backgroundColor: isDark
+                                ? AppColors.primaryDark
+                                : AppColors.primaryLight,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             elevation: 4,
                             shape: RoundedRectangleBorder(
