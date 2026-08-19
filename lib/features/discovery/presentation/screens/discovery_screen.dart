@@ -117,7 +117,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
               Expanded(
                 child: Stack(
                   children: [
@@ -290,6 +290,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     DetailedProfileModel pDetailed, {
     required ThemeData theme,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final p = pDetailed.profile;
     final socials = pDetailed.filteredSocials(false);
 
@@ -354,8 +355,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                   Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  side: const BorderSide(color: Colors.redAccent, width: 2),
+                  foregroundColor: theme.textTheme.bodyLarge?.color,
+                  side: BorderSide(
+                    color: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
+                    width: 1,
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -389,7 +395,9 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: const Color(0xFFFE3C72),
+                  backgroundColor: isDark
+                      ? AppColors.primaryDark
+                      : AppColors.primaryLight,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 4,
                   shape: RoundedRectangleBorder(

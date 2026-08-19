@@ -54,6 +54,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       if (ref.read(matchNotificationBadgeProvider) > 0) {
         ref.read(matchNotificationBadgeProvider.notifier).state = 0;
       }
+      // Initialize the active tab provider
+      ref.read(matchActiveTabProvider.notifier).state = _tabIndex;
     });
   }
 
@@ -66,6 +68,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     final textPrimary = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
 
     final pendingAsync = ref.watch(pendingLikesProvider);
@@ -104,7 +109,37 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+              // Dynamic info text
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _tabIndex == 0
+                        ? (pendingCount == 1
+                            ? '1 like reçu'
+                            : '$pendingCount likes reçus')
+                        : (matchesCount == 1
+                            ? '1 connexion'
+                            : '$matchesCount connexions'),
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               // Segmented control
               // ============================================================
@@ -168,6 +203,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                               setState(() {
                                 _tabIndex = i;
                               });
+                              ref.read(matchActiveTabProvider.notifier).state = i;
                             },
                             child: SizedBox(
                               height: double.infinity,
