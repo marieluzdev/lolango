@@ -86,7 +86,6 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
               decoration: BoxDecoration(
                 color: background,
-                border: Border(bottom: BorderSide(color: border)),
               ),
               child: Row(
                 children: [
@@ -95,7 +94,7 @@ class ProfileScreen extends ConsumerWidget {
                       'Mon profil',
                       style: TextStyle(
                         color: textPrimary,
-                        fontSize: 22,
+                        fontSize: 28,
                         fontWeight: FontWeight.w800,
                       ),
                     ),

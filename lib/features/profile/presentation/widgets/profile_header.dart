@@ -92,11 +92,11 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          OutlinedButton.icon(
+          FilledButton.icon(
             onPressed: () => context.push('/profile-edit'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: textPrimary,
-              side: BorderSide(color: border),
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark ? AppColors.surfaceDark : Colors.black,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(26),

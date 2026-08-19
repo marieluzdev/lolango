@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/errors/failures.dart';
@@ -30,6 +31,41 @@ class ProfileRepository {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<bool> hasSeenPrivacyModal() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return false;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_seen_privacy_modal_${user.id}') ?? false;
+  }
+
+  Future<void> markPrivacyModalSeen() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_privacy_modal_${user.id}', true);
+  }
+
+  Future<String?> fetchSocialVisibility() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+    try {
+      final response = await supabase.from('profiles').select('social_visibility').eq('id', user.id).maybeSingle();
+      if (response == null) return null;
+      return response['social_visibility'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> updateSocialVisibility(String mode, List<String>? visiblePlatforms) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    await supabase.from('profiles').update({
+      'social_visibility': mode,
+      'visible_socials': visiblePlatforms,
+    }).eq('id', user.id);
   }
 
   Future<Map<String, dynamic>?> fetchProfile() async {

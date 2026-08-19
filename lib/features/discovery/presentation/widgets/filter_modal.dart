@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lolango_v2/core/constants/app_colors.dart';
 
 class DiscoveryFilter {
   final RangeValues ageRange;
@@ -43,120 +44,159 @@ class _FilterModalState extends State<FilterModal> {
     super.dispose();
   }
 
+  /// Style partagé pour les chips
+  ChipThemeData get _chipTheme => ChipThemeData(
+        backgroundColor: const Color(0xFFF0F0EE),
+        selectedColor: AppColors.primaryLight, // jaune opaque
+        disabledColor: const Color(0xFFF0F0EE),
+        labelStyle: const TextStyle(
+          color: Color(0xFF1F1F1F),
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+        secondarySelectedColor: AppColors.primaryLight,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: const BorderSide(color: Color(0xFFE0E0DE)),
+        showCheckmark: false,
+      );
+
   @override
   Widget build(BuildContext context) {
     // Return only the content; container and title are provided by the reusable modal.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 8),
-        Text('Âge', style: Theme.of(context).textTheme.titleMedium),
-        RangeSlider(
-          values: _age,
-          min: 18,
-          max: 80,
-          divisions: 62,
-          labels: RangeLabels(
-            _age.start.round().toString(),
-            _age.end.round().toString(),
+    return ChipTheme(
+      data: _chipTheme,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Text('Âge', style: Theme.of(context).textTheme.titleMedium),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primaryLight,
+              thumbColor: AppColors.primaryLight,
+              overlayColor: AppColors.primaryLight.withValues(alpha: 0.15),
+              inactiveTrackColor: const Color(0xFFE0E0DE),
+            ),
+            child: RangeSlider(
+              values: _age,
+              min: 18,
+              max: 80,
+              divisions: 62,
+              labels: RangeLabels(
+                _age.start.round().toString(),
+                _age.end.round().toString(),
+              ),
+              onChanged: (v) => setState(() => _age = v),
+            ),
           ),
-          onChanged: (v) => setState(() => _age = v),
-        ),
-        const SizedBox(height: 8),
-        const Text('Sexe'),
-        Row(
-          children: [
-            ChoiceChip(
-              label: const Text('Tous'),
-              selected: _gender == null,
-              onSelected: (_) => setState(() => _gender = null),
-            ),
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: const Text('Femmes'),
-              selected: _gender == 'female',
-              onSelected: (_) => setState(() => _gender = 'female'),
-            ),
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: const Text('Hommes'),
-              selected: _gender == 'male',
-              onSelected: (_) => setState(() => _gender = 'male'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // City selection: use the real city from user profile if provided in initial
-        if (_city != null)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 8),
+          const Text('Sexe'),
+          const SizedBox(height: 8),
+          Row(
             children: [
-              const Text('Ville'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Toutes les villes'),
-                    selected: _city == null,
-                    onSelected: (_) => setState(() => _city = null),
-                  ),
-                  ChoiceChip(
-                    label: Text(_city!),
-                    selected: _city != null,
-                    onSelected: (_) =>
-                        setState(() => _city = widget.initial.city),
-                  ),
-                ],
+              ChoiceChip(
+                label: const Text('Tous'),
+                selected: _gender == null,
+                onSelected: (_) => setState(() => _gender = null),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('Femmes'),
+                selected: _gender == 'female',
+                onSelected: (_) => setState(() => _gender = 'female'),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('Hommes'),
+                selected: _gender == 'male',
+                onSelected: (_) => setState(() => _gender = 'male'),
               ),
             ],
-          )
-        else
-          const SizedBox.shrink(),
-        const SizedBox(height: 12),
-        const Text('Réseaux sociaux'),
-        Wrap(
-          spacing: 8,
-          children: ['Instagram', 'Snapchat', 'TikTok'].map((label) {
-            final selected = _socials.contains(label.toLowerCase());
-            return FilterChip(
-              label: Text(label),
-              selected: selected,
-              onSelected: (v) => setState(() {
-                if (v) {
-                  _socials.add(label.toLowerCase());
-                } else {
-                  _socials.remove(label.toLowerCase());
-                }
-              }),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annuler'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () {
-                final res = DiscoveryFilter(
-                  ageRange: _age,
-                  gender: _gender,
-                  city: _city,
-                  socials: _socials,
-                );
-                Navigator.of(context).pop(res);
-              },
-              child: const Text('Appliquer'),
-            ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: 12),
+          // City selection: use the real city from user profile if provided in initial
+          if (_city != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Ville'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('Toutes les villes'),
+                      selected: _city == null,
+                      onSelected: (_) => setState(() => _city = null),
+                    ),
+                    ChoiceChip(
+                      label: Text(_city!),
+                      selected: _city != null,
+                      onSelected: (_) =>
+                          setState(() => _city = widget.initial.city),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          else
+            const SizedBox.shrink(),
+          const SizedBox(height: 12),
+          const Text('Réseaux sociaux'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: ['Instagram', 'Snapchat', 'TikTok'].map((label) {
+              final selected = _socials.contains(label.toLowerCase());
+              return FilterChip(
+                label: Text(label),
+                selected: selected,
+                onSelected: (v) => setState(() {
+                  if (v) {
+                    _socials.add(label.toLowerCase());
+                  } else {
+                    _socials.remove(label.toLowerCase());
+                  }
+                }),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Annuler'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  final res = DiscoveryFilter(
+                    ageRange: _age,
+                    gender: _gender,
+                    city: _city,
+                    socials: _socials,
+                  );
+                  Navigator.of(context).pop(res);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: Colors.black,
+                ),
+                child: const Text('Appliquer'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

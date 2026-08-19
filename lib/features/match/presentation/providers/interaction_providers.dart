@@ -28,3 +28,8 @@ final matchesProvider = FutureProvider<List<DetailedProfileModel>>((ref) async {
 final hiddenProfilesProvider = StateProvider<Set<String>>((ref) => {});
 
 final matchNotificationBadgeProvider = StateProvider<int>((ref) => 0);
+final seenLikesCountProvider = StateProvider<int>((ref) => 0);
+final seenMatchesCountProvider = StateProvider<int>((ref) => 0);
+
+// Onglet actif dans Match (0 = Likes reçus, 1 = Matchs)
+final matchActiveTabProvider = StateProvider<int>((ref) => 0);

@@ -12,6 +12,7 @@ import 'package:lolango_v2/features/profile/presentation/providers/profile_provi
 import 'package:lolango_v2/core/widgets/app_empty_state.dart';
 import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
+import 'package:lolango_v2/core/widgets/search_bar_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
@@ -23,6 +24,7 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
 
 class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   final ScrollController _scrollController = ScrollController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -111,140 +113,168 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         ref.read(discoveryFilterProvider.notifier).state = res;
                       }
                     },
-                    icon: const Icon(Icons.filter_list),
+                    icon: const Icon(LucideIcons.slidersHorizontal),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    await ref
-                        .read(discoveryNotifierProvider.notifier)
-                        .refresh();
-                  },
-                  child: discoveryAsync.when(
-                    loading: () => const AppSpinner(),
-                    error: (error, _) => AppErrorState(
-                      message: "Erreur lors du chargement des profils.",
-                      onRetry: () {
-                        ref.read(discoveryNotifierProvider.notifier).refresh();
+                child: Stack(
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: () async {
+                        await ref
+                            .read(discoveryNotifierProvider.notifier)
+                            .refresh();
                       },
-                    ),
-                    data: (discoveryState) {
-                      final filtered = discoveryState.profiles;
-                      if (filtered.isEmpty) {
-                        return CustomScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          slivers: [
-                            SliverFillRemaining(
-                              child: AppEmptyState(
-                                icon: LucideIcons.users,
-                                title: 'Aucun profil',
-                                description:
-                                    'Aucun profil trouvé selon les filtres actuels.',
-                                actionLabel: 'Réinitialiser',
-                                onAction: () {
-                                  ref
-                                      .read(discoveryFilterProvider.notifier)
-                                      .state = DiscoveryFilter(
-                                    ageRange: const RangeValues(18, 80),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      }
+                      child: discoveryAsync.when(
+                        loading: () => const AppSpinner(),
+                        error: (error, _) => AppErrorState(
+                          message: "Erreur lors du chargement des profils.",
+                          onRetry: () {
+                            ref.read(discoveryNotifierProvider.notifier).refresh();
+                          },
+                        ),
+                        data: (discoveryState) {
+                          final allProfiles = discoveryState.profiles;
+                          final filtered = _searchQuery.isEmpty
+                              ? allProfiles
+                              : allProfiles
+                                  .where((p) => p.profile.name
+                                      .toLowerCase()
+                                      .contains(_searchQuery.toLowerCase()))
+                                  .toList();
 
-                      return GridView.builder(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: 0.70,
-                            ),
-                        itemCount: discoveryState.hasMore
-                            ? filtered.length + 1
-                            : filtered.length,
-                        itemBuilder: (context, i) {
-                          // Footer : spinner de chargement
-                          if (i == filtered.length) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                          if (filtered.isEmpty) {
+                            return CustomScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              slivers: [
+                                SliverFillRemaining(
+                                  child: AppEmptyState(
+                                    icon: LucideIcons.users,
+                                    title: 'Aucun profil',
+                                    description:
+                                        'Aucun profil trouvé selon les filtres actuels.',
+                                    actionLabel: 'Réinitialiser',
+                                    onAction: () {
+                                      ref
+                                          .read(discoveryFilterProvider.notifier)
+                                          .state = DiscoveryFilter(
+                                        ageRange: const RangeValues(18, 80),
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             );
                           }
-                          final p = filtered[i];
-                          return ProfileCard(
-                            name: p.profile.name,
-                            age: p.profile.age,
-                            city: p.profile.city,
-                            country: p.profile.country,
-                            photoUrls: p.photoUrls,
-                            bio: p.profile.bio,
-                            socials: p.socials,
-                            interests: p.interests,
-                            isGridMode: true,
-                            onPass: () {
-                              ref.read(hiddenProfilesProvider.notifier).update((
-                                state,
-                              ) {
-                                final newState = Set<String>.from(state);
-                                newState.add(p.profile.id);
-                                return newState;
-                              });
-                              ref
-                                  .read(interactionRepositoryProvider)
-                                  .passProfile(p.profile.id)
-                                  .then((_) {
-                                    ref.invalidate(interactedProfilesProvider);
+
+                          return GridView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.only(bottom: 80),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  childAspectRatio: 0.70,
+                                ),
+                            itemCount: discoveryState.hasMore
+                                ? filtered.length + 1
+                                : filtered.length,
+                            itemBuilder: (context, i) {
+                              // Footer : spinner de chargement
+                              if (i == filtered.length) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              }
+                              final p = filtered[i];
+                              return ProfileCard(
+                                name: p.profile.name,
+                                age: p.profile.age,
+                                city: p.profile.city,
+                                country: p.profile.country,
+                                photoUrls: p.photoUrls,
+                                bio: p.profile.bio,
+                                socials: p.socials,
+                                blurredSocials: p.getBlurredSocials(false),
+                                interests: p.interests,
+                                isGridMode: true,
+                                isMatched: false,
+                                onPass: () {
+                                  ref.read(hiddenProfilesProvider.notifier).update((
+                                    state,
+                                  ) {
+                                    final newState = Set<String>.from(state);
+                                    newState.add(p.profile.id);
+                                    return newState;
                                   });
-                            },
-                            onConnect: () {
-                              ref.read(hiddenProfilesProvider.notifier).update((
-                                state,
-                              ) {
-                                final newState = Set<String>.from(state);
-                                newState.add(p.profile.id);
-                                return newState;
-                              });
-                              ref
-                                  .read(interactionRepositoryProvider)
-                                  .likeProfile(p.profile.id)
-                                  .then((isMatch) {
-                                    if (isMatch) {
-                                      ref
-                                          .read(
-                                            matchNotificationBadgeProvider
-                                                .notifier,
-                                          )
-                                          .state++;
-                                      ref.invalidate(matchesProvider);
-                                    }
-                                    ref.invalidate(interactedProfilesProvider);
+                                  ref
+                                      .read(interactionRepositoryProvider)
+                                      .passProfile(p.profile.id)
+                                      .then((_) {
+                                        ref.invalidate(interactedProfilesProvider);
+                                      });
+                                },
+                                onConnect: () {
+                                  ref.read(hiddenProfilesProvider.notifier).update((
+                                    state,
+                                  ) {
+                                    final newState = Set<String>.from(state);
+                                    newState.add(p.profile.id);
+                                    return newState;
                                   });
-                            },
-                            onTap: () {
-                              _showActionModal(
-                                context,
-                                ref,
-                                p,
-                                theme: Theme.of(context),
+                                  ref
+                                      .read(interactionRepositoryProvider)
+                                      .likeProfile(p.profile.id)
+                                      .then((isMatch) {
+                                        if (isMatch) {
+                                          ref
+                                              .read(
+                                                matchNotificationBadgeProvider
+                                                    .notifier,
+                                              )
+                                              .state++;
+                                          ref.invalidate(matchesProvider);
+                                        }
+                                        ref.invalidate(interactedProfilesProvider);
+                                      });
+                                },
+                                onTap: () {
+                                  _showActionModal(
+                                    context,
+                                    ref,
+                                    p,
+                                    theme: Theme.of(context),
+                                  );
+                                },
                               );
                             },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    // ── Barre de recherche fixe en bas au centre ──
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: SearchBarWidget(
+                          hint: 'Rechercher un profil...',
+                          onChanged: (q) => setState(() => _searchQuery = q),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -260,8 +290,9 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     DetailedProfileModel pDetailed, {
     required ThemeData theme,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final p = pDetailed.profile;
-    final socials = pDetailed.socials;
+    final socials = pDetailed.filteredSocials(false);
 
     showReusableModalBottomSheet(
       context: context,
@@ -324,8 +355,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                   Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  side: const BorderSide(color: Colors.redAccent, width: 2),
+                  foregroundColor: theme.textTheme.bodyLarge?.color,
+                  side: BorderSide(
+                    color: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
+                    width: 1,
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -359,7 +395,9 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: const Color(0xFFFE3C72),
+                  backgroundColor: isDark
+                      ? AppColors.primaryDark
+                      : AppColors.primaryLight,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -403,6 +441,19 @@ class _SocialRow extends StatelessWidget {
   final String username;
   final ThemeData theme;
   final VoidCallback? onTap;
+
+  String? _getAssetPath(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return 'assets/icons/instagram.png';
+      case 'snapchat':
+        return 'assets/icons/snapchat.png';
+      case 'tiktok':
+        return 'assets/icons/tiktok.png';
+      default:
+        return null;
+    }
+  }
 
   BoxDecoration _bgDecoration() {
     switch (platform.toLowerCase()) {
@@ -459,6 +510,7 @@ class _SocialRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final assetPath = _getAssetPath(platform);
     final style = _iconStyle();
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
 
@@ -470,7 +522,15 @@ class _SocialRow extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: _bgDecoration(),
-            child: Icon(style.icon, color: style.color, size: 22),
+            child: assetPath != null
+                ? Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      assetPath,
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : Icon(style.icon, color: style.color, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(

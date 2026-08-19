@@ -138,6 +138,7 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
       photoUrls: detailedP.photoUrls,
       bio: p.bio,
       socials: detailedP.socials,
+      blurredSocials: const {}, // User sees their own socials clearly
       interests: detailedP.interests,
       showActionButtons: false,
     );

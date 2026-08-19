@@ -53,6 +53,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   bool _usernameAvailable = false;
   bool _isSubmitting = false;
 
+  // Nombre de centres d'intérêt affichés par catégorie avant repli.
+  static const int _interestsPreviewCount = 3;
+  // Catégories actuellement dépliées (toutes leurs options visibles).
+  final Set<String> _expandedCategories = <String>{};
+
   // ============================================================
   // DATE DE NAISSANCE — roues défilantes (façon capture de référence)
   // ============================================================
@@ -103,6 +108,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _yearController = FixedExtentScrollController(
       initialItem: _birthYears.indexOf(_selectedYear),
     );
+
+    // Récupérer la localisation par défaut
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchExactLocation();
+    });
   }
 
   @override
@@ -367,7 +377,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     );
   }
 
-  Future<void> _fetchLocation() async {
+  Future<void> _fetchExactLocation() async {
     setState(() {
       _isLocationLoading = true;
       _locationError = null;
@@ -377,7 +387,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     try {
       final service = ref.read(locationServiceProvider);
       final position = await service.determinePosition();
-      final label = await service.reverseGeocode(
+      final exactAddress = await service.reverseGeocodeExact(
         position.latitude,
         position.longitude,
       );
@@ -385,14 +395,14 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       setState(() {
         _locationLatitude = position.latitude;
         _locationLongitude = position.longitude;
-        _locationLabel = label;
-        _locationController.text = label ?? '';
+        _locationLabel = exactAddress;
+        _locationController.text = exactAddress ?? '';
       });
     } catch (error) {
       setState(() {
         _locationError = error is StateError
             ? error.message
-            : 'Impossible de récupérer la localisation.';
+            : 'Impossible de récupérer l’adresse exacte.';
       });
     } finally {
       setState(() {
@@ -497,16 +507,22 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         title: 'Comment veux-tu qu’on t’appelle ?',
         subtitle:
             'Nous avons récupéré ton prénom depuis ton compte Google. Tu peux le modifier si tu veux.',
-        child: TextField(
-          controller: _firstNameController,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Prénom',
-            filled: true,
-            fillColor: surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: border),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border),
+          ),
+          child: TextField(
+            controller: _firstNameController,
+            onChanged: (_) => setState(() {}),
+            style: TextStyle(fontSize: 17, color: textPrimary),
+            decoration: const InputDecoration(
+              hintText: 'Prénom',
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 16),
             ),
           ),
         ),
@@ -522,10 +538,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Pseudo / Alias',
-              style: TextStyle(fontSize: 14, color: textTertiary),
-            ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -699,9 +711,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                 ),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? primary.withValues(alpha: isDark ? 0.18 : 0.16)
-                      : surface,
+                  color: isSelected ? primary : surface,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
                     color: isSelected ? primary : border,
@@ -718,13 +728,13 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: textPrimary,
+                          color: isSelected ? Colors.black : textPrimary,
                         ),
                       ),
                     ),
                     Icon(
                       isSelected ? Icons.check_circle : Icons.circle_outlined,
-                      color: isSelected ? primary : border,
+                      color: isSelected ? Colors.black : border,
                       size: 22,
                     ),
                   ],
@@ -739,27 +749,54 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         title: 'Qui souhaites-tu découvrir ?',
         subtitle:
             'Choisis les personnes que tu aimerais voir dans tes découvertes.',
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        child: Column(
           children: onboardingDiscoveryOptions.map((option) {
-            final selected = _discoveryPreferences.contains(option);
-            return FilterChip(
-              label: Text(option),
-              selected: selected,
-              onSelected: (_) {
-                setState(() {
-                  if (selected) {
-                    _discoveryPreferences.remove(option);
-                  } else {
-                    _discoveryPreferences.add(option);
-                  }
-                });
-              },
-              selectedColor: primary,
-              labelStyle: TextStyle(
-                color: selected ? Colors.black : textPrimary,
-                fontWeight: FontWeight.w600,
+            final isSelected = _discoveryPreferences.contains(option);
+            return GestureDetector(
+              onTap: () => setState(() {
+                if (isSelected) {
+                  _discoveryPreferences.remove(option);
+                } else {
+                  _discoveryPreferences.add(option);
+                }
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isSelected ? primary : surface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isSelected ? primary : border,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        option,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected ? Colors.black : textPrimary,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      isSelected ? Icons.check_circle : Icons.circle_outlined,
+                      color: isSelected ? Colors.black : border,
+                      size: 22,
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
@@ -772,172 +809,254 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _locationController,
-              onChanged: (value) =>
-                  setState(() => _locationLabel = value.trim()),
-              decoration: InputDecoration(
-                hintText: 'Dakar, Sénégal',
-                helperText:
-                    'Tu peux modifier la localisation approximative si nécessaire.',
-                filled: true,
-                fillColor: surface,
-                border: OutlineInputBorder(
+            GestureDetector(
+              onTap: _isLocationLoading ? null : _fetchExactLocation,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: surface,
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: border),
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.mapPin, color: textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: IgnorePointer(
+                        child: TextField(
+                          controller: _locationController,
+                          readOnly: true,
+                          style: TextStyle(fontSize: 17, color: textPrimary),
+                          decoration: const InputDecoration(
+                            hintText: 'Dakar, Sénégal',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (_isLocationLoading)
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(primary),
+                        ),
+                      )
+                    else
+                      Icon(
+                        LucideIcons.chevronRight,
+                        color: textSecondary,
+                        size: 20,
+                      ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            if (_isLocationLoading)
-              Row(
-                children: [
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Récupération de la localisation…',
-                    style: TextStyle(color: textSecondary),
-                  ),
-                ],
-              )
-            else if (_locationError != null)
+            if (_locationError != null) ...[
+              const SizedBox(height: 8),
               Text(
                 _locationError!,
-                style: TextStyle(color: error, fontWeight: FontWeight.w600),
-              )
-            else if (!_locationAttempted)
-              Text(
-                'Appuie sur le bouton pour récupérer ta localisation approximative.',
-                style: TextStyle(color: textSecondary),
-              )
-            else if (_locationLabel != null && _locationLabel!.isNotEmpty)
-              Text(
-                'Localisation approximative trouvée',
-                style: TextStyle(
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: error, fontSize: 13),
               ),
+            ],
             const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _isLocationLoading ? null : _fetchLocation,
-              icon: const Icon(LucideIcons.mapPin),
-              label: const Text('Récupérer ma localisation'),
-              style: FilledButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+            GestureDetector(
+              onTap: _isLocationLoading ? null : _fetchExactLocation,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.locateFixed, color: primary, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Récupérer ma localisation',
+                    style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+
+      // ==================================================
+      // ÉTAPE 7 — CENTRES D'INTÉRÊT (cartes façon capture de référence :
+      // icône, nom, "X au total", chevron qui déplie tout, 3 puces visibles
+      // par défaut + puce "+ N autres").
+      // ==================================================
       _buildStep(
         title: 'Qu’est-ce que tu aimes ?',
         subtitle:
             'Choisis les activités, passions et sujets qui te ressemblent.',
-        child: SizedBox(
-          height: 420,
-          child: ListView.builder(
-            itemCount: _categories.length,
-            itemBuilder: (context, categoryIndex) {
-              final category = _categories[categoryIndex];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${category.emoji} ${category.name}',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+        child: Column(
+          children: _categories.map((category) {
+            final isExpanded = _expandedCategories.contains(category.name);
+            final totalCount = category.interests.length;
+            final visibleInterests = isExpanded
+                ? category.interests
+                : category.interests.take(_interestsPreviewCount).toList();
+            final remainingCount = totalCount - _interestsPreviewCount;
+
+            void toggleExpanded() {
+              setState(() {
+                if (isExpanded) {
+                  _expandedCategories.remove(category.name);
+                } else {
+                  _expandedCategories.add(category.name);
+                }
+              });
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        category.emoji,
+                        style: const TextStyle(fontSize: 28),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: category.interests.map((interest) {
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$totalCount au total',
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: toggleExpanded,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            isExpanded
+                                ? LucideIcons.chevronUp
+                                : LucideIcons.chevronDown,
+                            color: textPrimary,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ...visibleInterests.map((interest) {
                         final checked = _selectedInterests.contains(interest);
-                        return ChoiceChip(
-                          label: Text(interest),
-                          selected: checked,
-                          onSelected: (_) {
-                            setState(() {
-                              if (checked) {
-                                _selectedInterests.remove(interest);
-                              } else {
-                                _selectedInterests.add(interest);
-                              }
-                            });
-                          },
-                          selectedColor: primary,
-                          labelStyle: TextStyle(
-                            color: checked ? Colors.black : textPrimary,
-                            fontWeight: FontWeight.w600,
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            if (checked) {
+                              _selectedInterests.remove(interest);
+                            } else {
+                              _selectedInterests.add(interest);
+                            }
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: checked ? primary : background,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: checked ? primary : border,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  interest,
+                                  style: TextStyle(
+                                    color: checked ? Colors.black : textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (checked) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.check,
+                                    size: 15,
+                                    color: Colors.black,
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                      }),
+                      if (!isExpanded && remainingCount > 0)
+                        GestureDetector(
+                          onTap: toggleExpanded,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: background,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: border),
+                            ),
+                            child: Text(
+                              '+ $remainingCount autres',
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ),
       ),
+
       _buildStep(
         title: 'Ajoute une photo qui te représente 📸',
         subtitle: 'Sélectionne au moins une photo pour compléter ton profil.',
         child: Column(
           children: [
-            InkWell(
-              onTap: _pickPhotos,
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: border, width: 1.2),
-                ),
-                child: Column(
-                  children: [
-                    Icon(LucideIcons.imagePlus, size: 30, color: primary),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Choisir des photos',
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Jusqu’à 4 photos pour ton profil',
-                      style: TextStyle(color: textSecondary, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -1025,16 +1144,22 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             for (int index = 0; index < _socialControllers.length; index++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  controller: _socialControllers[index],
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: _getSocialHint(index),
-                    filled: true,
-                    fillColor: surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: border),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
+                  ),
+                  child: TextField(
+                    controller: _socialControllers[index],
+                    onChanged: (_) => setState(() {}),
+                    style: TextStyle(fontSize: 17, color: textPrimary),
+                    decoration: InputDecoration(
+                      hintText: _getSocialHint(index),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -1048,18 +1173,25 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             'Présente-toi en quelques mots et donne envie de découvrir ton univers.',
         child: Column(
           children: [
-            TextField(
-              controller: _bioController,
-              onChanged: (_) => setState(() {}),
-              maxLength: 150,
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintText: 'Passionné de musique, football et voyages 🌍',
-                filled: true,
-                fillColor: surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: border),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: border),
+              ),
+              child: TextField(
+                controller: _bioController,
+                onChanged: (_) => setState(() {}),
+                maxLength: 150,
+                maxLines: 5,
+                style: TextStyle(fontSize: 17, color: textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Passionné de musique, football et voyages 🌍',
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  counterText: '',
                 ),
               ),
             ),
@@ -1086,25 +1218,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
               child: Row(
                 children: [
                   if (_currentStep > 0)
-                    IconButton(
-                      onPressed: _previousPage,
-                      icon: const Icon(LucideIcons.arrowLeft),
+                    GestureDetector(
+                      onTap: _previousPage,
+                      child: const Icon(LucideIcons.arrowLeft),
                     ),
-                  const Spacer(),
-                  Text(
-                    '${_currentStep + 1}/10',
-                    style: TextStyle(color: textSecondary),
-                  ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: LinearProgressIndicator(
-                value: (_currentStep + 1) / 10,
-                backgroundColor: border,
-                valueColor: AlwaysStoppedAnimation<Color>(primary),
-                minHeight: 6,
               ),
             ),
             Expanded(
@@ -1118,10 +1236,10 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             // BOUTON CONTINUER — pilule sombre pleine largeur (façon capture)
             // ==================================================
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 64,
                 child: FilledButton(
                   onPressed: _canContinue && !_isSubmitting
                       ? _handleContinuePressed
@@ -1187,7 +1305,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 0),
             Text(
               title,
               style: TextStyle(
