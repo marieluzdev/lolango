@@ -209,6 +209,7 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
+
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(LucideIcons.logOut, color: textPrimary),
