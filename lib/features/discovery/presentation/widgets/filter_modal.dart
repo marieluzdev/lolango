@@ -25,11 +25,13 @@ class DiscoveryFilter {
 
 class FilterModal extends StatefulWidget {
   final DiscoveryFilter initial;
+  final String? userCity;
   final ValueChanged<DiscoveryFilter>? onFilterChanged;
 
   const FilterModal({
     super.key,
     required this.initial,
+    this.userCity,
     this.onFilterChanged,
   });
 
@@ -158,7 +160,7 @@ class _FilterModalState extends State<FilterModal> {
           ),
           const SizedBox(height: 12),
           // City selection: use the real city from user profile if provided in initial
-          if (widget.initial.city != null)
+          if (widget.userCity != null && widget.userCity!.trim().isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -176,10 +178,10 @@ class _FilterModalState extends State<FilterModal> {
                       },
                     ),
                     ChoiceChip(
-                      label: Text('Dans ma ville (${widget.initial.city})'),
+                      label: Text('Dans ma ville (${widget.userCity})'),
                       selected: _city != null,
                       onSelected: (_) {
-                        setState(() => _city = widget.initial.city);
+                        setState(() => _city = widget.userCity);
                         _notifyChanged();
                       },
                     ),

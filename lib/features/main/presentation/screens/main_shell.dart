@@ -44,19 +44,30 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   }
 
   Future<void> _checkPrivacyModal() async {
-    final hasSeen = await ref.read(hasSeenPrivacyModalProvider.future);
-    if (!hasSeen && mounted) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        isDismissible: false,
-        enableDrag: false,
-        backgroundColor: Colors.transparent,
-        builder: (_) => ProviderScope(
-          parent: ProviderScope.containerOf(context),
-          child: const PrivacyModalScreen(),
-        ),
-      );
+    AppLogger.d('[PRIVACY] _checkPrivacyModal started.');
+    try {
+      final hasSeen = await ref.read(hasSeenPrivacyModalProvider.future);
+      AppLogger.d('[PRIVACY] hasSeenPrivacyModalProvider returned: $hasSeen');
+      AppLogger.d('[PRIVACY] Is widget mounted? $mounted');
+      
+      if (!hasSeen && mounted) {
+        AppLogger.d('[PRIVACY] Showing PrivacyModalScreen now.');
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          isDismissible: false,
+          enableDrag: false,
+          backgroundColor: Colors.transparent,
+          builder: (_) => ProviderScope(
+            parent: ProviderScope.containerOf(context),
+            child: const PrivacyModalScreen(),
+          ),
+        );
+      } else {
+        AppLogger.d('[PRIVACY] Not showing PrivacyModalScreen (hasSeen: $hasSeen, mounted: $mounted).');
+      }
+    } catch (e) {
+      AppLogger.e('[PRIVACY] Error in _checkPrivacyModal: $e');
     }
   }
 

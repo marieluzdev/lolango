@@ -99,7 +99,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                       final initial = DiscoveryFilter(
                         ageRange: filterState.ageRange,
                         gender: filterState.gender,
-                        city: userCity ?? filterState.city,
+                        city: filterState.city,
                         socials: filterState.socials,
                       );
 
@@ -111,6 +111,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         children: [
                           FilterModal(
                             initial: initial,
+                            userCity: userCity,
                             onFilterChanged: (newFilter) {
                               ref.read(discoveryFilterProvider.notifier).state = newFilter;
                             },
@@ -183,16 +184,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                     description: hasRestrictive
                                         ? 'Aucun profil trouvé selon les filtres actuels.'
                                         : 'Aucun profil disponible pour le moment.',
-                                    actionLabel: hasRestrictive ? 'Réinitialiser' : null,
-                                    onAction: hasRestrictive
-                                        ? () {
-                                            ref
-                                                .read(discoveryFilterProvider.notifier)
-                                                .state = DiscoveryFilter(
-                                              ageRange: const RangeValues(18, 80),
-                                            );
-                                          }
-                                        : null,
                                   ),
                                 ),
                               ],

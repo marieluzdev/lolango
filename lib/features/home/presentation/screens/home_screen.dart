@@ -152,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final initial = DiscoveryFilter(
                         ageRange: filterState.ageRange,
                         gender: filterState.gender,
-                        city: userCity ?? filterState.city,
+                        city: filterState.city,
                         socials: filterState.socials,
                       );
 
@@ -164,6 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         children: [
                           FilterModal(
                             initial: initial,
+                            userCity: userCity,
                             onFilterChanged: (newFilter) {
                               ref.read(discoveryFilterProvider.notifier).state = newFilter;
                             },
@@ -202,16 +203,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         description: hasRestrictive
                             ? "Tu as swipé tous les profils disponibles avec ces filtres."
                             : "Reviens plus tard pour découvrir de nouveaux profils.",
-                        actionLabel: hasRestrictive ? "Voir tout le monde" : null,
-                        onAction: hasRestrictive
-                            ? () {
-                                ref
-                                    .read(discoveryFilterProvider.notifier)
-                                    .state = DiscoveryFilter(
-                                  ageRange: const RangeValues(18, 80),
-                                );
-                              }
-                            : null,
                       );
                     }
 
