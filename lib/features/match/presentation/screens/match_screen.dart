@@ -72,7 +72,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     final pendingCount = pendingAsync.valueOrNull?.length ?? 0;
     final seenLikesCount = ref.watch(seenLikesCountProvider);
     final unreadLikesCount = (pendingCount - seenLikesCount).clamp(0, 999);
-    
+
     final matchesAsync = ref.watch(matchesProvider);
     final matchesCount = matchesAsync.valueOrNull?.length ?? 0;
     final seenMatchesCount = ref.watch(seenMatchesCountProvider);
@@ -90,7 +90,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       backgroundColor: background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -107,99 +107,144 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               const SizedBox(height: 16),
 
               // Segmented control
+              // ============================================================
+              // SEGMENTED CONTROL
+              // ============================================================
               Container(
                 width: double.infinity,
+                height: 56,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: isDark
                       ? AppColors.surfaceDark
                       : AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                child: Row(
-                  children: List.generate(_tabs.length, (i) {
-                    final isSelected = _tabIndex == i;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _tabIndex = i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Stack(
+                  children: [
+                    // ========================================================
+                    // INDICATEUR QUI GLISSE
+                    // ========================================================
+                    AnimatedAlign(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      alignment: _tabIndex == 0
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: FractionallySizedBox(
+                        widthFactor: 0.5,
+                        heightFactor: 1,
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: isSelected ? primary : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.08,
-                                      ),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _tabs[i],
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  fontSize: 14,
-                                ),
+                            color: isDark
+                                ? AppColors.secondaryDark
+                                : AppColors.secondaryLight,
+                            borderRadius: BorderRadius.circular(26),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
                               ),
-                              if (i == 0 && unreadLikesCount > 0) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$unreadLikesCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              if (i == 1 && unreadMatchesCount > 0) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$unreadMatchesCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                         ),
                       ),
-                    );
-                  }),
+                    ),
+
+                    // ========================================================
+                    // TEXTES DES ONGLETS
+                    // ========================================================
+                    Row(
+                      children: List.generate(_tabs.length, (i) {
+                        final isSelected = _tabIndex == i;
+
+                        return Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              if (_tabIndex == i) return;
+
+                              setState(() {
+                                _tabIndex = i;
+                              });
+                            },
+                            child: SizedBox(
+                              height: double.infinity,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _tabs[i],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? (isDark
+                                                ? Colors.black
+                                                : Colors.white)
+                                          : textPrimary,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+
+                                  // Badge Likes
+                                  if (i == 0 && unreadLikesCount > 0) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$unreadLikesCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+
+                                  // Badge Matchs
+                                  if (i == 1 && unreadMatchesCount > 0) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$unreadMatchesCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
                 ),
               ),
-
               const SizedBox(height: 16),
 
               Expanded(
@@ -276,6 +321,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
           return GridView.builder(
             key: const ValueKey('likes'),
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -361,6 +407,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
           return GridView.builder(
             key: const ValueKey('matches'),
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,

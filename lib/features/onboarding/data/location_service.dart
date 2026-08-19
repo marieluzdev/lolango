@@ -37,7 +37,7 @@ class LocationService {
     );
   }
 
-  Future<String?> reverseGeocode(double latitude, double longitude) async {
+  Future<String?> reverseGeocodeExact(double latitude, double longitude) async {
     final uri = Uri.parse(
       'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$latitude&lon=$longitude&accept-language=fr',
     );
@@ -48,37 +48,40 @@ class LocationService {
 
     if (response.statusCode != 200) {
       throw StateError(
-        'Impossible de récupérer la localisation depuis OpenStreetMap.',
+        'Impossible de récupérer l’adresse exacte depuis OpenStreetMap.',
       );
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+    // display_name contient l'adresse complète et lisible (rue, quartier, ville, pays...)
+    final displayName = body['display_name'] as String?;
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+
     final address = body['address'] as Map<String, dynamic>?;
     if (address == null || address.isEmpty) {
-      throw StateError('Aucune adresse trouvée pour cette position.');
+      throw StateError('Aucune adresse exacte trouvée pour cette position.');
     }
 
-    final locality =
-        address['city'] ??
-        address['town'] ??
-        address['village'] ??
-        address['hamlet'] ??
-        address['municipality'];
-    final region = address['state'] ?? address['county'] ?? address['region'];
-    final country = address['country'];
+    final parts = <String>[
+      if (address['house_number'] != null) address['house_number'] as String,
+      if (address['road'] != null) address['road'] as String,
+      if (address['suburb'] != null) address['suburb'] as String,
+      if (address['city'] != null)
+        address['city'] as String
+      else if (address['town'] != null)
+        address['town'] as String
+      else if (address['village'] != null)
+        address['village'] as String,
+      if (address['country'] != null) address['country'] as String,
+    ];
 
-    if (locality != null && country != null) {
-      return '$locality, $country';
-    }
-    if (region != null && country != null) {
-      return '$region, $country';
-    }
-    if (country != null) {
-      return country as String;
+    if (parts.isEmpty) {
+      throw StateError('Impossible de déterminer une adresse exacte.');
     }
 
-    throw StateError(
-      'Impossible de déterminer une localisation approximative.',
-    );
+    return parts.join(', ');
   }
 }

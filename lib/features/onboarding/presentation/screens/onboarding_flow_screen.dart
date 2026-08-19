@@ -111,7 +111,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
 
     // Récupérer la localisation par défaut
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchLocation();
+      _fetchExactLocation();
     });
   }
 
@@ -377,7 +377,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     );
   }
 
-  Future<void> _fetchLocation() async {
+  Future<void> _fetchExactLocation() async {
     setState(() {
       _isLocationLoading = true;
       _locationError = null;
@@ -387,7 +387,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     try {
       final service = ref.read(locationServiceProvider);
       final position = await service.determinePosition();
-      final label = await service.reverseGeocode(
+      final exactAddress = await service.reverseGeocodeExact(
         position.latitude,
         position.longitude,
       );
@@ -395,14 +395,14 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       setState(() {
         _locationLatitude = position.latitude;
         _locationLongitude = position.longitude;
-        _locationLabel = label;
-        _locationController.text = label ?? '';
+        _locationLabel = exactAddress;
+        _locationController.text = exactAddress ?? '';
       });
     } catch (error) {
       setState(() {
         _locationError = error is StateError
             ? error.message
-            : 'Impossible de récupérer la localisation.';
+            : 'Impossible de récupérer l’adresse exacte.';
       });
     } finally {
       setState(() {
@@ -809,37 +809,64 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: border),
-              ),
-              child: Row(
-                children: [
-                  Icon(LucideIcons.mapPin, color: textSecondary, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _locationController,
-                      onChanged: (value) =>
-                          setState(() => _locationLabel = value.trim()),
-                      style: TextStyle(fontSize: 17, color: textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'Dakar, Sénégal',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 16),
+            GestureDetector(
+              onTap: _isLocationLoading ? null : _fetchExactLocation,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.mapPin, color: textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: IgnorePointer(
+                        child: TextField(
+                          controller: _locationController,
+                          readOnly: true,
+                          style: TextStyle(fontSize: 17, color: textPrimary),
+                          decoration: const InputDecoration(
+                            hintText: 'Dakar, Sénégal',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    if (_isLocationLoading)
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(primary),
+                        ),
+                      )
+                    else
+                      Icon(
+                        LucideIcons.chevronRight,
+                        color: textSecondary,
+                        size: 20,
+                      ),
+                  ],
+                ),
               ),
             ),
+            if (_locationError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _locationError!,
+                style: TextStyle(color: error, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: _isLocationLoading ? null : _fetchLocation,
+              onTap: _isLocationLoading ? null : _fetchExactLocation,
               child: Row(
                 children: [
                   Icon(LucideIcons.locateFixed, color: primary, size: 18),
@@ -898,18 +925,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: primary.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          category.emoji,
-                          style: const TextStyle(fontSize: 22),
-                        ),
+                      Text(
+                        category.emoji,
+                        style: const TextStyle(fontSize: 28),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
