@@ -172,26 +172,40 @@ class _FilterModalState extends State<FilterModal> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Annuler'),
+              SizedBox(
+                height: 56,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text('Annuler'),
+                ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () {
-                  final res = DiscoveryFilter(
-                    ageRange: _age,
-                    gender: _gender,
-                    city: _city,
-                    socials: _socials,
-                  );
-                  Navigator.of(context).pop(res);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  foregroundColor: Colors.black,
+              SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final res = DiscoveryFilter(
+                      ageRange: _age,
+                      gender: _gender,
+                      city: _city,
+                      socials: _socials,
+                    );
+                    Navigator.of(context).pop(res);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryLight,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text('Appliquer'),
                 ),
-                child: const Text('Appliquer'),
               ),
             ],
           ),

@@ -39,6 +39,7 @@ class SettingsScreen extends ConsumerWidget {
         content: 'Tu seras déconnecté de ton compte pour le moment.',
         cancelText: 'Annuler',
         confirmText: 'Se déconnecter',
+        outlineButton: true,
       );
 
       if (!confirmed) return;
@@ -68,33 +69,31 @@ class SettingsScreen extends ConsumerWidget {
       backgroundColor: background,
       appBar: AppBar(
         backgroundColor: background,
-        title: const Text('Paramètres'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          'Paramètres',
+          style: TextStyle(
+            color: textPrimary,
+            fontWeight: FontWeight.w800,
+            fontSize: 28,
+          ),
+        ),
+        iconTheme: IconThemeData(color: textPrimary),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: border),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(LucideIcons.moonStar, color: textPrimary),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Mode sombre',
-                        style: TextStyle(color: textPrimary, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Switch(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Apparence', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.palette,
+                  title: 'Thème',
+                  textPrimary: textPrimary,
+                  trailing: Switch(
                     value: themeMode == ThemeMode.dark,
                     activeThumbColor: AppColors.primaryLight,
                     onChanged: (value) async {
@@ -105,143 +104,222 @@ class SettingsScreen extends ConsumerWidget {
                           );
                     },
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.bell, color: textPrimary),
-              title: Text(
-                'Tester les notifications',
-                style: TextStyle(color: textPrimary),
-              ),
-              subtitle: Text(
-                'Envoie une notification de test via Supabase',
-                style: TextStyle(color: textSecondary),
-              ),
-              onTap: () async {
-                try {
-                  await ref
-                      .read(pushNotificationServiceProvider)
-                      .refreshToken();
-                  await ref
-                      .read(profileRepositoryProvider)
-                      .sendTestNotification();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notification de test envoyée.'),
-                      ),
-                    );
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Échec de l\'envoi : $error')),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.shieldCheck, color: textPrimary),
-              title: Text(
-                'Vérifier le token FCM',
-                style: TextStyle(color: textPrimary),
-              ),
-              subtitle: Text(
-                'Affiche le token local et le token stocké dans Supabase',
-                style: TextStyle(color: textSecondary),
-              ),
-              onTap: () async {
-                try {
-                  final localToken = await ref
-                      .read(pushNotificationServiceProvider)
-                      .refreshToken();
-                  final storedToken = await ref
-                      .read(profileRepositoryProvider)
-                      .fetchStoredFcmToken();
+                ),
+                _buildTile(
+                  icon: LucideIcons.globe,
+                  title: 'Langue',
+                  textPrimary: textPrimary,
+                  showDivider: false,
+                ),
+              ], surface),
 
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Local: ${localToken ?? 'aucun token'}\nStocké: ${storedToken ?? 'aucun token'}',
-                        ),
-                        duration: const Duration(seconds: 5),
-                      ),
-                    );
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Erreur token FCM : $error')),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.lock, color: textPrimary),
-              title: Text(
-                'Confidentialité des réseaux',
-                style: TextStyle(color: textPrimary),
-              ),
-              subtitle: Builder(
-                builder: (context) {
-                  final visibilityAsync = ref.watch(socialVisibilityProvider);
-                  final label = visibilityAsync.valueOrNull?.mode.label ?? '—';
-                  return Text(
-                    label,
-                    style: TextStyle(color: textSecondary),
-                  );
-                },
-              ),
-              trailing: Icon(LucideIcons.chevronRight, color: textSecondary, size: 18),
-              onTap: () async {
-                final p = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
-                final userPlatforms = p?.socials.keys.toList() ?? [];
-                if (context.mounted) {
-                  _showPrivacySettingsSheet(context, ref, textPrimary, textSecondary, userPlatforms);
-                }
-              },
-            ),
+              _buildSectionTitle('Compte', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.bell,
+                  title: 'Notifications',
+                  textPrimary: textPrimary,
+                  onTap: () async {
+                    try {
+                      await ref.read(pushNotificationServiceProvider).refreshToken();
+                      await ref.read(profileRepositoryProvider).sendTestNotification();
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification de test envoyée.')));
+                    } catch (error) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Échec de l\'envoi : $error')));
+                    }
+                  },
+                ),
+                _buildTile(
+                  icon: LucideIcons.mapPin,
+                  title: 'Lieu',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.lock,
+                  title: 'Confidentialité des réseaux',
+                  textPrimary: textPrimary,
+                  onTap: () async {
+                    final p = await ref.read(profileRepositoryProvider).fetchDetailedProfile();
+                    final userPlatforms = p?.socials.keys.toList() ?? [];
+                    if (context.mounted) {
+                      _showPrivacySettingsSheet(context, ref, textPrimary, textSecondary, userPlatforms);
+                    }
+                  },
+                ),
+                _buildTile(
+                  icon: LucideIcons.users,
+                  title: 'Mes communautés',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.ban,
+                  title: 'Utilisateurs bloqués',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.trash2,
+                  title: 'Supprimer mon compte',
+                  textPrimary: AppColors.errorLight,
+                  showDivider: false,
+                  onTap: deleteAccount,
+                ),
+              ], surface),
 
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.logOut, color: textPrimary),
-              title: Text(
-                'Se déconnecter',
-                style: TextStyle(color: textPrimary),
+              _buildSectionTitle('Sécurité', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.phone,
+                  title: 'Appeler la police',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.shield,
+                  title: 'Directives de sécurité',
+                  textPrimary: textPrimary,
+                  showDivider: false,
+                ),
+              ], surface),
+
+              _buildSectionTitle('Partenariat', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.badgeCheck,
+                  title: 'Devenir partenaire',
+                  textPrimary: textPrimary,
+                  showDivider: false,
+                ),
+              ], surface),
+
+              _buildSectionTitle('Légal', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.folder,
+                  title: 'Politique de confidentialité',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.fileText,
+                  title: 'Conditions d\'utilisation',
+                  textPrimary: textPrimary,
+                  showDivider: false,
+                ),
+              ], surface),
+
+              _buildSectionTitle('Support', textPrimary),
+              _buildGroup([
+                _buildTile(
+                  icon: LucideIcons.helpCircle,
+                  title: 'Centre d\'aide',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.send,
+                  title: 'Nous contacter',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.messageCircle,
+                  title: 'Faire une suggestion',
+                  textPrimary: textPrimary,
+                ),
+                _buildTile(
+                  icon: LucideIcons.wrench,
+                  title: 'Dépannage de connexion',
+                  textPrimary: textPrimary,
+                  showDivider: false,
+                  onTap: () async {
+                    try {
+                      final localToken = await ref.read(pushNotificationServiceProvider).refreshToken();
+                      final storedToken = await ref.read(profileRepositoryProvider).fetchStoredFcmToken();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Local: ${localToken ?? 'aucun token'}\nStocké: ${storedToken ?? 'aucun token'}'), duration: const Duration(seconds: 5)));
+                      }
+                    } catch (error) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur token FCM : $error')));
+                    }
+                  },
+                ),
+              ], surface),
+
+              const SizedBox(height: 48),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton.icon(
+                  onPressed: signOut,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFEBEE), // very light red
+                    foregroundColor: Colors.red,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  icon: const Icon(LucideIcons.logOut, size: 20),
+                  label: const Text(
+                    'Déconnexion',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
-              subtitle: Text(
-                'Déconnexion de Supabase',
-                style: TextStyle(color: textSecondary),
-              ),
-              onTap: signOut,
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(
-                LucideIcons.trash2,
-                color: AppColors.errorLight,
-              ),
-              title: const Text(
-                'Supprimer mon compte',
-                style: TextStyle(color: AppColors.errorLight),
-              ),
-              subtitle: Text(
-                'Suppression définitive',
-                style: TextStyle(color: textSecondary),
-              ),
-              onTap: deleteAccount,
-            ),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, Color textPrimary) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 24),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroup(List<Widget> children, Color surface) {
+    return Container(
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildTile({
+    required IconData icon,
+    required String title,
+    required Color textPrimary,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool showDivider = true,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Icon(icon, color: textPrimary, size: 22),
+          title: Text(
+            title,
+            style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          trailing: trailing ?? Icon(LucideIcons.chevronRight, color: textPrimary.withOpacity(0.4), size: 18),
+          onTap: onTap,
+        ),
+        if (showDivider)
+          Divider(height: 1, indent: 56, endIndent: 16, color: textPrimary.withOpacity(0.1)),
+      ],
     );
   }
 }

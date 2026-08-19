@@ -661,6 +661,7 @@ class _ProfileCardState extends State<ProfileCard> {
     final surface = isDark ? const Color(0xFF1E1E2E) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white70 : Colors.black54;
+    final border = isDark ? const Color(0xFF3E3E4E) : const Color(0xFFE0E0DE);
     final style = _socialIconStyle(platform);
 
     showReusableModalBottomSheet(
@@ -669,72 +670,78 @@ class _ProfileCardState extends State<ProfileCard> {
       surface: surface,
       textPrimary: textPrimary,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: _socialBgDecoration(platform),
-              child: Icon(style.icon, color: style.iconColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    platform,
-                    style: TextStyle(
-                      color: textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: username));
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Pseudo copié ! @$username'),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                  );
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  color: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '@$username',
-                    style: TextStyle(
-                      color: textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: FilledButton.icon(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: username));
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Pseudo copié ! @$username'),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: _socialBgDecoration(platform),
+                        child: Icon(style.icon, color: style.iconColor, size: 20),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              platform,
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '@$username',
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: textSecondary,
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-            icon: const Icon(Icons.copy_rounded, size: 18),
-            label: const Text(
-              'Copier le pseudo',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF6C63FF),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
               ),
-            ),
+            ],
           ),
         ),
       ],

@@ -312,17 +312,14 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           ),
           const SizedBox(height: 12),
           ...socials.entries.map((e) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _SocialRow(
-                platform: e.key,
-                username: e.value,
-                theme: theme,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSocialDetailModal(context, e.key, e.value, theme: theme);
-                },
-              ),
+            return _SocialRow(
+              platform: e.key,
+              username: e.value,
+              theme: theme,
+              onTap: () {
+                Navigator.pop(context);
+                _showSocialDetailModal(context, e.key, e.value, theme: theme);
+              },
             );
           }),
           const SizedBox(height: 8),
@@ -513,53 +510,64 @@ class _SocialRow extends StatelessWidget {
     final assetPath = _getAssetPath(platform);
     final style = _iconStyle();
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final textSecondary = textColor.withAlpha((0.6 * 255).round());
 
     return GestureDetector(
       onTap: onTap,
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: _bgDecoration(),
-            child: assetPath != null
-                ? Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Image.asset(
-                      assetPath,
-                      fit: BoxFit.contain,
-                    ),
-                  )
-                : Icon(style.icon, color: style.color, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  platform,
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                Text(
-                  username,
-                  style: TextStyle(
-                    color: textColor.withAlpha((0.6 * 255).round()),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: _bgDecoration(),
+              child: assetPath != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Image.asset(
+                        assetPath,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Icon(style.icon, color: style.color, size: 20),
             ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            color: textColor.withAlpha((0.4 * 255).round()),
-          ),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    platform,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    username,
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right,
+              color: textColor.withAlpha((0.4 * 255).round()),
+            ),
+          ],
+        ),
       ),
     );
   }
