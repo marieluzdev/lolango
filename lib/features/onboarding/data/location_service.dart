@@ -84,4 +84,29 @@ class LocationService {
 
     return parts.join(', ');
   }
+  Future<String?> reverseGeocodeCity(double latitude, double longitude) async {
+    final uri = Uri.parse(
+      'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$latitude&lon=$longitude&accept-language=fr',
+    );
+    final response = await http.get(
+      uri,
+      headers: {'User-Agent': 'lolango_v2/1.0 (https://lolango-v2)'},
+    );
+
+    if (response.statusCode != 200) {
+      return null;
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final address = body['address'] as Map<String, dynamic>?;
+    
+    if (address == null || address.isEmpty) {
+      return null;
+    }
+
+    return address['city']?.toString() ??
+        address['town']?.toString() ??
+        address['village']?.toString() ??
+        address['county']?.toString();
+  }
 }

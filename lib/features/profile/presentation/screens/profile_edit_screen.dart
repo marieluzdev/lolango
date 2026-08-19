@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/onboarding/domain/onboarding_models.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -48,11 +49,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (detailedProfile == null) return;
     final profile = detailedProfile.profile;
 
-    _firstNameController.text = profile.name;
-    _usernameController.text = profile.username.replaceFirst('@', '');
-    _bioController.text = profile.bio ?? '';
+    setState(() {
+      _firstNameController.text = profile.name;
+      _usernameController.text = profile.username.replaceFirst('@', '');
+      _bioController.text = profile.bio ?? '';
 
-    _selectedInterests = Set<String>.from(detailedProfile.interests);
+      _selectedInterests = Set<String>.from(detailedProfile.interests);
+    });
   }
 
   void _toggleInterest(String interest) {
@@ -100,6 +103,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       await repo.upsertInterests(_selectedInterests.toList());
 
       if (mounted) {
+        ref.invalidate(profileProvider);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Profil mis à jour.')));

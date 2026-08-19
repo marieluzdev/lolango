@@ -22,6 +22,15 @@ class ProfileHeader extends StatelessWidget {
     this.primaryPhotoUrl,
   });
 
+  String _extractCity(String location) {
+    // Diviser par virgule et prendre la première partie (ville)
+    final parts = location.split(',');
+    if (parts.isNotEmpty) {
+      return parts[0].trim();
+    }
+    return location;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -70,7 +79,7 @@ class ProfileHeader extends StatelessWidget {
                   location != 'Localisation non renseignée')
                 _InfoPill(
                   icon: LucideIcons.mapPin,
-                  label: location,
+                  label: _extractCity(location),
                   color: textSecondary,
                 ),
               if (gender != 'Non renseigné') ...[

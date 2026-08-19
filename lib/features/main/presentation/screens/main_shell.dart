@@ -10,6 +10,8 @@ import 'package:lolango_v2/features/home/presentation/screens/home_screen.dart';
 import 'package:lolango_v2/features/match/presentation/screens/match_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_screen.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
+import 'package:lolango_v2/features/social_access/presentation/screens/privacy_modal_screen.dart';
+import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
@@ -37,7 +39,25 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupRealtimeSubscriptions();
+      _checkPrivacyModal();
     });
+  }
+
+  Future<void> _checkPrivacyModal() async {
+    final hasSeen = await ref.read(hasSeenPrivacyModalProvider.future);
+    if (!hasSeen && mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        backgroundColor: Colors.transparent,
+        builder: (_) => ProviderScope(
+          parent: ProviderScope.containerOf(context),
+          child: const PrivacyModalScreen(),
+        ),
+      );
+    }
   }
 
   void _setupRealtimeSubscriptions() {

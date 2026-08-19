@@ -36,15 +36,22 @@ class ProfileRepository {
   Future<bool> hasSeenPrivacyModal() async {
     final user = supabase.auth.currentUser;
     if (user == null) return false;
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('has_seen_privacy_modal_${user.id}') ?? false;
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select('social_visibility')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (response == null) return false;
+      return response['social_visibility'] != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> markPrivacyModalSeen() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('has_seen_privacy_modal_${user.id}', true);
+    // No longer needs to use SharedPreferences. It will automatically be marked
+    // as seen when social_visibility is saved.
   }
 
   Future<String?> fetchSocialVisibility() async {

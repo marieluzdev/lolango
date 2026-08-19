@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.dart';
+import 'package:lolango_v2/core/widgets/app_loading.dart';
 
 class ProfilePreviewScreen extends ConsumerStatefulWidget {
   const ProfilePreviewScreen({super.key});
@@ -63,7 +64,23 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
         iconTheme: IconThemeData(color: textPrimary),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? AppLoading(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 400,
+                    maxHeight: 600,
+                  ),
+                  child: const ProfileCard(
+                    name: 'Chargement',
+                    age: 25,
+                    city: 'Ville',
+                    photoUrls: [],
+                    showActionButtons: false,
+                  ),
+                ),
+              ),
+            )
           : _profile == null
           ? Center(
               child: Text(

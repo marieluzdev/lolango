@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.dart';
@@ -102,16 +103,20 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         socials: filterState.socials,
                       );
 
-                      final res = await showReusableModalBottomSheet(
+                      await showReusableModalBottomSheet(
                         context: context,
                         title: 'Filtrer',
                         surface: surfaceColor,
                         textPrimary: textColor,
-                        children: [FilterModal(initial: initial)],
+                        children: [
+                          FilterModal(
+                            initial: initial,
+                            onFilterChanged: (newFilter) {
+                              ref.read(discoveryFilterProvider.notifier).state = newFilter;
+                            },
+                          ),
+                        ],
                       );
-                      if (res != null && res is DiscoveryFilter) {
-                        ref.read(discoveryFilterProvider.notifier).state = res;
-                      }
                     },
                     icon: const Icon(LucideIcons.slidersHorizontal),
                   ),
@@ -128,7 +133,26 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             .refresh();
                       },
                       child: discoveryAsync.when(
-                        loading: () => const AppSpinner(),
+                        loading: () => GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 80),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.70,
+                          ),
+                          itemCount: 6,
+                          itemBuilder: (context, i) => const AppLoading(
+                            child: ProfileCard(
+                              name: 'Chargement',
+                              age: 25,
+                              city: 'Ville',
+                              photoUrls: [],
+                              isGridMode: true,
+                            ),
+                          ),
+                        ),
                         error: (error, _) => AppErrorState(
                           message: "Erreur lors du chargement des profils.",
                           onRetry: () {
@@ -137,15 +161,18 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         ),
                         data: (discoveryState) {
                           final allProfiles = discoveryState.profiles;
+                          final hiddenIds = ref.watch(hiddenProfilesProvider);
+                          
                           final filtered = _searchQuery.isEmpty
-                              ? allProfiles
+                              ? allProfiles.where((p) => !hiddenIds.contains(p.profile.id)).toList()
                               : allProfiles
                                   .where((p) => p.profile.name
                                       .toLowerCase()
-                                      .contains(_searchQuery.toLowerCase()))
+                                      .contains(_searchQuery.toLowerCase()) && !hiddenIds.contains(p.profile.id))
                                   .toList();
 
                           if (filtered.isEmpty) {
+                            final hasRestrictive = filterState.isRestrictive;
                             return CustomScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
                               slivers: [
@@ -153,16 +180,19 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   child: AppEmptyState(
                                     icon: LucideIcons.users,
                                     title: 'Aucun profil',
-                                    description:
-                                        'Aucun profil trouvé selon les filtres actuels.',
-                                    actionLabel: 'Réinitialiser',
-                                    onAction: () {
-                                      ref
-                                          .read(discoveryFilterProvider.notifier)
-                                          .state = DiscoveryFilter(
-                                        ageRange: const RangeValues(18, 80),
-                                      );
-                                    },
+                                    description: hasRestrictive
+                                        ? 'Aucun profil trouvé selon les filtres actuels.'
+                                        : 'Aucun profil disponible pour le moment.',
+                                    actionLabel: hasRestrictive ? 'Réinitialiser' : null,
+                                    onAction: hasRestrictive
+                                        ? () {
+                                            ref
+                                                .read(discoveryFilterProvider.notifier)
+                                                .state = DiscoveryFilter(
+                                              ageRange: const RangeValues(18, 80),
+                                            );
+                                          }
+                                        : null,
                                   ),
                                 ),
                               ],
@@ -181,17 +211,18 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   childAspectRatio: 0.70,
                                 ),
                             itemCount: discoveryState.hasMore
-                                ? filtered.length + 1
+                                ? filtered.length + 2
                                 : filtered.length,
                             itemBuilder: (context, i) {
-                              // Footer : spinner de chargement
-                              if (i == filtered.length) {
-                                return const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                              // Footer : skeletonizer
+                              if (i >= filtered.length) {
+                                return const AppLoading(
+                                  child: ProfileCard(
+                                    name: 'Chargement',
+                                    age: 25,
+                                    city: 'Ville',
+                                    photoUrls: [],
+                                    isGridMode: true,
                                   ),
                                 );
                               }
@@ -200,7 +231,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                 name: p.profile.name,
                                 age: p.profile.age,
                                 city: p.profile.city,
-                                country: p.profile.country,
                                 photoUrls: p.photoUrls,
                                 bio: p.profile.bio,
                                 socials: p.socials,
@@ -421,7 +451,28 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
       title: platform,
       surface: theme.cardColor,
       textPrimary: theme.textTheme.bodyLarge?.color ?? Colors.black,
-      children: const [SizedBox(height: 16)],
+      children: [
+        _SocialRow(
+          platform: platform,
+          username: username,
+          theme: theme,
+          trailingIcon: Icons.copy,
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: username));
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Pseudo copié ! @$username'),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -431,12 +482,14 @@ class _SocialRow extends StatelessWidget {
     required this.platform,
     required this.username,
     required this.theme,
+    this.trailingIcon = Icons.chevron_right,
     this.onTap,
   });
 
   final String platform;
   final String username;
   final ThemeData theme;
+  final IconData trailingIcon;
   final VoidCallback? onTap;
 
   String? _getAssetPath(String platform) {
@@ -563,7 +616,7 @@ class _SocialRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Icon(
-              Icons.chevron_right,
+              trailingIcon,
               color: textColor.withAlpha((0.4 * 255).round()),
             ),
           ],

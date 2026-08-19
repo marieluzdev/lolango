@@ -121,7 +121,28 @@ class ProfileScreen extends ConsumerWidget {
                 onRefresh: () =>
                     ref.read(profileProvider.notifier).refreshProfile(),
                 child: profileState.when(
-                  loading: () => const AppSpinner(),
+                  loading: () => AppLoading(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const ProfileHeader(
+                            firstName: 'Chargement',
+                            username: 'chargement',
+                            location: 'Ville',
+                            gender: 'male',
+                            age: 25,
+                            primaryPhotoUrl: null,
+                          ),
+                          const SizedBox(height: 28),
+                          const ProfilePhotoGallery(photoUrls: []),
+                          const SizedBox(height: 24),
+                          ProfileBioSection(bio: 'Ceci est une fausse bio de chargement. ' * 3),
+                        ],
+                      ),
+                    ),
+                  ),
                   error: (err, stack) => AppErrorState(
                     message: err.toString(),
                     onRetry: () =>

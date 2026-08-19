@@ -36,18 +36,8 @@ class PushNotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
+    final settings = await _messaging.getNotificationSettings();
     debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
-    debugPrint('[FCM] Authorization details: $settings');
 
     const androidInitializationSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -68,7 +58,7 @@ class PushNotificationService {
       _androidNotificationChannelId,
       _androidNotificationChannelName,
       description: _androidNotificationChannelDescription,
-      importance: Importance.high,
+      importance: Importance.max,
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<
@@ -118,8 +108,9 @@ class PushNotificationService {
       _androidNotificationChannelId,
       _androidNotificationChannelName,
       channelDescription: _androidNotificationChannelDescription,
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
+      fullScreenIntent: true,
       playSound: true,
       ticker: 'ticker',
     );
@@ -161,6 +152,26 @@ class PushNotificationService {
     }
 
     return token;
+  }
+
+  Future<bool> requestNotificationPermission() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    final granted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+        
+    if (granted) {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await _saveTokenToSupabase(token);
+      }
+    }
+    
+    return granted;
   }
 
   Future<bool> _saveTokenToSupabase(String token) async {

@@ -17,9 +17,37 @@ class InteractionRepository {
     try {
       final res = await _client
           .from('interactions')
-          .select('target_id')
+          .select('target_id, status, created_at')
           .eq('user_id', _currentUserId);
-      return (res as List).map((row) => row['target_id'] as String).toList();
+          
+      final List<String> excludedIds = [];
+      final now = DateTime.now();
+
+      for (final row in res as List) {
+        final targetId = row['target_id'] as String;
+        final status = row['status'] as String;
+        final createdAtStr = row['created_at'] as String?;
+        
+        if (status == 'like') {
+          excludedIds.add(targetId);
+        } else if (status == 'pass') {
+          if (createdAtStr != null) {
+            final createdAt = DateTime.tryParse(createdAtStr);
+            if (createdAt != null) {
+              if (now.difference(createdAt).inHours < 24) {
+                excludedIds.add(targetId);
+              }
+            } else {
+              excludedIds.add(targetId);
+            }
+          } else {
+            excludedIds.add(targetId);
+          }
+        } else {
+          excludedIds.add(targetId);
+        }
+      }
+      return excludedIds;
     } catch (e) {
       throw Failure.from(e);
     }

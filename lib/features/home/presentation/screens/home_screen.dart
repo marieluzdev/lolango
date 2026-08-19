@@ -156,16 +156,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         socials: filterState.socials,
                       );
 
-                      final res = await showReusableModalBottomSheet(
+                      await showReusableModalBottomSheet(
                         context: context,
                         title: 'Filtrer',
                         surface: surface,
                         textPrimary: textCol,
-                        children: [FilterModal(initial: initial)],
+                        children: [
+                          FilterModal(
+                            initial: initial,
+                            onFilterChanged: (newFilter) {
+                              ref.read(discoveryFilterProvider.notifier).state = newFilter;
+                            },
+                          ),
+                        ],
                       );
-                      if (res != null && res is DiscoveryFilter) {
-                        ref.read(discoveryFilterProvider.notifier).state = res;
-                      }
                     },
                     icon: const Icon(LucideIcons.slidersHorizontal),
                   ),
@@ -174,7 +178,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 12),
               Expanded(
                 child: filteredAsync.when(
-                  loading: () => const AppSpinner(),
+                  loading: () => const AppLoading(
+                    child: ProfileCard(
+                      name: 'Chargement',
+                      age: 25,
+                      city: 'Ville',
+                      photoUrls: [],
+                    ),
+                  ),
                   error: (err, stack) => AppErrorState(
                     message: "Impossible de charger les profils.",
                     onRetry: () {
@@ -184,24 +195,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   data: (data) {
                     if (_isFinished || (_cards.isEmpty && _lastFilterHash != -1)) {
+                      final hasRestrictive = filterState.isRestrictive;
                       return AppEmptyState(
                         icon: LucideIcons.ghost,
-                        title: "Plus aucun profil",
-                        description:
-                            "Tu as swipé tous les profils disponibles avec ces filtres.",
-                        actionLabel: "Voir tout le monde",
-                        onAction: () {
-                          ref
-                              .read(discoveryFilterProvider.notifier)
-                              .state = DiscoveryFilter(
-                            ageRange: const RangeValues(18, 80),
-                          );
-                        },
+                        title: hasRestrictive ? "Plus aucun profil" : "C'est tout pour le moment",
+                        description: hasRestrictive
+                            ? "Tu as swipé tous les profils disponibles avec ces filtres."
+                            : "Reviens plus tard pour découvrir de nouveaux profils.",
+                        actionLabel: hasRestrictive ? "Voir tout le monde" : null,
+                        onAction: hasRestrictive
+                            ? () {
+                                ref
+                                    .read(discoveryFilterProvider.notifier)
+                                    .state = DiscoveryFilter(
+                                  ageRange: const RangeValues(18, 80),
+                                );
+                              }
+                            : null,
                       );
                     }
 
                     if (_cards.isEmpty) {
-                      return const AppSpinner();
+                      return const AppLoading(
+                        child: ProfileCard(
+                          name: 'Chargement',
+                          age: 25,
+                          city: 'Ville',
+                          photoUrls: [],
+                        ),
+                      );
                     }
 
                     return CardSwiper(
@@ -233,7 +255,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               name: p.profile.name,
                               age: p.profile.age,
                               city: p.profile.city,
-                              country: p.profile.country,
                               photoUrls: p.photoUrls,
                               bio: p.profile.bio,
                               socials: p.socials,

@@ -803,9 +803,6 @@ class _ProfileCardState extends State<ProfileCard> {
               if (widget.city != null && widget.city!.isNotEmpty)
                 _DetailRow(icon: Icons.location_on, text: widget.city!),
 
-              if (widget.country != null && widget.country!.isNotEmpty)
-                _DetailRow(icon: Icons.public, text: widget.country!),
-
               // Description / bio
               if (widget.bio != null && widget.bio!.isNotEmpty) ...[
                 const SizedBox(height: 16),
