@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
 import 'package:lolango_v2/features/social_access/domain/social_visibility_model.dart';
 import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
 
@@ -483,6 +484,7 @@ class ProfileSocialsSection extends ConsumerWidget {
                                     'Snapchat': snapchatController.text.trim(),
                                     'TikTok': tiktokController.text.trim(),
                                   });
+                                  ref.read(profileProvider.notifier).refreshProfile();
                                   if (editCtx.mounted) {
                                     Navigator.of(editCtx).pop(true);
                                   }
