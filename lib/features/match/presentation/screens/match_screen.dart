@@ -96,58 +96,67 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Titre
-              Text(
-                'Match',
-                style: TextStyle(
-                  color: textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Dynamic info text
-              Row(
-                mainAxisSize: MainAxisSize.min,
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Titre
                   Text(
-                    _tabIndex == 0
-                        ? (pendingCount == 1
-                              ? '1 like reçu'
-                              : '$pendingCount likes reçus')
-                        : (matchesCount == 1
-                              ? '1 connexion'
-                              : '$matchesCount connexions'),
+                    'Match',
                     style: TextStyle(
-                      color: textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      color: textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
-                    ),
+                  const SizedBox(height: 4),
+                  // Dynamic info text
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _tabIndex == 0
+                            ? (pendingCount == 1
+                                  ? '1 like reçu'
+                                  : '$pendingCount likes reçus')
+                            : (matchesCount == 1
+                                  ? '1 connexion'
+                                  : '$matchesCount connexions'),
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
-              const SizedBox(height: 12),
+            ),
 
-              // Segmented control
-              // ============================================================
-              // SEGMENTED CONTROL
-              // ============================================================
-              Container(
+            // Segmented control
+            // ============================================================
+            // SEGMENTED CONTROL
+            // ============================================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
                 width: double.infinity,
                 height: 56,
                 padding: const EdgeInsets.all(4),
@@ -284,7 +293,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
               Expanded(
                 child: Stack(
@@ -316,7 +326,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 12,
+                      bottom: MediaQuery.of(context).padding.bottom + 12,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: SearchBarWidget(
@@ -331,7 +341,6 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -374,7 +383,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
           return GridView.builder(
             key: const ValueKey('likes'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(top: 16, bottom: 80),
+            padding: EdgeInsets.only(
+              left: 20, 
+              right: 20, 
+              top: 16, 
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -419,6 +433,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         loading: () => AppLoading(
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.only(
+              left: 20, 
+              right: 20, 
+              top: 16, 
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -486,7 +506,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
           return GridView.builder(
             key: const ValueKey('matches'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(top: 16, bottom: 80),
+            padding: EdgeInsets.only(
+              left: 20, 
+              right: 20, 
+              top: 16, 
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -508,6 +533,12 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         loading: () => AppLoading(
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.only(
+              left: 20, 
+              right: 20, 
+              top: 16, 
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,

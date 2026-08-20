@@ -35,47 +35,54 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Messages',
-                style: TextStyle(
-                  color: textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Dynamic info text
-              Row(
-                mainAxisSize: MainAxisSize.min,
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversationsCount == 1
-                        ? '1 conversation'
-                        : '$conversationsCount conversations',
+                    'Messages',
                     style: TextStyle(
-                      color: textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      color: textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
-                    ),
+                  const SizedBox(height: 4),
+                  // Dynamic info text
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        conversationsCount == 1
+                            ? '1 conversation'
+                            : '$conversationsCount conversations',
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
-              const SizedBox(height: 20),
+            ),
               
               Expanded(
                 child: Stack(
@@ -105,7 +112,11 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
 
                           return ListView.separated(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.only(bottom: 80), // Espace pour la barre de recherche
+                            padding: EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              bottom: MediaQuery.of(context).padding.bottom + 80,
+                            ),
                             itemCount: filtered.length,
                             separatorBuilder: (context, index) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
@@ -121,11 +132,10 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
                         ),
                       ),
                     ),
-                    // ── Barre de recherche fixe en bas au centre ──
                     Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 12,
+                      bottom: MediaQuery.of(context).padding.bottom + 12,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: SearchBarWidget(
@@ -144,7 +154,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }

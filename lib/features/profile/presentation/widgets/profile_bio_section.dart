@@ -30,40 +30,18 @@ class ProfileBioSection extends StatelessWidget {
         const SizedBox(height: 10),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 22, 16, 16),
           decoration: BoxDecoration(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: -6,
-                top: -14,
-                child: Text(
-                  '\u201C',
-                  style: TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                    color: secondary.withValues(alpha: 0.55),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 14),
-                child: Text(
-                  bio,
-                  style: TextStyle(
-                    color: textPrimary,
-                    fontSize: 15,
-                    height: 1.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            bio,
+            style: TextStyle(
+              color: textPrimary,
+              fontSize: 15,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

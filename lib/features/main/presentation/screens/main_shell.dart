@@ -199,50 +199,55 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(index: _selectedIndex, children: _screens),
-      bottomNavigationBar: Container(
-        color: background,
-        padding: EdgeInsets.only(
-          top: 10,
-          bottom: MediaQuery.of(context).padding.bottom + 8,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: navItems.map((item) {
-            final isSelected = _selectedIndex == item.index;
+      bottomNavigationBar: ClipRect(
+        child: Container(
+          decoration: BoxDecoration(
+            color: background,
+          ),
+          padding: EdgeInsets.only(
+            top: 8,
+            bottom: MediaQuery.of(context).padding.bottom + 4,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: navItems.map((item) {
+              final isSelected = _selectedIndex == item.index;
 
-            final iconColor = isDark
-                ? (isSelected ? Colors.black : Colors.white)
-                : (isSelected ? Colors.white : Colors.black);
+              final iconColor = isDark
+                  ? (isSelected ? Colors.black : Colors.white)
+                  : (isSelected ? Colors.white : Colors.black);
 
-            Widget iconWidget = Icon(item.icon, size: 24, color: iconColor);
+              Widget iconWidget = Icon(item.icon, size: 22, color: iconColor);
 
-            return GestureDetector(
-              onTap: () => setState(() => _selectedIndex = item.index),
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 60,
-                height: 52,
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
+              return GestureDetector(
+                onTap: () => setState(() => _selectedIndex = item.index),
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: 56,
+                  height: 44,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? (isDark ? Colors.white : Colors.black)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: iconWidget,
                     ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? (isDark ? Colors.white : Colors.black)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: iconWidget,
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
