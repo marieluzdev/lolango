@@ -85,10 +85,18 @@ class InteractionRepository {
           .maybeSingle();
 
       if (checkRes != null) {
-        await _client.from('matches').insert({
+        final matchRes = await _client.from('matches').insert({
           'user1_id': _currentUserId,
           'user2_id': targetId,
           'created_at': DateTime.now().toIso8601String(),
+        }).select('id').single();
+
+        await _client.from('conversations').insert({
+          'match_id': matchRes['id'],
+          'user1_id': _currentUserId,
+          'user2_id': targetId,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
         });
 
         // Notifications for both users

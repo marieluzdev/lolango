@@ -11,6 +11,7 @@ import 'package:lolango_v2/features/discovery/presentation/providers/discovery_f
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
+import 'package:lolango_v2/features/match/presentation/screens/match_celebration_screen.dart';
 import 'package:lolango_v2/core/widgets/app_empty_state.dart';
 import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
@@ -265,6 +266,16 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                               )
                                               .state++;
                                           ref.invalidate(matchesProvider);
+                                          final currentUser = ref.read(profileProvider).value;
+                                          if (currentUser != null && mounted) {
+                                            showGeneralDialog(
+                                              context: context,
+                                              pageBuilder: (ctx, _, __) => MatchCelebrationScreen(
+                                                currentUser: currentUser,
+                                                matchedUser: p,
+                                              ),
+                                            );
+                                          }
                                         }
                                         ref.invalidate(interactedProfilesProvider);
                                       });
@@ -423,6 +434,16 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                               .read(matchNotificationBadgeProvider.notifier)
                               .state++;
                           ref.invalidate(matchesProvider);
+                          final currentUser = ref.read(profileProvider).value;
+                          if (currentUser != null && mounted) {
+                            showGeneralDialog(
+                              context: context,
+                              pageBuilder: (ctx, _, __) => MatchCelebrationScreen(
+                                currentUser: currentUser,
+                                matchedUser: pDetailed,
+                              ),
+                            );
+                          }
                         }
                         ref.invalidate(interactedProfilesProvider);
                       });

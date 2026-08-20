@@ -11,6 +11,7 @@ import 'package:lolango_v2/features/discovery/presentation/screens/discovery_scr
 import 'package:lolango_v2/features/home/presentation/screens/home_screen.dart';
 import 'package:lolango_v2/features/match/presentation/screens/match_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_screen.dart';
+import 'package:lolango_v2/features/messaging/presentation/screens/conversations_screen.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/social_access/presentation/screens/privacy_modal_screen.dart';
 import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
@@ -33,6 +34,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     HomeScreen(),
     DiscoveryScreen(),
     MatchScreen(),
+    ConversationsScreen(),
     ProfileScreen(),
   ];
 
@@ -192,7 +194,8 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         label: 'Match',
         index: 2,
       ),
-      const _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 3),
+      const _NavItem(icon: LucideIcons.messageCircle, label: 'Messages', index: 3),
+      const _NavItem(icon: LucideIcons.userRound, label: 'Profil', index: 4),
     ];
 
     return Scaffold(

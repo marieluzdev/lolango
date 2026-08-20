@@ -14,6 +14,8 @@ import 'package:lolango_v2/core/widgets/search_bar_widget.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_card.dart';
 import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
+import 'package:lolango_v2/features/match/presentation/screens/match_celebration_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
@@ -348,26 +350,40 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   child: AppEmptyState(
                     icon: LucideIcons.heart,
                     title: 'Aucun like',
-                    description:
-                        'Tu n\'as pas encore reçu de like. Continue de swiper !',
+                    description: 'Tu n\'as pas encore reçu de like.',
                   ),
                 ),
               ],
             );
           }
+          final filteredLikes = _searchQuery.isEmpty
+              ? likes
+              : likes.where((p) {
+                  final q = _searchQuery.toLowerCase();
+                  return p.profile.name.toLowerCase().contains(q) ||
+                      p.profile.username.toLowerCase().contains(q) ||
+                      (p.profile.city?.toLowerCase().contains(q) ?? false);
+                }).toList();
+
+          if (filteredLikes.isEmpty) {
+            return const Center(
+              child: Text('Aucun résultat'),
+            );
+          }
+
           return GridView.builder(
             key: const ValueKey('likes'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 16, bottom: 80),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 0.70,
             ),
-            itemCount: likes.length,
+            itemCount: filteredLikes.length,
             itemBuilder: (context, index) {
-              final p = likes[index];
+              final p = filteredLikes[index];
               return BlurredProfileCard(
                 profile: p,
                 onLike: () {
@@ -380,6 +396,17 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                         );
                         if (isMatch) {
                           ref.invalidate(matchesProvider);
+                          final currentUser = ref.read(profileProvider).value;
+                          if (currentUser != null && mounted) {
+                            showGeneralDialog(
+                              context: context,
+                              pageBuilder: (ctx, _, __) =>
+                                  MatchCelebrationScreen(
+                                    currentUser: currentUser,
+                                    matchedUser: p,
+                                  ),
+                            );
+                          }
                         }
                         ref.invalidate(pendingLikesProvider);
                         ref.invalidate(interactedProfilesProvider);
@@ -441,19 +468,34 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               ],
             );
           }
+          final filteredMatches = _searchQuery.isEmpty
+              ? matches
+              : matches.where((p) {
+                  final q = _searchQuery.toLowerCase();
+                  return p.profile.name.toLowerCase().contains(q) ||
+                      p.profile.username.toLowerCase().contains(q) ||
+                      (p.profile.city?.toLowerCase().contains(q) ?? false);
+                }).toList();
+
+          if (filteredMatches.isEmpty) {
+            return const Center(
+              child: Text('Aucun résultat'),
+            );
+          }
+
           return GridView.builder(
             key: const ValueKey('matches'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 16, bottom: 80),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 0.70,
             ),
-            itemCount: matches.length,
+            itemCount: filteredMatches.length,
             itemBuilder: (context, index) {
-              final p = matches[index];
+              final p = filteredMatches[index];
               return MatchedProfileCard(
                 profile: p,
                 onTap: () {
