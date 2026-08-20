@@ -10,6 +10,7 @@ import 'package:lolango_v2/features/onboarding/domain/onboarding_models.dart';
 import 'package:lolango_v2/features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
 import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:lolango_v2/core/notifications/push_notification_service.dart';
 import 'package:lolango_v2/core/utils/debouncer.dart';
 
 class OnboardingFlowScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,8 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   bool _isCheckingUsername = false;
   bool _usernameAvailable = false;
   bool _isSubmitting = false;
+  bool _notificationPermissionRequested = false;
+  String? _locationCity;
 
   // Nombre de centres d'intérêt affichés par catégorie avant repli.
   static const int _interestsPreviewCount = 3;
@@ -108,11 +111,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _yearController = FixedExtentScrollController(
       initialItem: _birthYears.indexOf(_selectedYear),
     );
-
-    // Récupérer la localisation par défaut
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchExactLocation();
-    });
   }
 
   @override
@@ -265,10 +263,10 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   }
 
   void _nextPage() {
-    const total = 10;
-    if (_currentStep < total - 1) {
+    FocusScope.of(context).unfocus();
+    if (_currentStep < 10) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
       setState(() => _currentStep++);
@@ -288,7 +286,10 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   /// Gère l'appui sur "Continuer" : intercepte l'étape "date de naissance"
   /// pour bloquer les moins de 18 ans avant de laisser passer à l'étape
   /// suivante (comme dans la capture de référence).
-  void _handleContinuePressed() {
+  void _handleContinuePressed() async {
+    FocusScope.of(context).unfocus();
+    if (!_canContinue) return;
+
     if (_currentStep == 2) {
       _updateBirthDate();
       if (_birthAge < 18) {
@@ -296,11 +297,21 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         return;
       }
     }
+    
     if (_currentStep == 9) {
+      await _requestNotificationPermission();
+      _nextPage();
+    } else if (_currentStep == 10) {
+      await _fetchExactLocation();
       _finishOnboarding();
     } else {
       _nextPage();
     }
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    setState(() => _notificationPermissionRequested = true);
+    await ref.read(pushNotificationServiceProvider).requestNotificationPermission();
   }
 
   Future<void> _checkUsername(String value) async {
@@ -336,27 +347,25 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       case 1:
         return _isUsernameValid;
       case 2:
-        // La validation de l'âge (18+) se fait au clic sur "Continuer".
         return true;
       case 3:
         return _gender != null;
       case 4:
         return _discoveryPreferences.isNotEmpty;
       case 5:
-        return _locationLabel != null &&
-            _locationLabel!.isNotEmpty &&
-            !_isLocationLoading;
-      case 6:
         return _selectedInterests.isNotEmpty;
-      case 7:
+      case 6:
         return _pickedPhotos.isNotEmpty;
-      case 8:
+      case 7:
         return _socialControllers.any(
           (controller) => controller.text.trim().isNotEmpty,
         );
-      case 9:
+      case 8:
         return _bioController.text.trim().length <= 150 &&
             _bioController.text.trim().isNotEmpty;
+      case 9:
+      case 10:
+        return true;
       default:
         return true;
     }
@@ -391,12 +400,17 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         position.latitude,
         position.longitude,
       );
+      final city = await service.reverseGeocodeCity(
+        position.latitude,
+        position.longitude,
+      );
 
       setState(() {
         _locationLatitude = position.latitude;
         _locationLongitude = position.longitude;
         _locationLabel = exactAddress;
-        _locationController.text = exactAddress ?? '';
+        _locationCity = city;
+        _locationController.text = city ?? exactAddress ?? '';
       });
     } catch (error) {
       setState(() {
@@ -441,11 +455,13 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         'gender': _gender,
         'discovery_preferences': _discoveryPreferences.toList(),
         'location_label': _locationLabel,
+        'location_city': _locationCity,
         'latitude': _locationLatitude,
         'longitude': _locationLongitude,
         'bio': _bioController.text.trim(),
         'photos': photoUrls,
         'social_links': socialMap,
+        'selected_interests': _selectedInterests.toList(),
         'profile_completed': true,
         'created_at': DateTime.now().toUtc().toIso8601String(),
       };
@@ -802,88 +818,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           }).toList(),
         ),
       ),
-      _buildStep(
-        title: 'Où es-tu ?',
-        subtitle:
-            'Nous affichons uniquement une zone approximative, jamais ton adresse exacte.',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: _isLocationLoading ? null : _fetchExactLocation,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: border),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.mapPin, color: textSecondary, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: IgnorePointer(
-                        child: TextField(
-                          controller: _locationController,
-                          readOnly: true,
-                          style: TextStyle(fontSize: 17, color: textPrimary),
-                          decoration: const InputDecoration(
-                            hintText: 'Dakar, Sénégal',
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (_isLocationLoading)
-                      SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(primary),
-                        ),
-                      )
-                    else
-                      Icon(
-                        LucideIcons.chevronRight,
-                        color: textSecondary,
-                        size: 20,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            if (_locationError != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _locationError!,
-                style: TextStyle(color: error, fontSize: 13),
-              ),
-            ],
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _isLocationLoading ? null : _fetchExactLocation,
-              child: Row(
-                children: [
-                  Icon(LucideIcons.locateFixed, color: primary, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Récupérer ma localisation',
-                    style: TextStyle(
-                      color: primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
 
       // ==================================================
       // ÉTAPE 7 — CENTRES D'INTÉRÊT (cartes façon capture de référence :
@@ -1206,6 +1140,47 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           ],
         ),
       ),
+      _buildStep(
+        title: 'Juste une dernière chose 🔔',
+        subtitle: 'Permets-nous de t\'envoyer des notifications pour ne rater aucune rencontre. Reçois des alertes quand tu as un nouveau match ou un message.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: border),
+              ),
+              child: const Icon(LucideIcons.bellRing, size: 64, color: Colors.amber),
+            ),
+          ],
+        ),
+      ),
+      _buildStep(
+        title: 'Rencontrer à proximité 📍',
+        subtitle: 'Permets-nous d\'accéder à ta localisation pour rencontrer des gens près de chez toi. Ta position exacte ne sera jamais visible.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: border),
+              ),
+              child: const Icon(LucideIcons.mapPin, size: 64, color: Colors.redAccent),
+            ),
+            const SizedBox(height: 32),
+            if (_locationError != null) ...[
+              Text(_locationError!, style: TextStyle(color: error, fontSize: 14), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+            ],
+          ],
+        ),
+      ),
     ];
 
     return Scaffold(
@@ -1236,12 +1211,12 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             // BOUTON CONTINUER — pilule sombre pleine largeur (façon capture)
             // ==================================================
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               child: SizedBox(
                 width: double.infinity,
                 height: 64,
                 child: FilledButton(
-                  onPressed: _canContinue && !_isSubmitting
+                  onPressed: _canContinue && !_isSubmitting && !_isLocationLoading
                       ? _handleContinuePressed
                       : null,
                   style: FilledButton.styleFrom(
@@ -1252,7 +1227,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: _isSubmitting
+                  child: _isSubmitting || _isLocationLoading
                       ? SizedBox(
                           width: 22,
                           height: 22,
@@ -1265,8 +1240,10 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                         )
                       : Text(
                           _currentStep == 9
-                              ? 'Valider mon profil'
-                              : 'Continuer',
+                              ? 'Autoriser les notifications'
+                              : _currentStep == 10
+                                  ? 'Autoriser et terminer'
+                                  : 'Continuer',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

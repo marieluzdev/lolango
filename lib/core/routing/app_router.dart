@@ -13,8 +13,7 @@ import 'package:lolango_v2/features/profile/presentation/screens/profile_preview
 import 'package:lolango_v2/features/profile/presentation/screens/settings_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/user_profile_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
-import 'package:lolango_v2/features/social_access/presentation/screens/privacy_modal_screen.dart';
-import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
+
 
 final pendingFirstNameProvider = StateProvider<String?>((ref) => null);
 
@@ -23,11 +22,15 @@ final pendingFirstNameProvider = StateProvider<String?>((ref) => null);
 class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
     // Listen to auth changes
-    ref.listen(authViewModelProvider, (_, _) => notifyListeners());
+    ref.listen(authViewModelProvider, (_, _) => _safeNotifyListeners());
     // Listen to profile status changes
-    ref.listen(profileStatusProvider, (_, _) => notifyListeners());
-    // Listen to privacy modal status
-    ref.listen(hasSeenPrivacyModalProvider, (_, _) => notifyListeners());
+    ref.listen(profileStatusProvider, (_, _) => _safeNotifyListeners());
+  }
+
+  void _safeNotifyListeners() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 }
 
@@ -63,11 +66,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       final profileCompleted = profileStatus.valueOrNull ?? false;
-      final hasSeenPrivacyModal = ref.read(hasSeenPrivacyModalProvider).valueOrNull ?? false;
+      
+
 
       if (isGoingToSplash) {
         if (!profileCompleted) return '/onboarding';
-        if (!hasSeenPrivacyModal) return '/privacy-setup';
         return '/home';
       }
 
@@ -80,17 +83,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (profileCompleted && (isGoingToLogin || isGoingToOnboarding)) {
-        if (!hasSeenPrivacyModal) return '/privacy-setup';
         return '/home';
-      }
-
-      final isGoingToPrivacy = state.matchedLocation == '/privacy-setup';
-      if (profileCompleted && hasSeenPrivacyModal && isGoingToPrivacy) {
-        return '/home';
-      }
-
-      if (profileCompleted && !hasSeenPrivacyModal && !isGoingToPrivacy) {
-        return '/privacy-setup';
       }
 
       return null;
@@ -104,20 +97,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           initialFirstName: state.uri.queryParameters['firstName'],
         ),
       ),
-      GoRoute(
-        path: '/privacy-setup',
-        pageBuilder: (context, state) {
-          return CustomTransitionPage(
-            key: state.pageKey,
-            opaque: false,
-            barrierColor: Colors.black54,
-            child: const PrivacyModalScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          );
-        },
-      ),
+
       GoRoute(
         path: '/home',
         builder: (context, state) => const MainShellScreen(),

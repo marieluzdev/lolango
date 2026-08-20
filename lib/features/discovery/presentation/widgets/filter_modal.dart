@@ -13,12 +13,27 @@ class DiscoveryFilter {
     this.city,
     Set<String>? socials,
   }) : socials = socials ?? {};
+
+  bool get isRestrictive {
+    if (city != null && city!.trim().isNotEmpty) return true;
+    if (gender != null) return true;
+    if (socials.isNotEmpty) return true;
+    if (ageRange.start > 18 || ageRange.end < 80) return true;
+    return false;
+  }
 }
 
 class FilterModal extends StatefulWidget {
   final DiscoveryFilter initial;
+  final String? userCity;
+  final ValueChanged<DiscoveryFilter>? onFilterChanged;
 
-  const FilterModal({super.key, required this.initial});
+  const FilterModal({
+    super.key,
+    required this.initial,
+    this.userCity,
+    this.onFilterChanged,
+  });
 
   @override
   State<FilterModal> createState() => _FilterModalState();
@@ -37,6 +52,17 @@ class _FilterModalState extends State<FilterModal> {
     _gender = widget.initial.gender;
     _city = widget.initial.city;
     _socials.addAll(widget.initial.socials);
+  }
+
+  void _notifyChanged() {
+    if (widget.onFilterChanged != null) {
+      widget.onFilterChanged!(DiscoveryFilter(
+        ageRange: _age,
+        gender: _gender,
+        city: _city,
+        socials: _socials,
+      ));
+    }
   }
 
   @override
@@ -93,7 +119,10 @@ class _FilterModalState extends State<FilterModal> {
                 _age.start.round().toString(),
                 _age.end.round().toString(),
               ),
-              onChanged: (v) => setState(() => _age = v),
+              onChanged: (v) {
+                setState(() => _age = v);
+                _notifyChanged();
+              },
             ),
           ),
           const SizedBox(height: 8),
@@ -104,43 +133,57 @@ class _FilterModalState extends State<FilterModal> {
               ChoiceChip(
                 label: const Text('Tous'),
                 selected: _gender == null,
-                onSelected: (_) => setState(() => _gender = null),
+                onSelected: (_) {
+                  setState(() => _gender = null);
+                  _notifyChanged();
+                },
               ),
               const SizedBox(width: 8),
               ChoiceChip(
                 label: const Text('Femmes'),
                 selected: _gender == 'female',
-                onSelected: (_) => setState(() => _gender = 'female'),
+                onSelected: (_) {
+                  setState(() => _gender = 'female');
+                  _notifyChanged();
+                },
               ),
               const SizedBox(width: 8),
               ChoiceChip(
                 label: const Text('Hommes'),
                 selected: _gender == 'male',
-                onSelected: (_) => setState(() => _gender = 'male'),
+                onSelected: (_) {
+                  setState(() => _gender = 'male');
+                  _notifyChanged();
+                },
               ),
             ],
           ),
           const SizedBox(height: 12),
           // City selection: use the real city from user profile if provided in initial
-          if (_city != null)
+          if (widget.userCity != null && widget.userCity!.trim().isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Ville'),
+                const Text('Localisation'),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text('Toutes les villes'),
+                      label: const Text('Dans tout le pays'),
                       selected: _city == null,
-                      onSelected: (_) => setState(() => _city = null),
+                      onSelected: (_) {
+                        setState(() => _city = null);
+                        _notifyChanged();
+                      },
                     ),
-                    ChoiceChip(
-                      label: Text(_city!),
+                      ChoiceChip(
+                        label: const Text('Dans ma ville'),
                       selected: _city != null,
-                      onSelected: (_) =>
-                          setState(() => _city = widget.initial.city),
+                      onSelected: (_) {
+                        setState(() => _city = widget.userCity);
+                        _notifyChanged();
+                      },
                     ),
                   ],
                 ),
@@ -158,43 +201,21 @@ class _FilterModalState extends State<FilterModal> {
               return FilterChip(
                 label: Text(label),
                 selected: selected,
-                onSelected: (v) => setState(() {
-                  if (v) {
-                    _socials.add(label.toLowerCase());
-                  } else {
-                    _socials.remove(label.toLowerCase());
-                  }
-                }),
+                onSelected: (v) {
+                  setState(() {
+                    if (v) {
+                      _socials.add(label.toLowerCase());
+                    } else {
+                      _socials.remove(label.toLowerCase());
+                    }
+                  });
+                  _notifyChanged();
+                },
               );
             }).toList(),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Annuler'),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () {
-                  final res = DiscoveryFilter(
-                    ageRange: _age,
-                    gender: _gender,
-                    city: _city,
-                    socials: _socials,
-                  );
-                  Navigator.of(context).pop(res);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  foregroundColor: Colors.black,
-                ),
-                child: const Text('Appliquer'),
-              ),
-            ],
-          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

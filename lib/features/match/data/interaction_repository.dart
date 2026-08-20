@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/core/errors/failures.dart';
+import 'package:lolango_v2/core/utils/logger.dart';
 
 class InteractionRepository {
   final SupabaseClient _client;
@@ -17,9 +18,37 @@ class InteractionRepository {
     try {
       final res = await _client
           .from('interactions')
-          .select('target_id')
+          .select('target_id, status, created_at')
           .eq('user_id', _currentUserId);
-      return (res as List).map((row) => row['target_id'] as String).toList();
+          
+      final List<String> excludedIds = [];
+      final now = DateTime.now();
+
+      for (final row in res as List) {
+        final targetId = row['target_id'] as String;
+        final status = row['status'] as String;
+        final createdAtStr = row['created_at'] as String?;
+        
+        if (status == 'like') {
+          excludedIds.add(targetId);
+        } else if (status == 'pass') {
+          if (createdAtStr != null) {
+            final createdAt = DateTime.tryParse(createdAtStr);
+            if (createdAt != null) {
+              if (now.difference(createdAt).inHours < 24) {
+                excludedIds.add(targetId);
+              }
+            } else {
+              excludedIds.add(targetId);
+            }
+          } else {
+            excludedIds.add(targetId);
+          }
+        } else {
+          excludedIds.add(targetId);
+        }
+      }
+      return excludedIds;
     } catch (e) {
       throw Failure.from(e);
     }
@@ -169,12 +198,20 @@ class InteractionRepository {
           .map((row) => row['user_id'] as String)
           .toList();
 
-      if (likerIds.isEmpty) return [];
+      AppLogger.d('[PENDING_LIKES] currentUserId: $_currentUserId');
+      AppLogger.d('[PENDING_LIKES] Raw likerIds (${likerIds.length}): $likerIds');
+
+      if (likerIds.isEmpty) {
+        AppLogger.d('[PENDING_LIKES] No likers found → returning empty list.');
+        return [];
+      }
 
       final matchesRes = await _client
           .from('matches')
           .select('user1_id, user2_id')
           .or('user1_id.eq.$_currentUserId,user2_id.eq.$_currentUserId');
+
+      AppLogger.d('[PENDING_LIKES] Raw matches rows (${(matchesRes as List).length}): $matchesRes');
 
       final matchedIds = (matchesRes as List).map((row) {
         return row['user1_id'] == _currentUserId
@@ -182,14 +219,22 @@ class InteractionRepository {
             : row['user1_id'];
       }).toSet();
 
+      AppLogger.d('[PENDING_LIKES] matchedIds set: $matchedIds');
+
       final pendingLikerIds = likerIds
           .where((id) => !matchedIds.contains(id))
           .toList();
 
-      if (pendingLikerIds.isEmpty) return [];
+      AppLogger.d('[PENDING_LIKES] pendingLikerIds after excluding matches (${pendingLikerIds.length}): $pendingLikerIds');
+
+      if (pendingLikerIds.isEmpty) {
+        AppLogger.d('[PENDING_LIKES] All likers are already matched → returning empty list.');
+        return [];
+      }
 
       return await _fetchDetailedProfilesByIds(pendingLikerIds);
     } catch (e) {
+      AppLogger.e('[PENDING_LIKES] Error: $e');
       throw Failure.from(e);
     }
   }

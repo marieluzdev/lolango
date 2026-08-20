@@ -18,27 +18,27 @@ final discoveryFilterInitProvider = Provider<void>((ref) {
           (filterState.city == null || filterState.city == '') &&
           filterState.socials.isEmpty;
 
-      if (prefs.isNotEmpty && isDefault) {
-        final first = prefs.first.toLowerCase();
+      if (isDefault) {
         String? mapped;
-        if (first.contains('fem')) {
-          mapped = 'female';
-        } else if (first.contains('hom')) {
-          mapped = 'male';
+        if (prefs.isNotEmpty) {
+          final first = prefs.first.toLowerCase();
+          if (first.contains('fem')) {
+            mapped = 'female';
+          } else if (first.contains('hom')) {
+            mapped = 'male';
+          }
         }
 
-        if (mapped != null) {
-          // Utilisation de Future.microtask pour éviter de modifier un state
-          // pendant la phase de build si ce provider est regardé dans un widget
-          Future.microtask(() {
-            ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
-              ageRange: filterState.ageRange,
-              gender: mapped,
-              city: filterState.city,
-              socials: filterState.socials,
-            );
-          });
-        }
+        // Utilisation de Future.microtask pour éviter de modifier un state
+        // pendant la phase de build si ce provider est regardé dans un widget
+        Future.microtask(() {
+          ref.read(discoveryFilterProvider.notifier).state = DiscoveryFilter(
+            ageRange: filterState.ageRange,
+            gender: mapped,
+            // Option A: pas de ville par défaut pour éviter un écran vide
+            socials: filterState.socials,
+          );
+        });
       }
     }
   });

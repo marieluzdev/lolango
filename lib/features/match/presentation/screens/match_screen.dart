@@ -117,11 +117,11 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   Text(
                     _tabIndex == 0
                         ? (pendingCount == 1
-                            ? '1 like reçu'
-                            : '$pendingCount likes reçus')
+                              ? '1 like reçu'
+                              : '$pendingCount likes reçus')
                         : (matchesCount == 1
-                            ? '1 connexion'
-                            : '$matchesCount connexions'),
+                              ? '1 connexion'
+                              : '$matchesCount connexions'),
                     style: TextStyle(
                       color: textSecondary,
                       fontSize: 13,
@@ -203,7 +203,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                               setState(() {
                                 _tabIndex = i;
                               });
-                              ref.read(matchActiveTabProvider.notifier).state = i;
+                              ref.read(matchActiveTabProvider.notifier).state =
+                                  i;
                             },
                             child: SizedBox(
                               height: double.infinity,
@@ -410,6 +411,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               child: AppErrorState(
                 message: "Impossible de charger les likes.",
                 onRetry: () => ref.invalidate(pendingLikesProvider),
+                autoRetrySeconds: 5,
               ),
             ),
           ],
@@ -433,8 +435,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   child: AppEmptyState(
                     icon: LucideIcons.messageCircleHeart,
                     title: 'Aucun match',
-                    description:
-                        'Les matchs apparaîtront ici quand l\'intérêt sera mutuel.',
+                    description: 'Les matchs apparaîtront ici',
                   ),
                 ),
               ],
@@ -484,6 +485,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               child: AppErrorState(
                 message: "Impossible de charger les matchs.",
                 onRetry: () => ref.invalidate(matchesProvider),
+                autoRetrySeconds: 5,
               ),
             ),
           ],
@@ -510,8 +512,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         ModalActionTile(
           icon: LucideIcons.user,
           label: 'Voir profil',
-          textColor: Colors.black,
-          backgroundColor: primary,
+          textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/user-profile/${p.id}', extra: p.name);

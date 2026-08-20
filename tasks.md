@@ -1,57 +1,69 @@
-# Tasks - Onboarding Lolango
+# Tasks — Lolango v2
 
-## État général
+> Plan de référence : [plan_amelioration.md](./plan_amelioration.md)
 
-- [x] 1. Analyse du projet et du flux d’auth existant
-- [x] 2. Mise en place de l’architecture onboarding + repository
-- [x] 3. Implémentation du router et de la redirection selon le profil
-- [x] 4. Création du flux d’onboarding (10 écrans + validation)
-- [x] 5. Ajout du navigation principale (Home / Découvrir / Match / Profil)
-- [x] 6. Profil, paramètres, thème sombre, déconnexion et suppression
-- [x] 7. Ajout des scripts SQL / RLS Supabase
-- [x] 8. Vérification Flutter et correction des erreurs
+---
 
-## Historique
+## 🔴 Priorité Haute
 
-- [2026-08-12] Analyse du contexte terminée : auth existant, router GoRouter, thème AppColors, structure feature-based déjà présente.
-- [2026-08-12] Implémentation du flux d’onboarding et de la navigation principale terminée.
-- [2026-08-12] Vérification Flutter en cours / corrections appliquées sur le provider de profil et les routes.
-- [2026-08-12] Scripts SQL et RLS Supabase ajoutés dans le dossier `supabase/`.
-- [2026-08-12] Correction du schéma SQL : suppression des clauses `WITH CHECK` sur les politiques SELECT/DELETE invalides sous PostgreSQL.
-- [2026-08-12] Implémentation du flux de photo réelle via `image_picker` + upload Supabase Storage.
-- [2026-08-12] Ajout des liens sociaux dans le parcours onboarding + édition de profil.
-- [2026-08-12] Création de l’écran d’édition profil avec sauvegarde Supabase.
-- [2026-08-12] Finalisation du profil enrichi et nettoyage des warnings de compilation principaux.
-- [2026-08-12] Correction du payload final d’onboarding : les colonnes `photos`, `social_links` et `selected_interests` ne sont plus envoyées vers `profiles`, et les données sont now réparties entre `profile_photos`, `profile_socials` et `profile_interests`.
+### Fix auto-refresh Découvrir (#3 + #10c)
+- [x] `discovery_providers.dart` — Remplacer `ref.read(hiddenProfilesProvider)` par `ref.watch(hiddenProfilesProvider)` dans `DiscoveryNotifier.build()`
 
-## Tâches liées au MVP complet
+### Filtre Localisation avec auto-apply (#1)
+- [x] `filter_modal.dart` — Renommer "Ville" → "Localisation"
+- [x] `filter_modal.dart` — Renommer "Toutes les villes" → "Dans tout le pays"
+- [x] `filter_modal.dart` — Renommer chip ville → "Dans ma ville (NomVille)"
+- [x] `filter_modal.dart` — Valeur par défaut = "Dans ma ville" si ville disponible
+- [x] `filter_modal.dart` — Supprimer boutons "Annuler" et "Appliquer"
+- [x] `filter_modal.dart` — Ajouter callback `onFilterChanged(DiscoveryFilter)` pour auto-apply
+- [x] `home_screen.dart` — Adapter l'ouverture du FilterModal pour utiliser `onFilterChanged`
+- [x] `discovery_screen.dart` — Adapter l'ouverture du FilterModal pour utiliser `onFilterChanged`
+- [x] `discovery_filter_init_provider.dart` — Initialiser filtre avec ville par défaut
 
-- [x] Validation stricte des écrans d’onboarding (prénom, username, âge, bio, interêts / localisation)
-- [x] Upload photo réel vers Supabase Storage
-- [x] Social links et user profile editing
-- [x] Écran de profil plus détaillé et cohérent avec la spec
-- [x] Vérification Flutter du projet sur la configuration actuelle
+### Privacy Modal au premier login (#8)
+- [x] `app_router.dart` — Ajouter logique de redirect vers `/privacy-setup` si `hasSeenPrivacyModal == false` et profil complété
 
-## Notifications FCM via Supabase
+---
 
-- [x] Phase 1 : Initialisation Firebase et enregistrement du handler FCM
-- [x] Phase 2 : Récupération du token FCM et enregistrement dans `profiles.fcm_token`
-- [x] Phase 3 : Extension du schéma Supabase avec `profiles.fcm_token` et table `notifications`
-- [x] Phase 4 : Implémentation de l’Edge Function Supabase / webhook de notification
+## 🟡 Priorité Moyenne
 
-## Notes d’implémentation
+### Skeletonizer — Remplacer les spinners de contenu (#10b)
+- [x] `home_screen.dart` — `AppSpinner()` → Skeleton ProfileCard factice via `AppLoading`
+- [x] `discovery_screen.dart` — `AppSpinner()` → Skeleton grille 4-6 cartes via `AppLoading`
+- [x] `discovery_screen.dart` — Footer pagination `CircularProgressIndicator` → Skeleton 2 cartes
+- [x] `profile_screen.dart` — `AppSpinner()` → Skeleton header + galerie + bio
+- [x] `profile_preview_screen.dart` — `CircularProgressIndicator()` → `AppLoading`
+- [x] `privacy_modal_screen.dart` — `CircularProgressIndicator()` → `AppLoading`
 
-- Le service Flutter récupère le token FCM et le stocke dans `profiles.fcm_token` à chaque connexion et quand le token est rafraîchi.
-- Le schéma Supabase ajoute `fcm_token` et une table `notifications` pour déclencher l’envoi.
-- L’Edge Function `supabase/functions/send-push/index.ts` lit l’INSERT sur `notifications`, récupère le `fcm_token` du destinataire et appelle l’API FCM v1 avec un access token Google OAuth2.
-- Prévoir l’ajout des secrets Supabase : `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `FIREBASE_SERVICE_ACCOUNT`.
+### Bouton "Copier le pseudo" dans Découvrir (#10a)
+- [x] `discovery_screen.dart` — Compléter `_showSocialDetailModal()` avec icône réseau, pseudo, et bouton Copier
+- [x] `discovery_screen.dart` — Utiliser `Clipboard.setData()` + SnackBar de confirmation
 
-## Refactoring : Bonnes Pratiques Flutter Modernes
+### Empty states conditionnels — Home (#5 + #6)
+- [x] `home_screen.dart` — Ajouter méthode `_hasRestrictiveFilters(DiscoveryFilter)` (ajoutée via extension `isRestrictive`)
+- [x] `home_screen.dart` — Si filtres restrictifs : afficher bouton "Voir tout le monde"
+- [x] `home_screen.dart` — Si filtres par défaut : message "Reviens plus tard" sans bouton
 
-- [ ] **Phase 1 : Core** (Fondations et infrastructure : lints, erreurs, logger, debouncer, extensions, widgets réutilisables, thème)
-- [ ] **Phase 2 : Data** (Repositories et modèles : modèles typés, factorisation requêtes, pagination)
-- [ ] **Phase 3 : Providers** (Riverpod propre : nettoyage Supabase direct, cache, initialisation filtre)
-- [ ] **Phase 4 : Présentation** (UI et états : décomposition God Widgets, empty/error/loading states)
-- [ ] **Phase 5 : Performance et cache** (CachedNetworkImage, debounce, invalidations)
-- [x] **Phase 6 : Qualité et polish** (Format, analyse, nettoyage des print et code mort)
-- [ ] **Phase 7 : Tests unitaires et widgets** (Erreurs, debouncer, repositories, widgets réutilisables)
+### Empty states conditionnels — Découvrir (#4 + #6)
+- [x] `discovery_screen.dart` — Différencier "filtres trop restrictifs" vs "tout swipé"
+- [x] `discovery_screen.dart` — Si filtres restrictifs : bouton "Modifier les filtres" (ouvre FilterModal / ou réinitialise)
+- [x] `discovery_screen.dart` — Si tout swipé : message sans bouton reset
+
+---
+
+## 🟢 Priorité Basse
+
+### Réapparition profils skippés après 24h (#2)
+- [x] `interaction_repository.dart` — `getInteractedProfileIds()` : exclut les `pass` < 24h, exclut toujours les `like`
+
+### Optimisation notifications push Android (#7)
+- [x] `push_notification_service.dart` — `Importance.high` → `Importance.max`, `Priority.high` → `Priority.max`
+- [x] `push_notification_service.dart` — `fullScreenIntent: true` ajouté pour les matchs
+- [x] `AndroidManifest.xml` — Permissions ajoutées : `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `USE_FULL_SCREEN_INTENT`, `RECEIVE_BOOT_COMPLETED`
+- [x] Supabase Edge Function `send-push/index.ts` — `"priority": "HIGH"` déjà présent dans le payload FCM
+
+---
+
+## ✅ Terminé
+
+*(Déplacer les tâches ici une fois implémentées)*

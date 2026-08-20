@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lolango_v2/core/network/connectivity_provider.dart';
+import 'package:lolango_v2/core/network/network_aware_provider.dart';
 import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +12,8 @@ import 'package:lolango_v2/features/home/presentation/screens/home_screen.dart';
 import 'package:lolango_v2/features/match/presentation/screens/match_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/profile_screen.dart';
 import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
+import 'package:lolango_v2/features/social_access/presentation/screens/privacy_modal_screen.dart';
+import 'package:lolango_v2/features/social_access/providers/social_visibility_provider.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
@@ -37,7 +41,44 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupRealtimeSubscriptions();
+      _checkPrivacyModal();
+      // Écoute la reconnexion réseau pour réinitialiser les canaux Realtime
+      ref.listenManual<bool>(isConnectedProvider, (previous, current) {
+        if (previous == false && current == true && mounted) {
+          AppLogger.d('[REALTIME] Network restored → re-subscribing Realtime channels.');
+          _teardownRealtimeSubscriptions();
+          _setupRealtimeSubscriptions();
+        }
+      });
     });
+  }
+
+  Future<void> _checkPrivacyModal() async {
+    AppLogger.d('[PRIVACY] _checkPrivacyModal started.');
+    try {
+      final hasSeen = await ref.read(hasSeenPrivacyModalProvider.future);
+      AppLogger.d('[PRIVACY] hasSeenPrivacyModalProvider returned: $hasSeen');
+      AppLogger.d('[PRIVACY] Is widget mounted? $mounted');
+      
+      if (!hasSeen && mounted) {
+        AppLogger.d('[PRIVACY] Showing PrivacyModalScreen now.');
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          isDismissible: false,
+          enableDrag: false,
+          backgroundColor: Colors.transparent,
+          builder: (_) => ProviderScope(
+            parent: ProviderScope.containerOf(context),
+            child: const PrivacyModalScreen(),
+          ),
+        );
+      } else {
+        AppLogger.d('[PRIVACY] Not showing PrivacyModalScreen (hasSeen: $hasSeen, mounted: $mounted).');
+      }
+    } catch (e) {
+      AppLogger.e('[PRIVACY] Error in _checkPrivacyModal: $e');
+    }
   }
 
   void _setupRealtimeSubscriptions() {
@@ -118,16 +159,25 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         });
   }
 
-  @override
-  void dispose() {
+  void _teardownRealtimeSubscriptions() {
     _notificationsChannel?.unsubscribe();
     _interactionsChannel?.unsubscribe();
     _matchesChannel?.unsubscribe();
+    _notificationsChannel = null;
+    _interactionsChannel = null;
+    _matchesChannel = null;
+  }
+
+  @override
+  void dispose() {
+    _teardownRealtimeSubscriptions();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Maintient le networkAwareProvider actif pour toute la session
+    ref.watch(networkAwareProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark
         ? AppColors.backgroundDark

@@ -15,8 +15,30 @@ import '../widgets/profile_interests_section.dart';
 import '../widgets/profile_socials_section.dart';
 import '../widgets/profile_photo_gallery.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  String _formatCity(String? fullAddress) {
+    if (fullAddress == null || fullAddress.trim().isEmpty) return 'Localisation non renseignée';
+    final parts = fullAddress.split(',');
+    if (parts.length > 2) {
+      final country = parts.last.trim();
+      var cityPart = parts[parts.length - 2].trim();
+      if (RegExp(r'^\d+$').hasMatch(cityPart) && parts.length > 3) {
+        cityPart = parts[parts.length - 3].trim();
+      }
+      cityPart = cityPart.replaceAll(RegExp(r'^Région de\s+', caseSensitive: false), '')
+                         .replaceAll(RegExp(r'^Region of\s+', caseSensitive: false), '')
+                         .replaceAll(RegExp(r'^Region de\s+', caseSensitive: false), '');
+      return '$cityPart, $country';
+    }
+    return fullAddress;
+  }
 
   void _showOptionsSheet({
     required BuildContext context,
@@ -35,8 +57,7 @@ class ProfileScreen extends ConsumerWidget {
         ModalActionTile(
           icon: LucideIcons.eye,
           label: 'Aperçu profil',
-          textColor: Colors.black,
-          backgroundColor: primary,
+          textColor: textPrimary,
           onTap: () {
             Navigator.of(context).pop();
             context.push('/profile-preview');
@@ -57,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark
         ? AppColors.backgroundDark
@@ -122,7 +143,28 @@ class ProfileScreen extends ConsumerWidget {
                 onRefresh: () =>
                     ref.read(profileProvider.notifier).refreshProfile(),
                 child: profileState.when(
-                  loading: () => const AppSpinner(),
+                  loading: () => AppLoading(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const ProfileHeader(
+                            firstName: 'Chargement',
+                            username: 'chargement',
+                            location: 'Ville',
+                            gender: 'male',
+                            age: 25,
+                            primaryPhotoUrl: null,
+                          ),
+                          const SizedBox(height: 28),
+                          const ProfilePhotoGallery(photoUrls: []),
+                          const SizedBox(height: 24),
+                          ProfileBioSection(bio: 'Ceci est une fausse bio de chargement. ' * 3),
+                        ],
+                      ),
+                    ),
+                  ),
                   error: (err, stack) => AppErrorState(
                     message: err.toString(),
                     onRetry: () =>
@@ -142,8 +184,7 @@ class ProfileScreen extends ConsumerWidget {
                     final bio =
                         profile.profile.bio ??
                         'Ajoute une bio pour te présenter.';
-                    final location =
-                        profile.profile.city ?? 'Localisation non renseignée';
+                    final location = _formatCity(profile.profile.city);
                     final gender = profile.profile.gender ?? 'Non renseigné';
                     final socials = profile.socials;
                     final interests = profile.interests;

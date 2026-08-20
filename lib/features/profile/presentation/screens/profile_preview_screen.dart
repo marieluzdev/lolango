@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/discovery/presentation/widgets/profile_card.dart';
+import 'package:lolango_v2/core/widgets/app_loading.dart';
 
 class ProfilePreviewScreen extends ConsumerStatefulWidget {
   const ProfilePreviewScreen({super.key});
@@ -56,14 +57,30 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
           'Aperçu de ta carte',
           style: TextStyle(
             color: textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            fontSize: 28,
           ),
         ),
         iconTheme: IconThemeData(color: textPrimary),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? AppLoading(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 400,
+                    maxHeight: 600,
+                  ),
+                  child: const ProfileCard(
+                    name: 'Chargement',
+                    age: 25,
+                    city: 'Ville',
+                    photoUrls: [],
+                    showActionButtons: false,
+                  ),
+                ),
+              ),
+            )
           : _profile == null
           ? Center(
               child: Text(
@@ -73,52 +90,63 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
             )
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
-                    ),
-                    child: Row(
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
                       children: [
-                        Icon(
-                          LucideIcons.eye,
-                          size: 16,
-                          color: textPrimary.withValues(alpha: 0.7),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.surfaceDark
+                                : AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.borderLight,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.eye,
+                                size: 16,
+                                color: textPrimary.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'C\'est ainsi que les autres utilisateurs voient ta carte',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: textPrimary.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            'C\'est ainsi que les autres utilisateurs voient ta carte',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: textPrimary.withValues(alpha: 0.7),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 400,
+                                maxHeight: 600,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: _buildProfileCard(),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: _buildProfileCard(),
                   ),
                 ),
                 const SizedBox(height: 16),

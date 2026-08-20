@@ -9,6 +9,7 @@ Future<bool> showConfirmationModalBottomSheet({
   String cancelText = 'Annuler',
   String confirmText = 'Confirmer',
   bool destructive = false,
+  bool outlineButton = false,
 }) async {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
@@ -75,36 +76,52 @@ Future<bool> showConfirmationModalBottomSheet({
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: border, width: 1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: border, width: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        cancelText,
-                        style: TextStyle(color: textPrimary),
+                        child: Text(
+                          cancelText,
+                          style: TextStyle(color: textPrimary),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: destructive
-                            ? Colors.red
-                            : primary,
-                        foregroundColor: destructive ? Colors.white : Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(confirmText),
+                    child: SizedBox(
+                      height: 56,
+                      child: outlineButton
+                          ? OutlinedButton(
+                              onPressed: () => Navigator.of(sheetContext).pop(true),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: Text(confirmText),
+                            )
+                          : FilledButton(
+                              onPressed: () => Navigator.of(sheetContext).pop(true),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: destructive
+                                    ? Colors.red
+                                    : primary,
+                                foregroundColor: destructive ? Colors.white : Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: Text(confirmText),
+                            ),
                     ),
                   ),
                 ],

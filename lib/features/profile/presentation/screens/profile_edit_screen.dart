@@ -3,45 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/features/onboarding/domain/onboarding_models.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
-
-const _kInterestSuggestions = [
-  'Sport',
-  'Musique',
-  'Cinéma',
-  'Voyage',
-  'Cuisine',
-  'Lecture',
-  'Gaming',
-  'Art',
-  'Danse',
-  'Nature',
-  'Photo',
-  'Mode',
-  'Fitness',
-  'Yoga',
-  'Randonnée',
-  'Surf',
-  'Ski',
-  'Tennis',
-  'Football',
-  'Basket',
-  'Running',
-  'Vélo',
-  'Escalade',
-  'Natation',
-  'Technologie',
-  'Entrepreneuriat',
-  'Finance',
-  'Design',
-  'Animation',
-  'Séries',
-  'Podcasts',
-  'DIY',
-  'Jardinage',
-  'Animaux',
-  'Bénévolat',
-];
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -54,13 +18,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final List<TextEditingController> _socialControllers = [
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-  ];
 
-  List<String> _interests = [];
+  Set<String> _selectedInterests = <String>{};
+  final List<OnboardingInterestCategory> _categories =
+      onboardingInterestCategories;
+  Set<String> _expandedCategories = <String>{};
+  static const int _interestsPreviewCount = 3;
   bool _isSaving = false;
 
   @override
@@ -74,9 +37,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     _firstNameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
-    for (final controller in _socialControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
@@ -89,25 +49,31 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (detailedProfile == null) return;
     final profile = detailedProfile.profile;
 
-    _firstNameController.text = profile.name;
-    _usernameController.text = profile.username.replaceFirst('@', '');
-    _bioController.text = profile.bio ?? '';
+    setState(() {
+      _firstNameController.text = profile.name;
+      _usernameController.text = profile.username.replaceFirst('@', '');
+      _bioController.text = profile.bio ?? '';
 
-    final map = detailedProfile.socials;
-    const platforms = ['Instagram', 'Snapchat', 'TikTok'];
-    for (var index = 0; index < _socialControllers.length; index++) {
-      _socialControllers[index].text = map[platforms[index]] ?? '';
-    }
-
-    _interests = List<String>.from(detailedProfile.interests);
+      _selectedInterests = Set<String>.from(detailedProfile.interests);
+    });
   }
 
   void _toggleInterest(String interest) {
     setState(() {
-      if (_interests.contains(interest)) {
-        _interests.remove(interest);
-      } else if (_interests.length < 10) {
-        _interests.add(interest);
+      if (_selectedInterests.contains(interest)) {
+        _selectedInterests.remove(interest);
+      } else if (_selectedInterests.length < 10) {
+        _selectedInterests.add(interest);
+      }
+    });
+  }
+
+  void _toggleCategoryExpanded(String categoryName) {
+    setState(() {
+      if (_expandedCategories.contains(categoryName)) {
+        _expandedCategories.remove(categoryName);
+      } else {
+        _expandedCategories.add(categoryName);
       }
     });
   }
@@ -134,19 +100,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         'bio': bio,
       });
 
-      final socialMap = <String, String>{};
-      const platforms = ['Instagram', 'Snapchat', 'TikTok'];
-      for (var index = 0; index < _socialControllers.length; index++) {
-        final value = _socialControllers[index].text.trim();
-        if (value.isNotEmpty) {
-          socialMap[platforms[index]] = value;
-        }
-      }
-
-      await repo.upsertSocials(socialMap);
-      await repo.upsertInterests(_interests);
+      await repo.upsertInterests(_selectedInterests.toList());
 
       if (mounted) {
+        ref.invalidate(profileProvider);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Profil mis à jour.')));
@@ -178,236 +135,338 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         ? AppColors.textSecondaryDark
         : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final secondary = isDark
+        ? AppColors.secondaryDark
+        : AppColors.secondaryLight;
 
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
         backgroundColor: background,
-        title: const Text('Modifier le profil'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          'Modifier le profil',
+          style: TextStyle(
+            color: textPrimary,
+            fontWeight: FontWeight.w800,
+            fontSize: 28,
+          ),
+        ),
+        iconTheme: IconThemeData(color: textPrimary),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _firstNameController,
-                decoration: InputDecoration(
-                  labelText: 'Prénom',
-                  filled: true,
-                  fillColor: surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: border),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Pseudo',
-                  prefixText: '@',
-                  filled: true,
-                  fillColor: surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: border),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _bioController,
-                minLines: 4,
-                maxLines: 6,
-                maxLength: 150,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Centres d\'intérêt',
+                    'Prénom',
                     style: TextStyle(
                       color: textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(
-                    '${_interests.length}/10',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: textSecondary,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: border),
+                    ),
+                    child: TextField(
+                      controller: _firstNameController,
+                      style: TextStyle(fontSize: 17, color: textPrimary),
+                      decoration: const InputDecoration(
+                        hintText: 'Prénom',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 16),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Pseudo',
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: border),
+                    ),
+                    child: TextField(
+                      controller: _usernameController,
+                      readOnly: true,
+                      style: TextStyle(fontSize: 17, color: textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Pseudo',
+                        prefixText: '@',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        hintStyle: TextStyle(color: textPrimary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Bio',
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: border),
+                    ),
+                    child: TextField(
+                      controller: _bioController,
+                      maxLength: 150,
+                      maxLines: 5,
+                      style: TextStyle(fontSize: 17, color: textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Passionné de musique, football et voyages 🌍',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        counterText: '',
+                        hintStyle: TextStyle(color: textPrimary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Centres d\'intérêt',
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        '${_selectedInterests.length}/10',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Choisis jusqu\'à 10 centres d\'intérêt',
+                    style: TextStyle(fontSize: 13, color: textSecondary),
+                  ),
+                  const SizedBox(height: 14),
+                  ..._categories.map((category) {
+                    final isExpanded = _expandedCategories.contains(category.name);
+                    final totalCount = category.interests.length;
+                    final visibleInterests = isExpanded
+                        ? category.interests
+                        : category.interests.take(_interestsPreviewCount).toList();
+                    final remainingCount = totalCount - _interestsPreviewCount;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                category.emoji,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      category.name,
+                                      style: TextStyle(
+                                        color: textPrimary,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$totalCount au total',
+                                      style: TextStyle(
+                                        color: textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _toggleCategoryExpanded(category.name),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(4),
+                                  child: Icon(
+                                    isExpanded
+                                        ? LucideIcons.chevronUp
+                                        : LucideIcons.chevronDown,
+                                    color: textPrimary,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ...visibleInterests.map((interest) {
+                                final checked = _selectedInterests.contains(
+                                  interest,
+                                );
+                                return GestureDetector(
+                                  onTap: () => _toggleInterest(interest),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: checked ? primary : background,
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: checked ? primary : border,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          interest,
+                                          style: TextStyle(
+                                            color: checked
+                                                ? Colors.black
+                                                : textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        if (checked) ...[
+                                          const SizedBox(width: 6),
+                                          const Icon(
+                                            Icons.check,
+                                            size: 15,
+                                            color: Colors.black,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                              if (!isExpanded && remainingCount > 0)
+                                GestureDetector(
+                                  onTap: () =>
+                                      _toggleCategoryExpanded(category.name),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: background,
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(color: border),
+                                    ),
+                                    child: Text(
+                                      '+ $remainingCount autres',
+                                      style: TextStyle(
+                                        color: textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  const SizedBox(height: 100),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Choisis jusqu\'à 10 centres d\'intérêt',
-                style: TextStyle(fontSize: 13, color: textSecondary),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _kInterestSuggestions.map((interest) {
-                  final selected = _interests.contains(interest);
-                  return GestureDetector(
-                    onTap: () => _toggleInterest(interest),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected ? primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: selected ? primary : border,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        interest,
-                        style: TextStyle(
-                          color: selected ? Colors.black : textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13.5,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 32),
-              Text(
-                'Réseaux',
-                style: TextStyle(
-                  color: textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    _buildSocialField(
-                      'Instagram',
-                      LucideIcons.camera,
-                      _socialControllers[0],
-                      textPrimary,
-                      textSecondary,
-                      border,
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: border,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
-                    _buildSocialField(
-                      'Snapchat',
-                      LucideIcons.messageCircle,
-                      _socialControllers[1],
-                      textPrimary,
-                      textSecondary,
-                      border,
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: border,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
-                    _buildSocialField(
-                      'TikTok',
-                      LucideIcons.music,
-                      _socialControllers[2],
-                      textPrimary,
-                      textSecondary,
-                      border,
-                      isLast: true,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              color: background,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
+                height: 56,
+                child: FilledButton(
                   onPressed: _isSaving ? null : _saveProfile,
                   style: FilledButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.black,
-                    minimumSize: const Size.fromHeight(52),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  icon: const Icon(LucideIcons.save, color: Colors.black),
-                  label: Text(
-                    _isSaving ? 'Enregistrement...' : 'Enregistrer',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
+                  child: _isSaving
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Enregistrer',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Les informations sont sauvegardées dans Supabase.',
-                style: TextStyle(color: textSecondary, fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialField(
-    String label,
-    IconData icon,
-    TextEditingController controller,
-    Color textPrimary,
-    Color textSecondary,
-    Color border, {
-    bool isLast = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 24, color: textPrimary),
-          const SizedBox(width: 14),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: TextStyle(color: textPrimary, fontSize: 15),
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: TextStyle(color: textSecondary),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
             ),
           ),

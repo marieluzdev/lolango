@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lolango_v2/features/auth/data/auth_repository.dart';
+import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
+import 'package:lolango_v2/features/discovery/presentation/providers/discovery_providers.dart';
+import 'package:lolango_v2/features/match/presentation/providers/interaction_providers.dart';
 
 class AuthViewModel extends StateNotifier<AsyncValue<User?>> {
   final AuthRepository _authRepository;
+  final Ref _ref;
   late final StreamSubscription<AuthState> _authStateSubscription;
 
-  AuthViewModel(this._authRepository)
+  AuthViewModel(this._authRepository, this._ref)
     : super(AsyncData(_authRepository.currentUser)) {
     _authStateSubscription = _authRepository.authStateChanges.listen((data) {
       state = AsyncData(data.session?.user);
@@ -49,7 +53,15 @@ class AuthViewModel extends StateNotifier<AsyncValue<User?>> {
   Future<void> signOut() async {
     try {
       await _authRepository.signOut();
-      // Le stream onAuthStateChange met à jour le state automatiquement.
+      
+      // Clear providers to prevent state bleeding between accounts
+      _ref.invalidate(profileProvider);
+      _ref.invalidate(discoveryNotifierProvider);
+      _ref.invalidate(interactedProfilesProvider);
+      _ref.invalidate(hiddenProfilesProvider);
+      _ref.invalidate(matchesProvider);
+      _ref.invalidate(pendingLikesProvider);
+      
     } catch (e, st) {
       state = AsyncError(e, st);
     }
@@ -58,5 +70,5 @@ class AuthViewModel extends StateNotifier<AsyncValue<User?>> {
 
 final authViewModelProvider =
     StateNotifierProvider<AuthViewModel, AsyncValue<User?>>((ref) {
-      return AuthViewModel(ref.watch(authRepositoryProvider));
+      return AuthViewModel(ref.watch(authRepositoryProvider), ref);
     });
