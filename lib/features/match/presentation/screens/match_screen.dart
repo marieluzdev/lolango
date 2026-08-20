@@ -410,6 +410,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               child: AppErrorState(
                 message: "Impossible de charger les likes.",
                 onRetry: () => ref.invalidate(pendingLikesProvider),
+                autoRetrySeconds: 5,
               ),
             ),
           ],
@@ -484,6 +485,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               child: AppErrorState(
                 message: "Impossible de charger les matchs.",
                 onRetry: () => ref.invalidate(matchesProvider),
+                autoRetrySeconds: 5,
               ),
             ),
           ],

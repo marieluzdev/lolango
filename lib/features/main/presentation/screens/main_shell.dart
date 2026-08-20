@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lolango_v2/core/network/connectivity_provider.dart';
+import 'package:lolango_v2/core/network/network_aware_provider.dart';
 import 'package:lolango_v2/core/utils/logger.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -40,6 +42,14 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupRealtimeSubscriptions();
       _checkPrivacyModal();
+      // Écoute la reconnexion réseau pour réinitialiser les canaux Realtime
+      ref.listenManual<bool>(isConnectedProvider, (previous, current) {
+        if (previous == false && current == true && mounted) {
+          AppLogger.d('[REALTIME] Network restored → re-subscribing Realtime channels.');
+          _teardownRealtimeSubscriptions();
+          _setupRealtimeSubscriptions();
+        }
+      });
     });
   }
 
@@ -149,16 +159,25 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         });
   }
 
-  @override
-  void dispose() {
+  void _teardownRealtimeSubscriptions() {
     _notificationsChannel?.unsubscribe();
     _interactionsChannel?.unsubscribe();
     _matchesChannel?.unsubscribe();
+    _notificationsChannel = null;
+    _interactionsChannel = null;
+    _matchesChannel = null;
+  }
+
+  @override
+  void dispose() {
+    _teardownRealtimeSubscriptions();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Maintient le networkAwareProvider actif pour toute la session
+    ref.watch(networkAwareProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark
         ? AppColors.backgroundDark

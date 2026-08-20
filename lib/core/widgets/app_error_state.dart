@@ -1,18 +1,61 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class AppErrorState extends StatelessWidget {
+class AppErrorState extends StatefulWidget {
   final String title;
   final String message;
   final VoidCallback onRetry;
+
+  /// Si renseigné, un countdown s'affiche et `onRetry` est appelé automatiquement
+  /// après [autoRetrySeconds] secondes.
+  final int? autoRetrySeconds;
 
   const AppErrorState({
     super.key,
     this.title = 'Oups, une erreur est survenue',
     required this.message,
     required this.onRetry,
+    this.autoRetrySeconds,
   });
+
+  @override
+  State<AppErrorState> createState() => _AppErrorStateState();
+}
+
+class _AppErrorStateState extends State<AppErrorState> {
+  Timer? _timer;
+  int _remaining = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoRetrySeconds != null && widget.autoRetrySeconds! > 0) {
+      _remaining = widget.autoRetrySeconds!;
+      _startTimer();
+    }
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _remaining--);
+      if (_remaining <= 0) {
+        timer.cancel();
+        widget.onRetry();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +85,7 @@ class AppErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              title,
+              widget.title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
@@ -52,15 +95,19 @@ class AppErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              message,
+              widget.message,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: textSecondary, height: 1.5),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: onRetry,
+              onPressed: widget.onRetry,
               icon: const Icon(LucideIcons.refreshCw, size: 18),
-              label: const Text('Réessayer'),
+              label: Text(
+                _remaining > 0
+                    ? 'Réessayer (${_remaining}s)'
+                    : 'Réessayer',
+              ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -77,3 +124,4 @@ class AppErrorState extends StatelessWidget {
     );
   }
 }
+
