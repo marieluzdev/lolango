@@ -14,6 +14,7 @@ import 'package:lolango_v2/core/widgets/reusable_modal_bottom_sheet.dart';
 import 'package:lolango_v2/core/widgets/app_empty_state.dart';
 import 'package:lolango_v2/core/widgets/app_error_state.dart';
 import 'package:lolango_v2/core/widgets/app_loading.dart';
+import 'package:lolango_v2/features/match/presentation/screens/match_celebration_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -60,6 +61,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
           ref.read(matchNotificationBadgeProvider.notifier).state++;
           ref.invalidate(matchesProvider);
+          final currentUser = ref.read(profileProvider).value;
+          if (currentUser != null && mounted) {
+            showGeneralDialog(
+              context: context,
+              pageBuilder: (ctx, _, __) => MatchCelebrationScreen(
+                currentUser: currentUser,
+                matchedUser: p,
+              ),
+            );
+          }
         }
       } else {
         await ref.read(interactionRepositoryProvider).passProfile(p.profile.id);

@@ -21,11 +21,12 @@ class ModalActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveColor =
         backgroundColor ??
         (isDangerous
             ? Colors.red.withValues(alpha: 0.1)
-            : Colors.black.withValues(alpha: 0.04));
+            : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04)));
     final effectiveTextColor = isDangerous ? Colors.red : textColor;
 
     return InkWell(

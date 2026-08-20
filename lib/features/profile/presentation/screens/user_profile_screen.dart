@@ -116,7 +116,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       socials: detailedP.socials,
       blurredSocials: detailedP.getBlurredSocials(false),
       interests: detailedP.interests,
-      showActionButtons: false,
+      showActionButtons: true,
+      onPass: () {},
+      onConnect: () {},
     );
   }
 }

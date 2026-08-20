@@ -126,11 +126,11 @@ class ProfileModel {
       username: m['username']?.toString() ?? '',
       age: age,
       city: () {
+        final locLabel = m['location_label']?.toString();
+        if (locLabel != null && locLabel.trim().isNotEmpty) return locLabel;
         final locCity = m['location_city']?.toString();
         if (locCity != null && locCity.trim().isNotEmpty) return locCity;
-        final c = m['city']?.toString();
-        if (c != null && c.trim().isNotEmpty) return c;
-        return m['location_label']?.toString();
+        return m['city']?.toString();
       }(),
       country: m['country']?.toString(),
       gender: m['gender']?.toString(),

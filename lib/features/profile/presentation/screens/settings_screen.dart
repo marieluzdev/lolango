@@ -387,6 +387,9 @@ void _showPrivacySettingsSheet(
                   const SizedBox(height: 16),
                   ...SocialVisibility.values.map((mode) {
                     final isSelected = selectedMode == mode;
+                    final selectedBg = isDark ? Colors.white : Colors.black;
+                    final selectedText = isDark ? Colors.black : Colors.white;
+                    final selectedTextSec = isDark ? Colors.black87 : Colors.white.withValues(alpha: 0.7);
                     final card = GestureDetector(
                       onTap: () => setSheetState(() => selectedMode = mode),
                       child: AnimatedContainer(
@@ -394,10 +397,10 @@ void _showPrivacySettingsSheet(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.black : surface,
+                          color: isSelected ? selectedBg : surface,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? Colors.black : border,
+                            color: isSelected ? selectedBg : border,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -412,7 +415,7 @@ void _showPrivacySettingsSheet(
                                       Text(
                                         mode.label,
                                         style: TextStyle(
-                                          color: isSelected ? Colors.white : textPrimary,
+                                          color: isSelected ? selectedText : textPrimary,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -422,7 +425,7 @@ void _showPrivacySettingsSheet(
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? Colors.white : primary,
+                                            color: isSelected ? (isDark ? Colors.black12 : Colors.white) : primary,
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Text(
@@ -441,7 +444,7 @@ void _showPrivacySettingsSheet(
                                   Text(
                                     mode.description,
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white.withValues(alpha: 0.7) : textSecondary,
+                                      color: isSelected ? selectedTextSec : textSecondary,
                                       fontSize: 12,
                                       height: 1.4,
                                     ),
@@ -450,7 +453,7 @@ void _showPrivacySettingsSheet(
                               ),
                             ),
                             if (isSelected)
-                              Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+                              Icon(Icons.check_circle_rounded, color: selectedText, size: 22),
                           ],
                         ),
                       ),

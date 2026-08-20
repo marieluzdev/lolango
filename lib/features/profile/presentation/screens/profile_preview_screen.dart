@@ -71,12 +71,14 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
                     maxWidth: 400,
                     maxHeight: 600,
                   ),
-                  child: const ProfileCard(
+                  child: ProfileCard(
                     name: 'Chargement',
                     age: 25,
                     city: 'Ville',
                     photoUrls: [],
-                    showActionButtons: false,
+                    showActionButtons: true,
+                    onPass: () {},
+                    onConnect: () {},
                   ),
                 ),
               ),
@@ -168,7 +170,9 @@ class _ProfilePreviewScreenState extends ConsumerState<ProfilePreviewScreen> {
       socials: detailedP.socials,
       blurredSocials: const {}, // User sees their own socials clearly
       interests: detailedP.interests,
-      showActionButtons: false,
+      showActionButtons: true,
+      onPass: () {},
+      onConnect: () {},
     );
   }
 }

@@ -824,7 +824,7 @@ class _ProfileCardState extends State<ProfileCard> {
 
               // Localisation
               if (widget.city != null && widget.city!.isNotEmpty)
-                _DetailRow(icon: Icons.location_on, text: widget.city!),
+                _DetailRow(icon: Icons.location_on, text: _formatCity(widget.city)),
 
               // Description / bio
               if (widget.bio != null && widget.bio!.isNotEmpty) ...[

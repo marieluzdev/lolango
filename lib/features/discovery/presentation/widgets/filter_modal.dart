@@ -94,129 +94,193 @@ class _FilterModalState extends State<FilterModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final border = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+
     // Return only the content; container and title are provided by the reusable modal.
-    return ChipTheme(
-      data: _chipTheme,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          Text('Âge', style: Theme.of(context).textTheme.titleMedium),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primaryLight,
-              thumbColor: AppColors.primaryLight,
-              overlayColor: AppColors.primaryLight.withValues(alpha: 0.15),
-              inactiveTrackColor: const Color(0xFFE0E0DE),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        Text('Âge', style: Theme.of(context).textTheme.titleMedium),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: AppColors.primaryLight,
+            thumbColor: AppColors.primaryLight,
+            overlayColor: AppColors.primaryLight.withValues(alpha: 0.15),
+            inactiveTrackColor: const Color(0xFFE0E0DE),
+          ),
+          child: RangeSlider(
+            values: _age,
+            min: 18,
+            max: 80,
+            divisions: 62,
+            labels: RangeLabels(
+              _age.start.round().toString(),
+              _age.end.round().toString(),
             ),
-            child: RangeSlider(
-              values: _age,
-              min: 18,
-              max: 80,
-              divisions: 62,
-              labels: RangeLabels(
-                _age.start.round().toString(),
-                _age.end.round().toString(),
-              ),
-              onChanged: (v) {
-                setState(() => _age = v);
+            onChanged: (v) {
+              setState(() => _age = v);
+              _notifyChanged();
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text('Sexe'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildFilterButton(
+              label: 'Tous',
+              isSelected: _gender == null,
+              onTap: () {
+                setState(() => _gender = null);
                 _notifyChanged();
               },
+              textPrimary: textPrimary,
+              surface: surface,
+              border: border,
+              primary: primary,
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text('Sexe'),
-          const SizedBox(height: 8),
-          Row(
+            _buildFilterButton(
+              label: 'Femmes',
+              isSelected: _gender == 'female',
+              onTap: () {
+                setState(() => _gender = 'female');
+                _notifyChanged();
+              },
+              textPrimary: textPrimary,
+              surface: surface,
+              border: border,
+              primary: primary,
+            ),
+            _buildFilterButton(
+              label: 'Hommes',
+              isSelected: _gender == 'male',
+              onTap: () {
+                setState(() => _gender = 'male');
+                _notifyChanged();
+              },
+              textPrimary: textPrimary,
+              surface: surface,
+              border: border,
+              primary: primary,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // City selection: use the real city from user profile if provided in initial
+        if (widget.userCity != null && widget.userCity!.trim().isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ChoiceChip(
-                label: const Text('Tous'),
-                selected: _gender == null,
-                onSelected: (_) {
-                  setState(() => _gender = null);
-                  _notifyChanged();
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                label: const Text('Femmes'),
-                selected: _gender == 'female',
-                onSelected: (_) {
-                  setState(() => _gender = 'female');
-                  _notifyChanged();
-                },
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                label: const Text('Hommes'),
-                selected: _gender == 'male',
-                onSelected: (_) {
-                  setState(() => _gender = 'male');
-                  _notifyChanged();
-                },
+              const Text('Localisation'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildFilterButton(
+                    label: 'Dans tout le pays',
+                    isSelected: _city == null,
+                    onTap: () {
+                      setState(() => _city = null);
+                      _notifyChanged();
+                    },
+                    textPrimary: textPrimary,
+                    surface: surface,
+                    border: border,
+                    primary: primary,
+                  ),
+                  _buildFilterButton(
+                    label: 'Dans ma ville',
+                    isSelected: _city != null,
+                    onTap: () {
+                      setState(() => _city = widget.userCity);
+                      _notifyChanged();
+                    },
+                    textPrimary: textPrimary,
+                    surface: surface,
+                    border: border,
+                    primary: primary,
+                  ),
+                ],
               ),
             ],
+          )
+        else
+          const SizedBox.shrink(),
+        const SizedBox(height: 12),
+        const Text('Réseaux sociaux'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: ['Instagram', 'Snapchat', 'TikTok'].map((label) {
+            final selected = _socials.contains(label.toLowerCase());
+            return _buildFilterButton(
+              label: label,
+              isSelected: selected,
+              onTap: () {
+                setState(() {
+                  if (selected) {
+                    _socials.remove(label.toLowerCase());
+                  } else {
+                    _socials.add(label.toLowerCase());
+                  }
+                });
+                _notifyChanged();
+              },
+              textPrimary: textPrimary,
+              surface: surface,
+              border: border,
+              primary: primary,
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildFilterButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color textPrimary,
+    required Color surface,
+    required Color border,
+    required Color primary,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? primary : surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 12),
-          // City selection: use the real city from user profile if provided in initial
-          if (widget.userCity != null && widget.userCity!.trim().isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Localisation'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Dans tout le pays'),
-                      selected: _city == null,
-                      onSelected: (_) {
-                        setState(() => _city = null);
-                        _notifyChanged();
-                      },
-                    ),
-                      ChoiceChip(
-                        label: const Text('Dans ma ville'),
-                      selected: _city != null,
-                      onSelected: (_) {
-                        setState(() => _city = widget.userCity);
-                        _notifyChanged();
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            )
-          else
-            const SizedBox.shrink(),
-          const SizedBox(height: 12),
-          const Text('Réseaux sociaux'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: ['Instagram', 'Snapchat', 'TikTok'].map((label) {
-              final selected = _socials.contains(label.toLowerCase());
-              return FilterChip(
-                label: Text(label),
-                selected: selected,
-                onSelected: (v) {
-                  setState(() {
-                    if (v) {
-                      _socials.add(label.toLowerCase());
-                    } else {
-                      _socials.remove(label.toLowerCase());
-                    }
-                  });
-                  _notifyChanged();
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          const SizedBox(height: 16),
-        ],
+        ),
       ),
     );
   }

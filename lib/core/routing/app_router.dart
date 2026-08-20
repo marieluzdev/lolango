@@ -13,6 +13,7 @@ import 'package:lolango_v2/features/profile/presentation/screens/profile_preview
 import 'package:lolango_v2/features/profile/presentation/screens/settings_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/screens/user_profile_screen.dart';
 import 'package:lolango_v2/features/profile/presentation/viewmodels/profile_status_provider.dart';
+import 'package:lolango_v2/features/messaging/presentation/screens/chat_screen.dart';
 
 
 final pendingFirstNameProvider = StateProvider<String?>((ref) => null);
@@ -124,6 +125,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final userId = state.pathParameters['id']!;
           final userName = state.extra as String?;
           return UserProfileScreen(userId: userId, userName: userName);
+        },
+      ),
+      GoRoute(
+        path: '/chat/:id',
+        builder: (context, state) {
+          final conversationId = state.pathParameters['id']!;
+          return ChatScreen(conversationId: conversationId);
         },
       ),
     ],
