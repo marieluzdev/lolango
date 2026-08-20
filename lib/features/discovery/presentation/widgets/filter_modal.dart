@@ -177,8 +177,8 @@ class _FilterModalState extends State<FilterModal> {
                         _notifyChanged();
                       },
                     ),
-                    ChoiceChip(
-                      label: Text('Dans ma ville (${widget.userCity})'),
+                      ChoiceChip(
+                        label: const Text('Dans ma ville'),
                       selected: _city != null,
                       onSelected: (_) {
                         setState(() => _city = widget.userCity);

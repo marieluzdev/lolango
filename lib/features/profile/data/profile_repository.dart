@@ -34,13 +34,32 @@ class ProfileRepository {
   }
 
   Future<bool> hasSeenPrivacyModal() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('privacy_modal_seen') ?? false;
+    final user = supabase.auth.currentUser;
+    if (user == null) return false;
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select('privacy_modal_seen')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (response == null) return false;
+      return response['privacy_modal_seen'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> markPrivacyModalSeen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('privacy_modal_seen', true);
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    try {
+      await supabase
+          .from('profiles')
+          .update({'privacy_modal_seen': true})
+          .eq('id', user.id);
+    } catch (_) {
+      // Ignorer l'erreur silencieusement
+    }
   }
 
   Future<String?> fetchSocialVisibility() async {

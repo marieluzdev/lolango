@@ -436,6 +436,28 @@ class _ProfileCardState extends State<ProfileCard> {
     );
   }
 
+  String _formatCity(String? fullAddress) {
+    if (fullAddress == null || fullAddress.trim().isEmpty) return '';
+    final parts = fullAddress.split(',');
+    if (parts.length > 2) {
+      final country = parts.last.trim();
+      var cityPart = parts[parts.length - 2].trim();
+      
+      // Si l'avant-dernière partie est un code postal (uniquement des chiffres), on prend la précédente
+      if (RegExp(r'^\d+$').hasMatch(cityPart) && parts.length > 3) {
+        cityPart = parts[parts.length - 3].trim();
+      }
+
+      // Nettoyer les préfixes administratifs courants
+      cityPart = cityPart.replaceAll(RegExp(r'^Région de\s+', caseSensitive: false), '')
+                         .replaceAll(RegExp(r'^Region of\s+', caseSensitive: false), '')
+                         .replaceAll(RegExp(r'^Region de\s+', caseSensitive: false), '');
+      
+      return '$cityPart, $country';
+    }
+    return fullAddress;
+  }
+
   // -------------------------------------------------------------------------
   // Onglet 1 : photo de fond + nom + âge + intérêts + réseaux + boutons
   // -------------------------------------------------------------------------
@@ -450,6 +472,7 @@ class _ProfileCardState extends State<ProfileCard> {
     final displayName = widget.age != null
         ? '${widget.name}, ${widget.age}'
         : widget.name;
+    final displayCity = _formatCity(widget.city);
 
     return Stack(
       fit: StackFit.expand,
@@ -502,7 +525,7 @@ class _ProfileCardState extends State<ProfileCard> {
                 ),
 
                 // Ville
-                if (widget.city != null && widget.city!.isNotEmpty) ...[
+                if (displayCity.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -514,7 +537,7 @@ class _ProfileCardState extends State<ProfileCard> {
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          widget.city!,
+                          displayCity,
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 15,

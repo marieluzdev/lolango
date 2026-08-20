@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -313,7 +314,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final p = pDetailed.profile;
-    final socials = pDetailed.filteredSocials(false);
+    final socials = pDetailed.socials ?? {};
+    final blurredSocials = pDetailed.getBlurredSocials(false);
 
     showReusableModalBottomSheet(
       context: context,
@@ -333,15 +335,30 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           ),
           const SizedBox(height: 12),
           ...socials.entries.map((e) {
-            return _SocialRow(
+            final isBlurred = blurredSocials.contains(e.key);
+            Widget row = _SocialRow(
               platform: e.key,
-              username: e.value,
+              username: isBlurred ? '••••••••' : e.value,
               theme: theme,
-              onTap: () {
+              onTap: isBlurred ? null : () {
                 Navigator.pop(context);
                 _showSocialDetailModal(context, e.key, e.value, theme: theme);
               },
             );
+
+            if (isBlurred) {
+              row = ClipRect(
+                child: ImageFiltered(
+                  imageFilter: ui.ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Opacity(
+                    opacity: 0.8,
+                    child: row,
+                  ),
+                ),
+              );
+            }
+
+            return row;
           }),
           const SizedBox(height: 8),
         ] else ...[
