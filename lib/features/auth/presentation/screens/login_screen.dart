@@ -90,7 +90,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // IMAGE
             // ============================================================
             Expanded(
-              flex: 62,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -125,94 +124,90 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // ============================================================
             // CONTENU
             // ============================================================
-            Expanded(
-              flex: 38,
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 14),
 
-                      // ==================================================
-                      // TITRE
-                      // ==================================================
-                      Text(
-                        'Bienvenue sur Lolango',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: textPrimary,
-                          letterSpacing: -0.7,
-                          height: 1.15,
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // ==================================================
-                      // DESCRIPTION
-                      // ==================================================
-                      Text(
-                        'Découvrez de nouveaux profils et faites des '
-                        'rencontres authentiques.\n\n'
-                        'Connectez-vous, échangez vos passions et '
-                        'partagez vos réseaux en toute sécurité.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          height: 1.45,
-                          color: textSecondary,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // ==================================================
-                      // BOUTON GOOGLE
-                      // ==================================================
-                      AppButton(
-                        label: 'Continuer avec Google',
-                        onPressed: _isLoading ? null : _handleGoogleSignIn,
-                        isLoading: _isLoading,
-                        isFullWidth: true,
-                        type: AppButtonType.outline,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        prefixWidget: Image.asset(
-                          'assets/icons/google.png',
-                          width: 22,
-                          height: 22,
-                        ),
-                      ),
-
-                      // ==================================================
-                      // ERREUR
-                      // ==================================================
-                      if (authState.hasError) ...[
-                        const SizedBox(height: 14),
-
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: errorColor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            authState.error.toString(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: errorColor, fontSize: 13),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 8),
-                    ],
+                  // ==================================================
+                  // TITRE
+                  // ==================================================
+                  Text(
+                    'Bienvenue sur Lolango',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: textPrimary,
+                      letterSpacing: -0.7,
+                      height: 1.15,
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 10),
+
+                  // ==================================================
+                  // DESCRIPTION
+                  // ==================================================
+                  Text(
+                    'Découvrez de nouveaux profils et faites des '
+                    'rencontres authentiques.\n\n'
+                    'Connectez-vous, échangez vos passions et '
+                    'partagez vos réseaux en toute sécurité.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      height: 1.45,
+                      color: textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  // ==================================================
+                  // BOUTON GOOGLE
+                  // ==================================================
+                  AppButton(
+                    label: 'Continuer avec Google',
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
+                    isLoading: _isLoading,
+                    isFullWidth: true,
+                    type: AppButtonType.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    prefixWidget: Image.asset(
+                      'assets/icons/google.png',
+                      width: 22,
+                      height: 22,
+                    ),
+                  ),
+
+                  // ==================================================
+                  // ERREUR
+                  // ==================================================
+                  if (authState.hasError) ...[
+                    const SizedBox(height: 14),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: errorColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        authState.error.toString(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: errorColor, fontSize: 13),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
           ],
