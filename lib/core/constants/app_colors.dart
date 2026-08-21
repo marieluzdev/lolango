@@ -6,80 +6,82 @@ class AppColors {
   // ============================================================
 
   /// Couleur principale de Lolango
-  static const Color primaryLight = Color(0xFFFFE44D);
+  static const Color primaryLight = Color(0xFF8FA98A);
 
-  /// Couleur secondaire : noir doux / charcoal
-  static const Color secondaryLight = Color(0xFF242424);
+  /// Couleur secondaire / accent
+  static const Color secondaryLight = Color(0xFFD9795B);
 
   /// Fond général
-  static const Color backgroundLight = Color(0xFFFFFFFF);
+  static const Color backgroundLight = Color(0xFFFAF9F6);
 
   /// Surface : cartes, champs, sections légèrement détachées
-  static const Color surfaceLight = Color(0xFFF7F7F5);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
 
   /// Texte principal
-  static const Color textPrimaryLight = Color(0xFF1F1F1F);
+  static const Color textPrimaryLight = Color(0xFF202522);
 
   /// Texte secondaire
-  static const Color textSecondaryLight = Color(0xFF555555);
+  static const Color textSecondaryLight = Color(0xFF68716B);
 
   /// Texte discret
-  static const Color textTertiaryLight = Color(0xFF8A8A8A);
+  static const Color textTertiaryLight = Color(0xFF9A9F9B);
 
   /// Bordures / séparateurs
-  static const Color borderLight = Color(0xFFE8E8E5);
+  static const Color borderLight = Color(0xFFE8E9E5);
 
   /// Succès
-  static const Color successLight = Color(0xFF3FA56A);
+  static const Color successLight = Color(0xFF4F9D69);
 
   /// Erreur
-  static const Color errorLight = Color(0xFFD9534F);
+  static const Color errorLight = Color(0xFFD95C5C);
 
   /// Éléments de navigation / zones neutres
-  static const Color navbarLight = Color(0xFFF7F7F5);
+  static const Color navbarLight = Color(0xFFFAF9F6);
 
   /// Badge / compteur
-  static const Color counterBackgroundLight = Color(0xFF242424);
+  static const Color counterBackgroundLight = Color(0xFFD9795B);
+
   static const Color counterTextLight = Color(0xFFFFFFFF);
 
   // ============================================================
   // DARK THEME
   // ============================================================
 
-  /// Identité principale conservée en dark mode
-  static const Color primaryDark = Color(0xFFFFE44D);
+  /// Identité principale adaptée au dark mode
+  static const Color primaryDark = Color(0xFF9DBA98);
 
-  /// Noir doux utilisé pour les éléments secondaires
-  static const Color secondaryDark = Color(0xFFE8E8E8);
+  /// Couleur secondaire / accent adaptée au dark mode
+  static const Color secondaryDark = Color(0xFFE58A6C);
 
   /// Fond général
-  static const Color backgroundDark = Color(0xFF111111);
+  static const Color backgroundDark = Color(0xFF151916);
 
   /// Surface / cartes
-  static const Color surfaceDark = Color(0xFF1C1C1C);
+  static const Color surfaceDark = Color(0xFF1E241F);
 
   /// Texte principal
-  static const Color textPrimaryDark = Color(0xFFF5F5F5);
+  static const Color textPrimaryDark = Color(0xFFF3F5F2);
 
   /// Texte secondaire
-  static const Color textSecondaryDark = Color(0xFFC7C7C7);
+  static const Color textSecondaryDark = Color(0xFFA8B0AA);
 
   /// Texte discret
-  static const Color textTertiaryDark = Color(0xFF929292);
+  static const Color textTertiaryDark = Color(0xFF7F8881);
 
   /// Bordures
-  static const Color borderDark = Color(0xFF2A2A2A);
+  static const Color borderDark = Color(0xFF303730);
 
   /// Succès
-  static const Color successDark = Color(0xFF5CC784);
+  static const Color successDark = Color(0xFF67B77F);
 
   /// Erreur
-  static const Color errorDark = Color(0xFFF26A67);
+  static const Color errorDark = Color(0xFFE57373);
 
   /// Navigation
-  static const Color navbarDark = Color(0xFF191919);
+  static const Color navbarDark = Color(0xFF1A201B);
 
   /// Badge / compteur
-  static const Color counterBackgroundDark = Color(0xFFFFE44D);
-  static const Color counterTextDark = Color(0xFF1F1F1F);
+  static const Color counterBackgroundDark = Color(0xFFE58A6C);
+
+  static const Color counterTextDark = Color(0xFF202522);
 }

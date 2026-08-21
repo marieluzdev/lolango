@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/core/widgets/app_button.dart';
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
@@ -36,8 +37,15 @@ class AppEmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: surface, shape: BoxShape.circle),
-              child: Icon(icon, size: 48, color: textSecondary),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.secondaryDark.withValues(alpha: 0.1) : AppColors.secondaryLight.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon, 
+                size: 48, 
+                color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
@@ -57,21 +65,10 @@ class AppEmptyState extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 32),
-              ElevatedButton(
+              AppButton(
+                label: actionLabel!,
                 onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: Text(
-                  actionLabel!,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                type: AppButtonType.primary,
               ),
             ],
           ],

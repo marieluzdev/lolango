@@ -73,11 +73,11 @@ class _AppButtonState extends State<AppButton> {
     switch (widget.type) {
       case AppButtonType.primary:
         backgroundColor = primaryColor;
-        textColor = Colors.black; // Primary is yellow in Lolango
+        textColor = Colors.white;
         break;
       case AppButtonType.secondary:
         backgroundColor = secondaryColor;
-        textColor = Colors.white; // Secondary is primary red
+        textColor = Colors.white;
         break;
       case AppButtonType.outline:
         backgroundColor = Colors.transparent;
@@ -104,7 +104,7 @@ class _AppButtonState extends State<AppButton> {
       side: borderSide,
     );
 
-    Widget content = widget.isLoading || _isProcessing
+    Widget content = widget.isLoading
         ? SizedBox(
             width: 20,
             height: 20,

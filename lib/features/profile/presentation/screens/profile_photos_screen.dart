@@ -120,7 +120,7 @@ class _ProfilePhotosScreenState extends ConsumerState<ProfilePhotosScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.errorDark : AppColors.errorLight),
             child: const Text('Supprimer'),
           ),
         ],

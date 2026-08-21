@@ -562,18 +562,28 @@ class _ProfileCardState extends State<ProfileCard> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withAlpha((0.18 * 255).round()),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: Colors.white.withAlpha((0.35 * 255).round()),
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [AppColors.primaryDark, AppColors.primaryDark.withOpacity(0.8)]
+                                : [AppColors.primaryLight, AppColors.primaryLight.withOpacity(0.8)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isDark ? AppColors.primaryDark : AppColors.primaryLight).withOpacity(0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Text(
                           interest,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       );
@@ -650,8 +660,8 @@ class _ProfileCardState extends State<ProfileCard> {
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
                             backgroundColor: isDark
-                                ? AppColors.primaryDark
-                                : AppColors.primaryLight,
+                                ? AppColors.secondaryDark
+                                : AppColors.secondaryLight,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             elevation: 4,
                             shape: RoundedRectangleBorder(

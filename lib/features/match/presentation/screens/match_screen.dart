@@ -186,7 +186,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
                               width: 4,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: primary,
+                                color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -309,9 +309,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: isSelected
-                                          ? (isDark
-                                                ? Colors.black
-                                                : Colors.white)
+                                          ? (isDark ? Colors.black : Colors.white)
                                           : textPrimary,
                                       fontWeight: isSelected
                                           ? FontWeight.w700
@@ -329,7 +327,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
+                                        color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
@@ -352,7 +350,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
+                                        color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
@@ -447,6 +445,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
               physics: AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverFillRemaining(
+                  hasScrollBody: false,
                   child: AppEmptyState(
                     icon: LucideIcons.heart,
                     title: 'Aucun like',
@@ -570,6 +569,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
               physics: AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverFillRemaining(
+                  hasScrollBody: false,
                   child: AppEmptyState(
                     icon: LucideIcons.messageCircleHeart,
                     title: 'Aucun match',
@@ -706,7 +706,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
         ModalActionTile(
           icon: LucideIcons.flag,
           label: 'Signaler',
-          textColor: Colors.red,
+          textColor: isDark ? AppColors.errorDark : AppColors.errorLight,
           isDangerous: true,
           onTap: () {
             Navigator.of(context).pop();

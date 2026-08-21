@@ -78,6 +78,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     final textSecondary =
         isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final counterBg = isDark ? AppColors.counterBackgroundDark : AppColors.counterBackgroundLight;
 
     final conversationsAsync = ref.watch(conversationsProvider);
     final conversationsCount = conversationsAsync.valueOrNull?.length ?? 0;
@@ -128,7 +129,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                               width: 4,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: primary,
+                                color: counterBg,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -179,8 +180,8 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
               child: Stack(
                 children: [
                   RefreshIndicator(
-                    onRefresh: () async =>
-                        ref.invalidate(conversationsProvider),
+                    onRefresh: () =>
+                        ref.read(conversationsProvider.notifier).refresh(),
                     child: conversationsAsync.when(
                       data: (conversations) {
                         final filtered = conversations.where((c) {
@@ -194,6 +195,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                             physics: const AlwaysScrollableScrollPhysics(),
                             slivers: [
                               SliverFillRemaining(
+                                hasScrollBody: false,
                                 child: AppEmptyState(
                                   icon: LucideIcons.messageCircle,
                                   title: _searchQuery.isNotEmpty
@@ -243,7 +245,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                       error: (e, _) => AppErrorState(
                         message: 'Impossible de charger les messages.',
                         onRetry: () =>
-                            ref.invalidate(conversationsProvider),
+                            ref.read(conversationsProvider.notifier).refresh(),
                       ),
                     ),
                   ),
@@ -451,6 +453,8 @@ class _ConversationTile extends StatelessWidget {
     final textSecondary =
         isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final counterBg = isDark ? AppColors.counterBackgroundDark : AppColors.counterBackgroundLight;
+    final counterText = isDark ? AppColors.counterTextDark : AppColors.counterTextLight;
 
     final otherUser = conversation.otherUser.profile;
     final lastMsg = conversation.lastMessage;
@@ -525,7 +529,7 @@ class _ConversationTile extends StatelessWidget {
                           timeStr,
                           style: TextStyle(
                             color: conversation.unreadCount > 0
-                                ? primary
+                                ? counterBg
                                 : textSecondary,
                             fontSize: 12,
                             fontWeight: conversation.unreadCount > 0
@@ -563,13 +567,13 @@ class _ConversationTile extends StatelessWidget {
                           margin: const EdgeInsets.only(left: 8),
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: primary,
+                            color: counterBg,
                             shape: BoxShape.circle,
                           ),
                           child: Text(
                             '${conversation.unreadCount}',
-                            style: const TextStyle(
-                              color: Colors.black,
+                            style: TextStyle(
+                              color: counterText,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),

@@ -220,7 +220,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                                 style: TextStyle(color: textPrimary),
                               ),
                               activeColor: primary,
-                              checkColor: Colors.black,
+                              checkColor: Colors.white,
                               contentPadding: EdgeInsets.zero,
                               controlAffinity:
                                   ListTileControlAffinity.leading,
@@ -261,7 +261,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                       onPressed: _isSaving ? null : _handleConfirm,
                       style: FilledButton.styleFrom(
                         backgroundColor: secondary,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -273,7 +273,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.black,
+                                  Colors.white,
                                 ),
                               ),
                             )
@@ -314,10 +314,10 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : surface,
+          color: isSelected ? primary : surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.black : border,
+            color: isSelected ? primary : border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -354,7 +354,7 @@ class _PrivacyModalScreenState extends ConsumerState<PrivacyModalScreen> {
                           child: Text(
                             'Défaut',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: isSelected ? primary : Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),

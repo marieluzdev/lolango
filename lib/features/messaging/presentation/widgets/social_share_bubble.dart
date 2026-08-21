@@ -24,6 +24,7 @@ class SocialShareBubble extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final secondary = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
     final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
@@ -139,7 +140,7 @@ class SocialShareBubble extends StatelessWidget {
                             'Ouvrir',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: primary,
+                              color: secondary,
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
@@ -148,7 +149,7 @@ class SocialShareBubble extends StatelessWidget {
                           Icon(
                             LucideIcons.arrowUpRight,
                             size: 16,
-                            color: primary,
+                            color: secondary,
                           ),
                         ],
                       ),

@@ -174,9 +174,9 @@ class ProfileSocialsSection extends ConsumerWidget {
                     const SizedBox(height: 16),
                     ...SocialVisibility.values.map((mode) {
                       final isSelected = selectedMode == mode;
-                      final selectedBg = isDark ? Colors.white : Colors.black;
-                      final selectedText = isDark ? Colors.black : Colors.white;
-                      final selectedTextSec = isDark ? Colors.black87 : Colors.white.withValues(alpha: 0.7);
+                      final selectedBg = primary;
+                      final selectedText = Colors.white;
+                      final selectedTextSec = Colors.white.withValues(alpha: 0.7);
                       final card = GestureDetector(
                         onTap: () => setSheetState(() => selectedMode = mode),
                         child: AnimatedContainer(
@@ -212,13 +212,13 @@ class ProfileSocialsSection extends ConsumerWidget {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: isSelected ? (isDark ? Colors.black12 : Colors.white) : primary,
+                                              color: isSelected ? Colors.white : primary,
                                               borderRadius: BorderRadius.circular(10),
                                             ),
                                             child: Text(
                                               'Défaut',
                                               style: TextStyle(
-                                                color: Colors.black,
+                                                color: isSelected ? primary : Colors.white,
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -271,7 +271,7 @@ class ProfileSocialsSection extends ConsumerWidget {
                                       },
                                       title: Text(platform, style: TextStyle(color: textPrimary)),
                                       activeColor: primary,
-                                      checkColor: Colors.black,
+                                      checkColor: Colors.white,
                                       contentPadding: EdgeInsets.zero,
                                       controlAffinity: ListTileControlAffinity.leading,
                                     ),
@@ -337,7 +337,7 @@ class ProfileSocialsSection extends ConsumerWidget {
                               },
                               style: FilledButton.styleFrom(
                                 backgroundColor: primary,
-                                foregroundColor: Colors.black,
+                                foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -494,7 +494,7 @@ class ProfileSocialsSection extends ConsumerWidget {
                                 },
                                 style: FilledButton.styleFrom(
                                   backgroundColor: primary,
-                                  foregroundColor: Colors.black,
+                                  foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),
                                   ),

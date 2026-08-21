@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/core/widgets/app_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AppErrorState extends StatefulWidget {
@@ -77,10 +78,10 @@ class _AppErrorStateState extends State<AppErrorState> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: surface, shape: BoxShape.circle),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.alertCircle,
                 size: 48,
-                color: Colors.redAccent,
+                color: isDark ? AppColors.errorDark : AppColors.errorLight,
               ),
             ),
             const SizedBox(height: 24),
@@ -100,23 +101,11 @@ class _AppErrorStateState extends State<AppErrorState> {
               style: TextStyle(fontSize: 16, color: textSecondary, height: 1.5),
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
+            AppButton(
               onPressed: widget.onRetry,
-              icon: const Icon(LucideIcons.refreshCw, size: 18),
-              label: Text(
-                _remaining > 0
-                    ? 'Réessayer (${_remaining}s)'
-                    : 'Réessayer',
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
+              icon: LucideIcons.refreshCw,
+              label: _remaining > 0 ? 'Réessayer (${_remaining}s)' : 'Réessayer',
+              type: AppButtonType.primary,
             ),
           ],
         ),

@@ -100,6 +100,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen>
     final discoveryAsync = ref.watch(discoveryNotifierProvider);
     final filterState = ref.watch(discoveryFilterProvider);
 
+
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
@@ -251,6 +252,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen>
                             physics: const AlwaysScrollableScrollPhysics(),
                             slivers: [
                               SliverFillRemaining(
+                                hasScrollBody: false,
                                 child: AppEmptyState(
                                   icon: LucideIcons.users,
                                   title: 'Aucun profil',
@@ -535,8 +537,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen>
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: isDark
-                      ? AppColors.primaryDark
-                      : AppColors.primaryLight,
+                      ? AppColors.secondaryDark
+                      : AppColors.secondaryLight,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 4,
                   shape: RoundedRectangleBorder(

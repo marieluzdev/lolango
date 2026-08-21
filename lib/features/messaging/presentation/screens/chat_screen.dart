@@ -10,6 +10,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lolango_v2/features/messaging/presentation/widgets/social_share_bubble.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -46,8 +47,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             column: 'conversation_id',
             value: widget.conversationId,
           ),
-          callback: (payload) {
-            ref.invalidate(messagesProvider(widget.conversationId));
+          callback: (payload) async {
+            // Refresh silencieux : les messages existants restent visibles
+            await ref
+                .read(messagesProvider(widget.conversationId).notifier)
+                .refresh();
             ref.read(messagingRepositoryProvider).markAsRead(widget.conversationId);
           },
         )
@@ -73,7 +77,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       text,
     );
 
-    ref.invalidate(messagesProvider(widget.conversationId));
+    // Refresh silencieux après envoi (pas de spinner)
+    ref
+        .read(messagesProvider(widget.conversationId).notifier)
+        .refresh();
 
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -252,7 +259,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              // Skeleton : imite des bulles de messages pendant le 1er chargement
+              loading: () => _MessagesSkeleton(isDark: isDark),
               error: (e, _) => Center(child: Text('Erreur: $e')),
             ),
           ),
@@ -688,5 +696,91 @@ class _PlatformIcon extends StatelessWidget {
           child: Icon(LucideIcons.link, size: size * 0.6, color: Colors.black87),
         );
     }
+  }
+}
+
+// ── Skeleton de messages ──────────────────────────────────────────────────────
+
+class _MessagesSkeleton extends StatelessWidget {
+  final bool isDark;
+
+  const _MessagesSkeleton({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final skeletonBase = isDark ? const Color(0xFF2A2F2B) : const Color(0xFFEEEEEE);
+    final skeletonHighlight = isDark ? const Color(0xFF3A3F3B) : const Color(0xFFF5F5F5);
+
+    // Définit des "gabarits" de bulles : (isMe, largeurFraction)
+    const bubbles = [
+      (false, 0.55),
+      (true, 0.45),
+      (false, 0.70),
+      (true, 0.35),
+      (false, 0.50),
+      (true, 0.60),
+      (false, 0.40),
+      (true, 0.50),
+    ];
+
+    return Skeletonizer(
+      enabled: true,
+      effect: ShimmerEffect(
+        baseColor: skeletonBase,
+        highlightColor: skeletonHighlight,
+        duration: const Duration(milliseconds: 1200),
+      ),
+      child: ListView.builder(
+        reverse: true,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        itemCount: bubbles.length,
+        itemBuilder: (context, index) {
+          final (isMe, widthFraction) = bubbles[index];
+          final screenWidth = MediaQuery.of(context).size.width;
+          final bubbleWidth = screenWidth * widthFraction;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Avatar placeholder pour les messages reçus
+                if (!isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8, bottom: 2),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: skeletonBase,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                // Bulle placeholder
+                Container(
+                  width: bubbleWidth,
+                  height: 44 + (index % 3) * 12.0,
+                  decoration: BoxDecoration(
+                    color: isMe ? surface : skeletonBase,
+                    borderRadius: BorderRadius.circular(20).copyWith(
+                      bottomRight: isMe
+                          ? const Radius.circular(4)
+                          : const Radius.circular(20),
+                      bottomLeft: !isMe
+                          ? const Radius.circular(4)
+                          : const Radius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }

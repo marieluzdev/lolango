@@ -98,20 +98,20 @@ class _MatchCelebrationScreenState extends State<MatchCelebrationScreen>
                     opacity: _fadeAnimation,
                     child: ScaleTransition(
                       scale: _scaleAnimation,
-                      child: const Column(
+                      child: Column(
                         children: [
                           Text(
                             "C'est un match !",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.primaryLight,
+                              color: Colors.white,
                               letterSpacing: -1,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 12),
-                          Text(
+                          const SizedBox(height: 12),
+                          const Text(
                             "Vous vous plaisez mutuellement",
                             style: TextStyle(
                               fontSize: 16,
@@ -169,11 +169,11 @@ class _MatchCelebrationScreenState extends State<MatchCelebrationScreen>
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
+                              color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primaryLight.withOpacity(0.4),
+                                  color: Colors.white.withOpacity(0.6),
                                   blurRadius: 20,
                                   spreadRadius: 5,
                                 )
@@ -211,12 +211,13 @@ class _MatchCelebrationScreenState extends State<MatchCelebrationScreen>
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryLight,
-                              foregroundColor: Colors.black,
+                              backgroundColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                              foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
-                              elevation: 0,
+                              elevation: 10,
+                              shadowColor: Colors.black45,
                             ),
                             child: const Text(
                               "Envoyer un message",
@@ -356,6 +357,7 @@ class _Particle {
     
     final colors = [
       AppColors.primaryLight,
+      AppColors.secondaryLight,
       const Color(0xFFFE3C72),
       Colors.white,
       Colors.blue,

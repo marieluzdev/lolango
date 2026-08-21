@@ -1171,7 +1171,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: border),
               ),
-              child: const Icon(LucideIcons.mapPin, size: 64, color: Colors.redAccent),
+              child: Icon(LucideIcons.mapPin, size: 64, color: isDark ? AppColors.secondaryDark : AppColors.secondaryLight),
             ),
             const SizedBox(height: 32),
             if (_locationError != null) ...[

@@ -180,10 +180,14 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   Widget build(BuildContext context) {
     // Maintient le networkAwareProvider actif pour toute la session
     ref.watch(networkAwareProvider);
+    final matchBadgeCount = ref.watch(matchNotificationBadgeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
+    final primary = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final navbarBg = isDark ? AppColors.navbarDark : AppColors.navbarLight;
 
     // Items de navigation (identiques à v1)
     final navItems = [
@@ -204,7 +208,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
       bottomNavigationBar: ClipRect(
         child: Container(
           decoration: BoxDecoration(
-            color: background,
+            color: navbarBg,
           ),
           padding: EdgeInsets.only(
             top: 8,
@@ -215,11 +219,20 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
             children: navItems.map((item) {
               final isSelected = _selectedIndex == item.index;
 
-              final iconColor = isDark
-                  ? (isSelected ? Colors.black : Colors.white)
-                  : (isSelected ? Colors.white : Colors.black);
+              final iconColor = isSelected
+                  ? Colors.white // High contrast on both primaryLight and primaryDark
+                  : textSecondary;
 
               Widget iconWidget = Icon(item.icon, size: 22, color: iconColor);
+
+              if (item.index == 2 && matchBadgeCount > 0) {
+                iconWidget = Badge(
+                  backgroundColor: isDark ? AppColors.secondaryDark : AppColors.secondaryLight,
+                  textColor: Colors.white,
+                  label: Text(matchBadgeCount.toString()),
+                  child: iconWidget,
+                );
+              }
 
               return GestureDetector(
                 onTap: () => setState(() => _selectedIndex = item.index),
@@ -237,7 +250,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? (isDark ? Colors.white : Colors.black)
+                            ? primary
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(22),
                       ),

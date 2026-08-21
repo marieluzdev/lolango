@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:lolango_v2/core/constants/app_colors.dart';
 /// Tile réutilisable pour une action dans un modal
 class ModalActionTile extends StatelessWidget {
   const ModalActionTile({
@@ -25,9 +25,9 @@ class ModalActionTile extends StatelessWidget {
     final effectiveColor =
         backgroundColor ??
         (isDangerous
-            ? Colors.red.withValues(alpha: 0.1)
+            ? (Theme.of(context).brightness == Brightness.dark ? AppColors.errorDark : AppColors.errorLight).withValues(alpha: 0.1)
             : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04)));
-    final effectiveTextColor = isDangerous ? Colors.red : textColor;
+    final effectiveTextColor = isDangerous ? (Theme.of(context).brightness == Brightness.dark ? AppColors.errorDark : AppColors.errorLight) : textColor;
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),

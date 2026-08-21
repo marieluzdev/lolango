@@ -250,7 +250,7 @@ class SettingsScreen extends ConsumerWidget {
                   onPressed: signOut,
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFFFEBEE), // very light red
-                    foregroundColor: Colors.red,
+                    foregroundColor: isDark ? AppColors.errorDark : AppColors.errorLight,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
@@ -387,9 +387,9 @@ void _showPrivacySettingsSheet(
                   const SizedBox(height: 16),
                   ...SocialVisibility.values.map((mode) {
                     final isSelected = selectedMode == mode;
-                    final selectedBg = isDark ? Colors.white : Colors.black;
-                    final selectedText = isDark ? Colors.black : Colors.white;
-                    final selectedTextSec = isDark ? Colors.black87 : Colors.white.withValues(alpha: 0.7);
+                    final selectedBg = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+                    final selectedText = Colors.white;
+                    final selectedTextSec = Colors.white.withOpacity(0.8);
                     final card = GestureDetector(
                       onTap: () => setSheetState(() => selectedMode = mode),
                       child: AnimatedContainer(
@@ -425,13 +425,15 @@ void _showPrivacySettingsSheet(
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? (isDark ? Colors.black12 : Colors.white) : primary,
+                                            color: isSelected
+                                                ? Colors.white.withOpacity(0.25)
+                                                : (isDark ? AppColors.secondaryDark : AppColors.secondaryLight),
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Text(
                                             'Défaut',
                                             style: TextStyle(
-                                              color: Colors.black,
+                                              color: Colors.white,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -484,7 +486,7 @@ void _showPrivacySettingsSheet(
                                     },
                                     title: Text(platform, style: TextStyle(color: textPrimary)),
                                     activeColor: primary,
-                                    checkColor: Colors.black,
+                                    checkColor: Colors.white,
                                     contentPadding: EdgeInsets.zero,
                                     controlAffinity: ListTileControlAffinity.leading,
                                   ),
@@ -559,7 +561,7 @@ void _showPrivacySettingsSheet(
                             },
                             style: FilledButton.styleFrom(
                               backgroundColor: primary,
-                              foregroundColor: Colors.black,
+                              foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -731,7 +733,7 @@ Future<bool> _showEditNetworksModal(
                             },
                             style: FilledButton.styleFrom(
                               backgroundColor: primary,
-                              foregroundColor: Colors.black,
+                              foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),

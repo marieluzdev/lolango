@@ -72,8 +72,8 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/images/icon_app.png"
 
 flutter_native_splash:
-  color: "#FFE44D"
-  color_dark: "#0D0D0D"
+  color: "#FFFFFF"
+  color_dark: "#151916"
   image: "assets/images/native_splash_light.png"
   image_dark: "assets/images/native_splash_dark.png"
   android: true
@@ -81,5 +81,5 @@ flutter_native_splash:
   android_12:
     image: "assets/images/native_splash_light.png"
     image_dark: "assets/images/native_splash_dark.png"
-    color: "#FFE44D"
-    color_dark: "#0D0D0D"
+    color: "#FFFFFF"
+    color_dark: "#151916"

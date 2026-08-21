@@ -10,7 +10,7 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primaryLight,
         primary: AppColors.primaryLight,
-        onPrimary: Colors.black,
+        onPrimary: Colors.white,
         secondary: AppColors.secondaryLight,
         surface: AppColors.surfaceLight,
         error: AppColors.errorLight,
@@ -31,22 +31,27 @@ class AppTheme {
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              Brightness.dark, // icônes noires (light mode)
-          statusBarBrightness: Brightness.light, // iOS
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceLight,
-        selectedColor: AppColors.primaryLight, // jaune opaque
+        selectedColor: AppColors.primaryLight.withValues(alpha: 0.3),
         disabledColor: AppColors.surfaceLight,
         labelStyle: const TextStyle(color: AppColors.textPrimaryLight, fontWeight: FontWeight.w500),
-        secondaryLabelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        secondarySelectedColor: AppColors.primaryLight,
+        secondaryLabelStyle: const TextStyle(color: AppColors.textPrimaryLight, fontWeight: FontWeight.w600),
+        secondarySelectedColor: AppColors.primaryLight.withValues(alpha: 0.3),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: const BorderSide(color: AppColors.borderLight),
         showCheckmark: false,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primaryLight,
+        ),
       ),
     );
   }
@@ -57,7 +62,7 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primaryDark,
         primary: AppColors.primaryDark,
-        onPrimary: Colors.black,
+        onPrimary: Colors.white,
         secondary: AppColors.secondaryDark,
         surface: AppColors.surfaceDark,
         error: AppColors.errorDark,
@@ -78,22 +83,27 @@ class AppTheme {
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              Brightness.light, // icônes blanches (dark mode)
-          statusBarBrightness: Brightness.dark, // iOS
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceDark,
-        selectedColor: AppColors.primaryDark, // jaune opaque
+        selectedColor: AppColors.primaryDark.withValues(alpha: 0.3),
         disabledColor: AppColors.surfaceDark,
         labelStyle: const TextStyle(color: AppColors.textPrimaryDark, fontWeight: FontWeight.w500),
-        secondaryLabelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        secondarySelectedColor: AppColors.primaryDark,
+        secondaryLabelStyle: const TextStyle(color: AppColors.textPrimaryDark, fontWeight: FontWeight.w600),
+        secondarySelectedColor: AppColors.primaryDark.withValues(alpha: 0.3),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: const BorderSide(color: AppColors.borderDark),
         showCheckmark: false,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primaryDark,
+        ),
       ),
     );
   }

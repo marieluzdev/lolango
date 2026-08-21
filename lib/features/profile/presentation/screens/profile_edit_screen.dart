@@ -385,7 +385,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                           interest,
                                           style: TextStyle(
                                             color: checked
-                                                ? Colors.black
+                                                ? Colors.white
                                                 : textPrimary,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
@@ -396,7 +396,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                           const Icon(
                                             Icons.check,
                                             size: 15,
-                                            color: Colors.black,
+                                            color: Colors.white,
                                           ),
                                         ],
                                       ],
@@ -453,7 +453,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   onPressed: _isSaving ? null : _saveProfile,
                   style: FilledButton.styleFrom(
                     backgroundColor: primary,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -465,7 +465,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.black,
+                              Colors.white,
                             ),
                           ),
                         )

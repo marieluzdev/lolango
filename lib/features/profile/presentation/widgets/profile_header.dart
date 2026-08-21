@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lolango_v2/core/constants/app_colors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lolango_v2/core/widgets/app_cached_image.dart';
+import 'package:lolango_v2/core/widgets/app_button.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String firstName;
@@ -101,21 +102,11 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(
+          AppButton(
             onPressed: () => context.push('/profile-edit'),
-            style: FilledButton.styleFrom(
-              backgroundColor: isDark ? AppColors.surfaceDark : Colors.black,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(26),
-              ),
-            ),
-            icon: const Icon(Icons.edit, size: 16),
-            label: const Text(
-              'Modifier le profil',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-            ),
+            icon: LucideIcons.edit,
+            label: 'Modifier le profil',
+            type: AppButtonType.outline,
           ),
         ],
       ),

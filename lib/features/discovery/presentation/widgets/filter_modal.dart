@@ -276,7 +276,7 @@ class _FilterModalState extends State<FilterModal> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.black : textPrimary,
+            color: isSelected ? Colors.white : textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),

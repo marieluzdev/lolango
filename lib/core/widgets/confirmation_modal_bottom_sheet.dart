@@ -101,8 +101,8 @@ Future<bool> showConfirmationModalBottomSheet({
                           ? OutlinedButton(
                               onPressed: () => Navigator.of(sheetContext).pop(true),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red,
-                                side: const BorderSide(color: Colors.red),
+                                foregroundColor: isDark ? AppColors.errorDark : AppColors.errorLight,
+                                side: BorderSide(color: isDark ? AppColors.errorDark : AppColors.errorLight),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -113,7 +113,7 @@ Future<bool> showConfirmationModalBottomSheet({
                               onPressed: () => Navigator.of(sheetContext).pop(true),
                               style: FilledButton.styleFrom(
                                 backgroundColor: destructive
-                                    ? Colors.red
+                                    ? (isDark ? AppColors.errorDark : AppColors.errorLight)
                                     : primary,
                                 foregroundColor: destructive ? Colors.white : Colors.black,
                                 shape: RoundedRectangleBorder(
