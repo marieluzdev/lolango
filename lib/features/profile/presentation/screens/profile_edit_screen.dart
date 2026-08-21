@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:lolango_v2/core/constants/app_colors.dart';
+import 'package:lolango_v2/core/models/detailed_profile_model.dart';
 import 'package:lolango_v2/features/onboarding/domain/onboarding_models.dart';
 import 'package:lolango_v2/features/profile/data/profile_repository.dart';
 import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
+
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -40,22 +42,30 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     super.dispose();
   }
 
+  void _populateFromProfile(DetailedProfileModel detailedProfile) {
+    final profile = detailedProfile.profile;
+    _firstNameController.text = profile.name;
+    _usernameController.text = profile.username.replaceFirst('@', '');
+    _bioController.text = profile.bio ?? '';
+    _selectedInterests = Set<String>.from(detailedProfile.interests);
+  }
+
   Future<void> _loadProfile() async {
+    // 1. Pré-remplir instantanément depuis le cache Riverpod si disponible
+    final cached = ref.read(profileProvider).valueOrNull;
+    if (cached != null) {
+      setState(() => _populateFromProfile(cached));
+      return; // données déjà fraîches, pas besoin de refetch
+    }
+
+    // 2. Aucune donnée en cache → fetch réseau (premier chargement)
     final detailedProfile = await ref
         .read(profileRepositoryProvider)
         .fetchDetailedProfile();
     if (!mounted) return;
-
     if (detailedProfile == null) return;
-    final profile = detailedProfile.profile;
 
-    setState(() {
-      _firstNameController.text = profile.name;
-      _usernameController.text = profile.username.replaceFirst('@', '');
-      _bioController.text = profile.bio ?? '';
-
-      _selectedInterests = Set<String>.from(detailedProfile.interests);
-    });
+    setState(() => _populateFromProfile(detailedProfile));
   }
 
   void _toggleInterest(String interest) {

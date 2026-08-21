@@ -25,21 +25,55 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
   ConsumerState<DiscoveryScreen> createState() => _DiscoveryScreenState();
 }
 
-class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
+class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
+  bool _isSearchVisible = false;
+
+  late final AnimationController _searchAnimController;
+  late final Animation<double> _searchOpacity;
+  late final Animation<Offset> _searchSlide;
 
   @override
   void initState() {
     super.initState();
+    _searchAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _searchOpacity = CurvedAnimation(
+      parent: _searchAnimController,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
+    );
+    _searchSlide = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _searchAnimController, curve: Curves.easeOutCubic),
+    );
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _searchAnimController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchVisible = !_isSearchVisible;
+      if (_isSearchVisible) {
+        _searchAnimController.forward();
+      } else {
+        _searchAnimController.reverse();
+        _searchQuery = '';
+      }
+    });
   }
 
   void _onScroll() {
@@ -74,16 +108,18 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+              padding: const EdgeInsets.only(left: 20, right: 12, top: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'Découvrir',
-                    style: TextStyle(
-                      color: textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
+                  Expanded(
+                    child: Text(
+                      'Découvrir',
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -124,6 +160,35 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     },
                     icon: const Icon(LucideIcons.slidersHorizontal),
                   ),
+                  // ── Bouton toggle recherche ──────────────────────────────
+                  GestureDetector(
+                    onTap: _toggleSearch,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, anim) => ScaleTransition(
+                          scale: anim,
+                          child: FadeTransition(opacity: anim, child: child),
+                        ),
+                        child: Icon(
+                          _isSearchVisible
+                              ? LucideIcons.x
+                              : LucideIcons.search,
+                          key: ValueKey(_isSearchVisible),
+                          color: textPrimary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
@@ -304,16 +369,25 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                       },
                     ),
                   ),
-                  // ── Barre de recherche fixe en bas au centre ──
+                  // ── Barre de recherche animée en bas ─────────────────────────
                   Positioned(
                     left: 0,
                     right: 0,
                     bottom: MediaQuery.of(context).padding.bottom + 12,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SearchBarWidget(
-                        hint: 'Rechercher un profil...',
-                        onChanged: (q) => setState(() => _searchQuery = q),
+                    child: SlideTransition(
+                      position: _searchSlide,
+                      child: FadeTransition(
+                        opacity: _searchOpacity,
+                        child: IgnorePointer(
+                          ignoring: !_isSearchVisible,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: SearchBarWidget(
+                              hint: 'Rechercher un profil...',
+                              onChanged: (q) => setState(() => _searchQuery = q),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

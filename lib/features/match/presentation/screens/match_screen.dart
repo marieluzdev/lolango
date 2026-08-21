@@ -25,11 +25,62 @@ class MatchScreen extends ConsumerStatefulWidget {
   ConsumerState<MatchScreen> createState() => _MatchScreenState();
 }
 
-class _MatchScreenState extends ConsumerState<MatchScreen> {
+class _MatchScreenState extends ConsumerState<MatchScreen>
+    with SingleTickerProviderStateMixin {
   int _tabIndex = 0;
   String _searchQuery = '';
+  bool _isSearchVisible = false;
+
+  late final AnimationController _searchAnimController;
+  late final Animation<double> _searchOpacity;
+  late final Animation<Offset> _searchSlide;
 
   static const _tabs = ['Likes reçus', 'Matchs'];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _searchOpacity = CurvedAnimation(
+      parent: _searchAnimController,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
+    );
+    _searchSlide = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _searchAnimController, curve: Curves.easeOutCubic),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(matchNotificationBadgeProvider) > 0) {
+        ref.read(matchNotificationBadgeProvider.notifier).state = 0;
+      }
+      // Initialize the active tab provider
+      ref.read(matchActiveTabProvider.notifier).state = _tabIndex;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchAnimController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchVisible = !_isSearchVisible;
+      if (_isSearchVisible) {
+        _searchAnimController.forward();
+      } else {
+        _searchAnimController.reverse();
+        _searchQuery = '';
+      }
+    });
+  }
 
   // Dummy profile for skeleton
   static final _dummyProfile = DetailedProfileModel(
@@ -49,17 +100,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     interests: [],
   );
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ref.read(matchNotificationBadgeProvider) > 0) {
-        ref.read(matchNotificationBadgeProvider.notifier).state = 0;
-      }
-      // Initialize the active tab provider
-      ref.read(matchActiveTabProvider.notifier).state = _tabIndex;
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,51 +142,91 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-              child: Column(
+              padding: const EdgeInsets.only(left: 20, right: 12, top: 20),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Titre
-                  Text(
-                    'Match',
-                    style: TextStyle(
-                      color: textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Titre
+                        Text(
+                          'Match',
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Dynamic info text
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _tabIndex == 0
+                                  ? (pendingCount == 1
+                                        ? '1 like reçu'
+                                        : '$pendingCount likes reçus')
+                                  : (matchesCount == 1
+                                        ? '1 connexion'
+                                        : '$matchesCount connexions'),
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // Dynamic info text
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _tabIndex == 0
-                            ? (pendingCount == 1
-                                  ? '1 like reçu'
-                                  : '$pendingCount likes reçus')
-                            : (matchesCount == 1
-                                  ? '1 connexion'
-                                  : '$matchesCount connexions'),
-                        style: TextStyle(
-                          color: textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Container(
-                        width: 4,
-                        height: 4,
+                  // ── Bouton toggle recherche ──────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: GestureDetector(
+                      onTap: _toggleSearch,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: primary,
-                          shape: BoxShape.circle,
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          transitionBuilder: (child, anim) => ScaleTransition(
+                            scale: anim,
+                            child: FadeTransition(opacity: anim, child: child),
+                          ),
+                          child: Icon(
+                            _isSearchVisible
+                                ? LucideIcons.x
+                                : LucideIcons.search,
+                            key: ValueKey(_isSearchVisible),
+                            color: textPrimary,
+                            size: 22,
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
@@ -322,16 +403,25 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                             : _buildMatchesTab(),
                       ),
                     ),
-                    // ── Barre de recherche fixe en bas au centre ──
+                    // ── Barre de recherche animée en bas ─────────────────────────
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: MediaQuery.of(context).padding.bottom + 12,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: SearchBarWidget(
-                          hint: 'Rechercher...',
-                          onChanged: (q) => setState(() => _searchQuery = q),
+                      child: SlideTransition(
+                        position: _searchSlide,
+                        child: FadeTransition(
+                          opacity: _searchOpacity,
+                          child: IgnorePointer(
+                            ignoring: !_isSearchVisible,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: SearchBarWidget(
+                                hint: 'Rechercher...',
+                                onChanged: (q) => setState(() => _searchQuery = q),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

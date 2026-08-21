@@ -117,7 +117,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: Icon(Icons.close_rounded, color: iconColor, size: 20),
+                    child: Icon(Icons.close_rounded, color: textColor, size: 20),
                   ),
                 ),
               ),
