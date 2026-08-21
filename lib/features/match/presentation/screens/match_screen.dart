@@ -16,6 +16,7 @@ import 'package:lolango_v2/features/match/presentation/widgets/blurred_profile_c
 import 'package:lolango_v2/features/match/presentation/widgets/matched_profile_card.dart';
 import 'package:lolango_v2/features/profile/presentation/providers/profile_provider.dart';
 import 'package:lolango_v2/features/match/presentation/screens/match_celebration_screen.dart';
+import 'package:lolango_v2/features/messaging/presentation/providers/messaging_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
@@ -679,6 +680,26 @@ class _MatchScreenState extends ConsumerState<MatchScreen>
           onTap: () {
             Navigator.of(context).pop();
             context.push('/user-profile/${p.id}', extra: p.name);
+          },
+        ),
+        const SizedBox(height: 12),
+        ModalActionTile(
+          icon: LucideIcons.send,
+          label: 'Envoyer un message',
+          textColor: textPrimary,
+          onTap: () async {
+            Navigator.of(context).pop();
+            
+            // Find the conversation for this match
+            final conversations = ref.read(conversationsProvider).valueOrNull ?? [];
+            final conversation = conversations.firstWhere(
+              (c) => c.matchId == p.id || c.otherUser.profile.id == p.id,
+              orElse: () => throw Exception('Conversation not found for this match'),
+            );
+            
+            if (mounted) {
+              context.push('/chat/${conversation.id}');
+            }
           },
         ),
         const SizedBox(height: 12),
